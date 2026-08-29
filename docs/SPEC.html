@@ -1,0 +1,656 @@
+<meta charset="utf-8">
+<title>Shaker Build Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ink:#0B0C12; --ink-2:#0F1119;
+  --panel:#151A2B; --raise:#232A42;
+  --line:rgba(255,255,255,.085); --line-2:rgba(255,255,255,.16);
+  --text:#EAEDF6; --dim:#949AB4; --faint:#6B7191;
+  --lime:#C6FF3D; --cyan:#33E6FF; --magenta:#FF3DBE; --amber:#FFB43D; --violet:#A855F7;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ink); color:var(--text);
+  font-family:var(--body); font-size:16px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(900px 520px at 12% -8%, rgba(198,255,61,.10), transparent 62%),
+    radial-gradient(760px 460px at 96% 4%, rgba(255,61,190,.10), transparent 60%),
+    radial-gradient(900px 620px at 50% 108%, rgba(51,230,255,.07), transparent 65%);
+  background-attachment:fixed;
+  padding-bottom:126px;
+}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+.prose{max-width:70ch}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.02em}
+p{margin:0 0 1em}
+a{color:var(--cyan)}
+code{font-family:var(--mono);font-size:.87em;background:rgba(255,255,255,.06);border:1px solid var(--line);padding:.08em .38em;border-radius:6px;color:#DCE3FF}
+
+header.top{padding:70px 0 26px}
+.kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.kicker b{color:var(--lime);font-weight:600}
+h1{font-size:clamp(42px,7.4vw,76px);line-height:.94;font-weight:800;margin:18px 0 0}
+h1 .glow{color:var(--lime);text-shadow:0 0 34px rgba(198,255,61,.45)}
+.deck{font-size:19px;color:var(--dim);max-width:62ch;margin-top:18px}
+.metastrip{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);
+  border:1px solid var(--line);background:rgba(255,255,255,.035);padding:6px 11px;border-radius:999px}
+
+section.phase{padding:50px 0 6px;scroll-margin-top:20px}
+.phase-head{display:flex;gap:18px;align-items:baseline;border-top:1px solid var(--line);padding-top:26px}
+.num{font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.1em;padding:5px 10px;border-radius:8px;
+  color:var(--ink);background:var(--c);white-space:nowrap;box-shadow:0 0 26px -6px var(--c)}
+.phase h2{font-size:clamp(27px,4vw,38px);font-weight:800;line-height:1.05}
+.phase-sub{color:var(--dim);font-size:15.5px;margin:10px 0 0;max-width:66ch}
+h3{font-size:21px;font-weight:700;margin:40px 0 12px;color:#fff}
+.lab{font-size:12.5px;font-weight:600;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--c);margin:28px 0 10px}
+#p1{--c:var(--lime)} #p2{--c:var(--cyan)} #p3{--c:var(--magenta)} #p4{--c:var(--amber)} #p5{--c:var(--violet)} #p0{--c:var(--dim)} #p6{--c:var(--dim)}
+
+.card{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--line);
+  border-radius:var(--r);padding:20px 22px}
+.grid{display:grid;gap:16px;margin:16px 0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.pick{border-color:rgba(198,255,61,.36);box-shadow:0 0 44px -20px rgba(198,255,61,.9)}
+.card h5{margin:0 0 6px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.01em}
+.card .role{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:11px}
+.card .role.win{color:var(--lime)}
+.card p{font-size:14.5px;color:var(--dim);margin:0 0 .7em}
+.card p:last-child{margin-bottom:0}
+.card p strong{color:var(--text);font-weight:600}
+
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.025);margin:14px 0}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:14px}
+th,td{text-align:left;padding:11px 15px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--dim)}
+thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+  background:rgba(255,255,255,.035);font-weight:600;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td strong{color:var(--text);font-weight:600}
+td.f{font-family:var(--mono);font-size:12.5px;color:#DCE3FF;white-space:nowrap}
+.ty{font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}
+.chip{font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--dim)}
+.chip.on{color:var(--ink);background:var(--lime);border-color:transparent;font-weight:600}
+.chip.warn{color:var(--amber);border-color:rgba(255,180,61,.42)}
+.chip.net{color:var(--cyan);border-color:rgba(51,230,255,.42)}
+
+.flag{border-left:3px solid var(--amber);background:rgba(255,180,61,.07);border-radius:0 10px 10px 0;padding:14px 18px;margin:16px 0}
+.flag b{color:var(--amber);font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:5px}
+.flag p{margin:0;font-size:14.5px;color:var(--dim)}
+.flag p + p{margin-top:.6em}
+.note{border-left-color:var(--cyan);background:rgba(51,230,255,.06)}
+.note b{color:var(--cyan)}
+
+pre.frame{font-family:var(--mono);font-size:12px;line-height:1.55;color:#C9D1EE;background:var(--ink-2);
+  border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;overflow-x:auto;margin:14px 0}
+pre.frame b{color:var(--lime);font-weight:400}
+pre.frame i{color:var(--faint);font-style:normal}
+pre.tree{font-family:var(--mono);font-size:12.5px;line-height:1.72;color:var(--dim);background:var(--ink-2);
+  border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;overflow-x:auto;margin:14px 0}
+pre.tree b{color:var(--text);font-weight:600}
+
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:14px 0;display:grid;gap:10px}
+ol.steps li{counter-increment:s;position:relative;padding-left:42px;font-size:15px;color:var(--dim)}
+ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:2px;font-family:var(--mono);
+  font-size:11px;color:var(--c);border:1px solid var(--line-2);border-radius:6px;padding:2px 6px}
+ol.steps li strong{color:var(--text);font-weight:600}
+ul.dash{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px}
+ul.dash li{padding-left:20px;position:relative;font-size:15px;color:var(--dim)}
+ul.dash li::before{content:"";position:absolute;left:0;top:11px;width:9px;height:1.5px;background:var(--c);opacity:.85}
+ul.dash li strong{color:var(--text);font-weight:600}
+
+.sw{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0}
+.sw div{border-radius:12px;border:1px solid var(--line);padding:11px 12px;font-family:var(--mono);font-size:10.5px;line-height:1.5}
+.sw div span{display:block;height:46px;border-radius:8px;margin-bottom:9px}
+.sw .n{color:var(--text);font-weight:600;letter-spacing:.03em}
+.sw .h{color:var(--faint)}
+
+.srcdemo{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;max-width:420px;margin:14px 0}
+.srcdemo .rk{font-family:var(--mono);font-size:11px;color:var(--violet);letter-spacing:.14em}
+.srcdemo h5{font-family:var(--display);font-size:20px;font-weight:700;margin:4px 0 6px;color:#fff}
+.srcdemo p{font-size:13.5px;color:var(--dim);margin:0 0 10px}
+.srcdemo .live{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--cyan);border:1px solid rgba(51,230,255,.4);border-radius:999px;padding:4px 9px}
+.srcdemo .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.srcdemo .src{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--faint);line-height:1.9}
+.srcdemo .src u{color:var(--text);text-decoration:none}
+
+nav.pill{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:20;max-width:min(680px,calc(100vw - 26px));
+  overflow-x:auto;scrollbar-width:none;background:rgba(16,19,32,.88);backdrop-filter:blur(16px) saturate(1.3);
+  border:1px solid var(--line-2);border-radius:999px;box-shadow:0 18px 44px -18px #000}
+nav.pill::-webkit-scrollbar{display:none}
+nav.pill ul{display:flex;gap:2px;list-style:none;margin:0;padding:6px}
+nav.pill a{display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;color:var(--faint);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border-radius:999px;min-width:76px;white-space:nowrap}
+nav.pill a i{font-style:normal;font-size:8.5px;opacity:.65}
+nav.pill a:hover,nav.pill a:focus-visible{color:var(--text);background:rgba(255,255,255,.06)}
+nav.pill a.on{color:var(--ink);background:var(--lime);font-weight:600;box-shadow:0 0 22px -4px rgba(198,255,61,.7)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+footer{border-top:1px solid var(--line);margin-top:56px;padding:26px 0 30px;color:var(--faint);font-size:12.5px;font-family:var(--mono);line-height:1.8}
+@media(max-width:620px){.phase-head{flex-direction:column;gap:10px}h1{font-size:40px}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="kicker"><span>Product architecture spec</span><span>&middot;</span><span>v0.1 draft</span><span>&middot;</span><b>specs only &mdash; no implementation</b></div>
+  <h1>The <span class="glow">Drink Shaker</span><br>Build Spec</h1>
+  <p class="deck">Five features on one dark neon surface: a pantry you actually keep current, a generator that only pours what you own, a personal drink book, a spirit browser, and a trending feed that cites its sources or shows nothing at all.</p>
+  <div class="metastrip">
+    <span class="tag">Expo + React Native</span><span class="tag">SQLite / Drizzle</span><span class="tag">Offline-first core</span><span class="tag">Cited live search</span><span class="tag">21+ age gate</span>
+  </div>
+</header>
+
+<section class="phase" id="p0">
+  <div class="phase-head"><span class="num">00</span><div><h2>Assumptions &amp; open questions</h2>
+  <p class="phase-sub">Four things in the brief have more than one reasonable reading. Here is the reading this spec is built on &mdash; change any of them and the affected phase changes with it.</p></div></div>
+
+  <div class="flag"><b>Flag 01 &mdash; "drink book" is undefined</b>
+    <p><strong>Assumed:</strong> manual recipe entry plus a bundled seed library, stored locally. The user types or edits a recipe, saves it, and can pull a random one back out.</p>
+    <p><strong>Explicitly out of scope:</strong> OCR of a physical cocktail book, and photo-to-recipe import. Both are real products with real cost (camera pipeline, layout parsing, a correction UI) and neither is implied by "stores user-added recipes." Noted as a v2 candidate in Phase 3.</p></div>
+
+  <div class="flag"><b>Flag 02 &mdash; the reference UI is alcohol-free</b>
+    <p>The supplied screen reads <em>"Types of non-alcoholic drinks"</em> and its pantry is juice, grenadine, lime, tonic. The written brief says liquor catalog and spirit type. <strong>Assumed:</strong> one app, one data model, with a <strong>Zero-Proof mode</strong> switch that filters the catalog and the generator to non-alcoholic ingredients. It costs one boolean on the catalog table and it is the single cheapest way to satisfy both.</p></div>
+
+  <div class="flag"><b>Flag 03 &mdash; "deep search" for trending</b>
+    <p><strong>Assumed:</strong> a server-side, web-connected retrieval on our own proxy, cached, returning ranked drinks each carrying at least one live URL. Not a crawler, not a scraper of any single bar site, and never a model answering from memory. See Phase 5.</p></div>
+
+  <div class="flag"><b>Flag 04 &mdash; "party drinking app"</b>
+    <p><strong>Assumed:</strong> a 21+ recipe and hosting tool. No drinking games, timers, dares, or anything that rewards speed or volume. Age gate on first launch, blocking, with the date stored locally. This is a scope decision, not a disclaimer.</p></div>
+</section>
+
+<section class="phase" id="p1">
+  <div class="phase-head"><span class="num">01</span><div><h2>Stack</h2>
+  <p class="phase-sub">The deciding constraint is not rendering &mdash; it is that four of five features must work with the router off, and the fifth must not embed a search key in a binary anyone can unzip.</p></div></div>
+
+  <div class="grid g2">
+    <div class="card pick">
+      <div class="role win">Recommended</div>
+      <h5>Expo (React Native) + TypeScript</h5>
+      <p><strong>Why.</strong> One codebase for iOS, Android, and web via react-native-web. Over-the-air updates mean a party-night bug fix ships in minutes without a store review. Expo Go plus a QR code is a genuine distribution channel for this product &mdash; you hand the party the app.</p>
+      <p><strong>With.</strong> expo-router (file-based tabs), Reanimated 3 + Moti (the shake, the reveal), expo-haptics, expo-linear-gradient + expo-blur for the glass panels, Zustand for UI state, TanStack Query for the one remote feature.</p>
+    </div>
+    <div class="card">
+      <div class="role">Runner-up</div>
+      <h5>Flutter</h5>
+      <p><strong>Better at.</strong> Pixel-identical output across devices and smoother heavy animation, which this neon-glass direction will lean on.</p>
+      <p><strong>Costs.</strong> Dart, a smaller cocktail/data package ecosystem, weaker web output for a shareable link, and no OTA equivalent. It does not remove the need for a separate backend for trending, so it wins on one axis and ties on the rest.</p>
+    </div>
+    <div class="card">
+      <div class="role">Live option</div>
+      <h5>Installable PWA</h5>
+      <p><strong>Better at.</strong> Distribution. A URL passed around a room beats an install every time, and IndexedDB plus a service worker covers the offline core.</p>
+      <p><strong>Costs.</strong> Weaker haptics and motion feel, no shelf presence, iOS storage eviction risk for a rarely-opened app. <strong>Take this if</strong> shipping this month matters more than feeling native &mdash; Expo web gets you most of it anyway.</p>
+    </div>
+  </div>
+
+  <div class="lab">Persistence</div>
+  <p class="prose"><strong>expo-sqlite + Drizzle ORM.</strong> Inventory and recipes are relational and filtered (by category, by spirit type, by "do I own every ingredient"), which is a join, not a key lookup. Key-value stores (AsyncStorage, MMKV) force that logic into JS over a full deserialized blob and get slow at a few hundred rows. Drizzle adds typed queries and versioned migrations, which matters the first time the seed catalog changes shape. MMKV stays for small preferences: age-gate date, units, Zero-Proof mode.</p>
+
+  <div class="lab">The trending backend</div>
+  <p class="prose">One small serverless function &mdash; a Cloudflare Worker, which fits inside its free plan at any realistic scale (see Phase 5) &mdash; is <strong>required</strong>, not optional. It holds the search and model keys, rate-limits, and caches one shared result for all users &mdash; so a party of twenty triggers one upstream call, not twenty. Client-side search would put a spendable key in the app bundle. No user accounts, no user data leaves the device; the endpoint takes a region and returns a public list.</p>
+
+  <div class="scroll"><table>
+    <thead><tr><th>Concern</th><th>Choice</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Local DB</td><td><strong>expo-sqlite + Drizzle</strong></td><td>Relational queries, typed, migratable</td></tr>
+      <tr><td class="f">Prefs</td><td><strong>react-native-mmkv</strong></td><td>Age gate, units, mode flags</td></tr>
+      <tr><td class="f">Server state</td><td><strong>TanStack Query</strong></td><td>Only the trending feed; persisted cache for offline reads</td></tr>
+      <tr><td class="f">UI state</td><td><strong>Zustand</strong></td><td>Filters, generator lock, sheet state</td></tr>
+      <tr><td class="f">Motion</td><td><strong>Reanimated 3 + Moti</strong></td><td>Native-thread animation; honors reduce-motion</td></tr>
+      <tr><td class="f">Backend</td><td><strong>Serverless proxy + KV cache</strong></td><td>Keys, rate limit, 6&ndash;12h shared TTL</td></tr>
+      <tr><td class="f">Images</td><td><strong>Bundled vector/PNG set</strong></td><td>Ingredient art ships with the app so the pantry renders offline</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="phase" id="p2">
+  <div class="phase-head"><span class="num">02</span><div><h2>Data models</h2>
+  <p class="phase-sub">Three core tables plus the join that makes the generator possible. The whole design turns on one idea: a recipe ingredient points at a <em>catalog item</em>, not at a string, so "do I own this" is a lookup rather than a guess.</p></div></div>
+
+  <div class="lab">Relationships</div>
+  <pre class="frame"><b>CatalogItem</b> ────┬──&lt; <b>InventoryItem</b>        "I own this"
+                 │
+                 └──&lt; <b>RecipeIngredient</b> &gt;──── <b>DrinkRecipe</b>
+                         │
+                         └──&lt; <b>SubstitutionRule</b>   "close enough"
+
+<i>Match test for one recipe:  every RecipeIngredient where isOptional = 0
+resolves to an InventoryItem via catalogItemId, or via a SubstitutionRule
+the user has allowed, or via categoryFallback (e.g. "any citrus").</i></pre>
+
+  <div class="lab">InventoryItem &mdash; "My Kit"</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="f">id</td><td class="ty">uuid</td><td>PK</td></tr>
+      <tr><td class="f">catalogItemId</td><td class="ty">uuid | null</td><td>FK to CatalogItem. Null for a free-typed custom item</td></tr>
+      <tr><td class="f">name</td><td class="ty">string</td><td>Display name; denormalized so custom items work standalone</td></tr>
+      <tr><td class="f">category</td><td class="ty">enum</td><td><code>beverage</code> <code>mixer</code> <code>garnish</code> <code>flavor</code> <code>ice</code> <code>glass</code> <code>sweet</code> <code>tool</code> <code>vibe</code> &mdash; the nine tiles in the reference UI</td></tr>
+      <tr><td class="f">brand</td><td class="ty">string | null</td><td>Optional, never required by matching</td></tr>
+      <tr><td class="f">level</td><td class="ty">enum</td><td><code>full</code> <code>half</code> <code>low</code> <code>out</code>. <strong>out</strong> excludes it from the generator without deleting it</td></tr>
+      <tr><td class="f">isStaple</td><td class="ty">bool</td><td>Assumed always on hand (ice, water, salt); skipped in "you're missing" copy</td></tr>
+      <tr><td class="f">tags</td><td class="ty">string[]</td><td>Free tags for search</td></tr>
+      <tr><td class="f">imageKey</td><td class="ty">string</td><td>Key into the bundled art set</td></tr>
+      <tr><td class="f">addedAt / updatedAt</td><td class="ty">timestamp</td><td>Sort, and "you haven't checked this shelf in a while"</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="lab">DrinkRecipe &amp; RecipeIngredient &mdash; "My Drink Book"</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="f">id</td><td class="ty">uuid</td><td>PK</td></tr>
+      <tr><td class="f">name</td><td class="ty">string</td><td>Required, the only required field on save</td></tr>
+      <tr><td class="f">origin</td><td class="ty">enum</td><td><code>user</code> <code>seed</code> <code>generated</code> <code>trending</code> &mdash; drives the card badge and whether edits are allowed</td></tr>
+      <tr><td class="f">method</td><td class="ty">enum</td><td><code>shake</code> <code>stir</code> <code>build</code> <code>blend</code> <code>muddle</code></td></tr>
+      <tr><td class="f">glass</td><td class="ty">string</td><td>References a glass CatalogItem where known</td></tr>
+      <tr><td class="f">steps</td><td class="ty">string[]</td><td>Ordered; one instruction per line in the editor</td></tr>
+      <tr><td class="f">garnish</td><td class="ty">string | null</td><td>Kept separate from steps so the card can show it</td></tr>
+      <tr><td class="f">abvEstimate</td><td class="ty">number | null</td><td>Derived from ingredients; shown as a range, labeled an estimate</td></tr>
+      <tr><td class="f">isZeroProof</td><td class="ty">bool</td><td>Derived: true when no ingredient has abv &gt; 0</td></tr>
+      <tr><td class="f">vibeTags</td><td class="ty">string[]</td><td><code>refreshing</code> <code>tropical</code> <code>bitter</code> <code>brunch</code> <code>nightcap</code> &mdash; the generator's filter axis</td></tr>
+      <tr><td class="f">accentHex</td><td class="ty">string</td><td>Card gradient; picked at save time from the base ingredient</td></tr>
+      <tr><td class="f">timesMade / lastMadeAt</td><td class="ty">int / ts</td><td>Feeds "recently poured" de-weighting in the generator</td></tr>
+      <tr><td class="f">isFavorite / rating</td><td class="ty">bool / 1-5</td><td>User signal, never network</td></tr>
+      <tr><td class="f">sourceUrl</td><td class="ty">string | null</td><td>Set only when origin = trending; carried through so attribution survives the save</td></tr>
+    </tbody>
+  </table></div>
+  <div class="scroll"><table>
+    <thead><tr><th>RecipeIngredient</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="f">recipeId</td><td class="ty">uuid</td><td>FK, cascade delete</td></tr>
+      <tr><td class="f">catalogItemId</td><td class="ty">uuid | null</td><td><strong>The match key.</strong> Null means text-only, matched by normalized name</td></tr>
+      <tr><td class="f">displayName</td><td class="ty">string</td><td>What the card prints</td></tr>
+      <tr><td class="f">amount / unit</td><td class="ty">number / enum</td><td><code>oz</code> <code>ml</code> <code>dash</code> <code>splash</code> <code>part</code> <code>piece</code>. Unit conversion at display time only</td></tr>
+      <tr><td class="f">role</td><td class="ty">enum</td><td><code>base</code> <code>modifier</code> <code>mixer</code> <code>sweetener</code> <code>garnish</code> <code>ice</code> &mdash; a missing <strong>base</strong> kills a match; a missing garnish only warns</td></tr>
+      <tr><td class="f">isOptional</td><td class="ty">bool</td><td>Excluded from the required-set test</td></tr>
+      <tr><td class="f">categoryFallback</td><td class="ty">enum | null</td><td>"any citrus", "any light rum" &mdash; matches a category rather than an item</td></tr>
+      <tr><td class="f">sortOrder</td><td class="ty">int</td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="lab">CatalogItem &mdash; the browsable library</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="f">id</td><td class="ty">uuid</td><td>Stable across app versions &mdash; inventory rows point here</td></tr>
+      <tr><td class="f">name</td><td class="ty">string</td><td>"Blanco tequila", "Tonic water"</td></tr>
+      <tr><td class="f">kind</td><td class="ty">enum</td><td><code>spirit</code> <code>liqueur</code> <code>wine</code> <code>beer</code> <code>mixer</code> <code>syrup</code> <code>bitters</code> <code>garnish</code> <code>tool</code> <code>glass</code></td></tr>
+      <tr><td class="f">spiritType</td><td class="ty">enum | null</td><td><code>vodka</code> <code>gin</code> <code>rum</code> <code>tequila</code> <code>mezcal</code> <code>whiskey</code> <code>brandy</code> <code>aperitif</code> &mdash; the browser's primary filter</td></tr>
+      <tr><td class="f">styleSubtype</td><td class="ty">string | null</td><td>"reposado", "London dry", "rye"</td></tr>
+      <tr><td class="f">region</td><td class="ty">string | null</td><td>Reference only</td></tr>
+      <tr><td class="f">typicalAbv</td><td class="ty">number</td><td>0 for mixers &mdash; also what derives <code>isZeroProof</code></td></tr>
+      <tr><td class="f">flavorNotes</td><td class="ty">string[]</td><td>Powers the Flavor Explorer tile</td></tr>
+      <tr><td class="f">substituteIds</td><td class="ty">uuid[]</td><td>Ranked, best first</td></tr>
+      <tr><td class="f">blurb</td><td class="ty">string</td><td>2&ndash;3 sentences, ships in the bundle, no network</td></tr>
+      <tr><td class="f">isZeroProof</td><td class="ty">bool</td><td>Filter for Zero-Proof mode</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="lab">Supporting</div>
+  <ul class="dash">
+    <li><strong>SubstitutionRule</strong> &mdash; <code>fromId</code>, <code>toId</code>, <code>closeness</code> (0&ndash;1), <code>note</code>. Seeded, extendable by the user. The generator only crosses a substitution when closeness clears a threshold and the user has "allow substitutes" on.</li>
+    <li><strong>GeneratorRun</strong> &mdash; <code>recipeId</code>, <code>ranAt</code>, <code>accepted</code>, <code>lockedIngredientId</code>. Prevents the same drink twice in a row and gives "shake again" real memory.</li>
+    <li><strong>TrendingDrink</strong> (cache only, never merged into the book unless saved) &mdash; <code>rank</code>, <code>name</code>, <code>whyTrending</code>, <code>ingredientHints[]</code>, <code>sources[]</code>, <code>retrievedAt</code>, <code>confidence</code>.</li>
+    <li><strong>TrendingSource</strong> &mdash; <code>title</code>, <code>publisher</code>, <code>url</code>, <code>publishedAt</code>, <code>snippet</code>. An item with an empty sources array is never rendered.</li>
+    <li><strong>AppMeta</strong> &mdash; <code>ageGateAcceptedAt</code>, <code>units</code>, <code>zeroProofMode</code>, <code>allowSubstitutes</code>, <code>seedVersion</code>.</li>
+  </ul>
+</section>
+
+<section class="phase" id="p3">
+  <div class="phase-head"><span class="num">03</span><div><h2>Feature plan</h2>
+  <p class="phase-sub">Component structure, the logic that matters, and what each feature does when it can't do the thing. Offline posture is stated per feature.</p></div></div>
+
+  <h3>1 &mdash; My Kit (inventory CRUD)</h3>
+  <div class="chips"><span class="chip on">Fully offline</span><span class="chip">Source of truth for the generator</span></div>
+  <pre class="tree"><b>KitScreen</b>
+├── CategoryTileGrid      9 tiles, count badge each, tap filters
+├── KitSearchBar          debounced, matches name + brand + tags
+├── ItemGrid
+│   └── <b>ItemCard</b>          art, name, level ring, long-press → edit
+├── AddItemSheet
+│   ├── CatalogPicker     search the bundled catalog, one tap = added
+│   └── CustomItemForm    fallback when it isn't in the catalog
+└── StarterKitPrompt      empty state: "Add the 8 bottles most bars start with"</pre>
+  <ul class="dash">
+    <li><strong>Create</strong> favors the catalog picker &mdash; it sets <code>catalogItemId</code>, which is what makes matching exact. Custom entry is always available and degrades to name matching.</li>
+    <li><strong>Update</strong> is mostly the level ring: full → half → low → out, one tap, no form. This is the interaction people actually repeat, so it gets the fewest steps.</li>
+    <li><strong>Delete</strong> swipes with a 5-second undo toast. Deleting an item that appears in saved recipes never touches the recipe.</li>
+    <li><strong>Empty state</strong> is the real onboarding: the starter-kit prompt writes 8 rows in one tap so the generator has something to work with on minute one.</li>
+  </ul>
+
+  <h3>2 &mdash; Shaker (random generator)</h3>
+  <div class="chips"><span class="chip on">Fully offline</span><span class="chip warn">Has a defined no-match path</span></div>
+  <pre class="tree"><b>ShakerScreen</b>
+├── ShakeButton           glow pulse, haptic, accepts device-shake gesture
+├── FilterRail            vibe chips · zero-proof · allow-substitutes
+├── LockChip              "must use: Reposado" — pins one ingredient
+├── <b>ResultCard</b>            name · ingredient list · steps · glass · ABV estimate
+│   └── actions           Save to book · Shake again · I made this
+└── <b>FallbackPanel</b>         shown instead of ResultCard when nothing matches</pre>
+  <div class="lab">Matching, in order</div>
+  <ol class="steps">
+    <li><strong>Build the owned set.</strong> All InventoryItems where <code>level != out</code>, plus every item flagged <code>isStaple</code>.</li>
+    <li><strong>Filter candidates.</strong> Recipes from the seed library and the user's book; apply vibe chips, Zero-Proof mode, and the locked ingredient if set.</li>
+    <li><strong>Test each candidate.</strong> Every non-optional RecipeIngredient must resolve: direct <code>catalogItemId</code> hit, then <code>categoryFallback</code> hit, then &mdash; only if substitutes are allowed &mdash; a SubstitutionRule above threshold. Track which rule was used.</li>
+    <li><strong>Score the survivors.</strong> Never-made outranks made-before; anything in the last three GeneratorRuns is pushed down; exact matches outrank substituted ones; favorites get a small lift. Pick weighted-random from the top, not strictly best &mdash; a deterministic "random" button is the fastest way to make the feature boring.</li>
+    <li><strong>Render.</strong> Substituted lines are marked inline: <em>"Cointreau &rarr; using triple sec"</em>. Never silently swap.</li>
+    <li><strong>Zero survivors &rarr; FallbackPanel.</strong> Never invent a drink and never return a recipe with a missing ingredient.</li>
+  </ol>
+  <div class="flag note"><b>Fallback copy &mdash; the required behavior</b>
+    <p><strong>One item short:</strong> "You're one bottle from 6 drinks. Add <em>lime juice</em> to unlock the Daiquiri, Margarita, and 4 more." &mdash; with an <strong>Add to Kit</strong> button.</p>
+    <p><strong>Nothing close:</strong> "Nothing in your kit makes a full drink yet. Add a base spirit and a mixer, or browse Explore to see what pairs with what." &mdash; with <strong>Add to Kit</strong> and <strong>Open Explore</strong>.</p>
+    <p><strong>Filters too tight:</strong> "No tropical drinks in your kit &mdash; 11 others match. Clear the vibe filter?" The fallback always names the number and offers the single action that fixes it.</p></div>
+
+  <h3>3 &mdash; My Drink Book</h3>
+  <div class="chips"><span class="chip on">Fully offline</span><span class="chip">Manual entry &mdash; see Flag 01</span></div>
+  <pre class="tree"><b>BookScreen</b>
+├── BookGrid → <b>RecipeCard</b>     accent gradient, origin badge, times-made
+├── SurpriseMeButton         random pick from the book only
+├── <b>RecipeEditor</b>              name · ingredient rows · steps · glass · vibe tags
+│   └── IngredientRow        catalog autocomplete → sets catalogItemId
+├── RecipeDetailSheet        ingredients marked owned / missing against the kit
+└── ShareSheet               plain-text export; no account, no upload</pre>
+  <ul class="dash">
+    <li><strong>Only the name is required to save.</strong> A half-entered recipe at a party is worth more than a form that refuses to close.</li>
+    <li><strong>Ingredient autocomplete resolves to the catalog</strong> as you type. This is the one place worth nudging &mdash; a resolved ingredient makes the recipe reachable by the generator.</li>
+    <li><strong>Surprise Me</strong> draws only from saved recipes, ignoring inventory, and says so: "From your book &mdash; you may need to shop."</li>
+    <li><strong>Recipes imported from Trending</strong> keep <code>sourceUrl</code> and stay attributed in the detail sheet.</li>
+    <li><strong>v2 candidate:</strong> photo-of-a-page import. Out of scope here per Flag 01.</li>
+  </ul>
+
+  <h3>4 &mdash; Explore (liquor browser)</h3>
+  <div class="chips"><span class="chip on">Fully offline</span><span class="chip">Seeded on first launch</span></div>
+  <pre class="tree"><b>ExploreScreen</b>
+├── SpiritTypeChips      vodka · gin · rum · tequila · whiskey · aperitif · zero-proof
+├── FlavorExplorerTile   browse by flavor note instead of by bottle
+├── CatalogList → <b>CatalogCard</b>
+└── <b>CatalogDetailSheet</b>
+    ├── blurb · typical ABV · flavor notes
+    ├── "Makes 12 drinks you can already pour"   ← joins against the kit
+    └── Add to My Kit</pre>
+  <ul class="dash">
+    <li><strong>Seeding:</strong> bundled JSON is written to SQLite on first launch and versioned by <code>seedVersion</code>; later app versions diff rather than wipe, so user edits survive.</li>
+    <li><strong>The detail sheet's job is conversion:</strong> every bottle answers "what does this get me," computed locally against the current kit.</li>
+    <li><strong>Zero-Proof mode</strong> filters this screen to <code>isZeroProof</code> items, which is exactly the reference UI's "types of non-alcoholic drinks."</li>
+  </ul>
+
+  <h3>5 &mdash; Trending Sips (live)</h3>
+  <div class="chips"><span class="chip net">Requires network</span><span class="chip warn">Degrades to last cached snapshot</span><span class="chip">Never fabricates</span></div>
+  <pre class="tree"><b>TrendingScreen</b>
+├── StatusBanner       "Live · retrieved 2h ago"  |  "Offline · showing 14 Aug"
+├── RegionPicker       global · US · UK · APAC
+├── <b>TrendingCard</b>       rank · name · why it's trending · ingredient chips · sources
+├── SourceSheet        full citation list, tap to open in browser
+└── ImportButton       copies into the drink book with sourceUrl intact</pre>
+  <div class="lab">Client API surface</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Endpoint</th><th>Returns</th><th>Behavior</th></tr></thead>
+    <tbody>
+      <tr><td class="f">GET /v1/trending<br><span class="ty">?region=&amp;limit=&amp;zeroProof=</span></td><td class="f">{ generatedAt, ttl,<br>items[], degraded }</td><td>Served from KV cache. <code>degraded:true</code> when upstream failed and the cache is stale &mdash; the client shows the banner, not an error screen.</td></tr>
+      <tr><td class="f">GET /v1/trending/:id</td><td class="f">{ item, sources[] }</td><td>Full citation list for the source sheet</td></tr>
+      <tr><td class="f">POST /v1/trending/refresh</td><td class="f">202 | 429</td><td>Rate-limited hard. Pull-to-refresh calls it; a 429 quietly re-serves cache</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="dash">
+    <li><strong>Client states:</strong> cold (skeleton cards) &rarr; live &rarr; stale (banner + timestamp) &rarr; offline-no-cache (an honest empty state pointing at the offline features, not a spinner).</li>
+    <li><strong>Persisted TanStack cache</strong> means yesterday's list still opens on a dead hotel wifi, correctly labeled with its date.</li>
+  </ul>
+</section>
+
+<section class="phase" id="p4">
+  <div class="phase-head"><span class="num">04</span><div><h2>UI &amp; UX</h2>
+  <p class="phase-sub">Dark glass, one neon primary, four accents with assigned jobs. The reference screen is the brief; this pins down its rules.</p></div></div>
+
+  <div class="lab">Bottom navigation</div>
+  <pre class="frame">┌──────────────────────────────────────────────────────────┐
+│  ●            ◈          ▤          ↗          ⌕         │
+│ <b>SHAKER</b>      MY KIT     RECIPES   TRENDING¹    EXPLORE    │
+└──────────────────────────────────────────────────────────┘
+ <i>floating pill · 12pt above safe-area · 64pt tall · blur(16) over rgba(16,19,32,.88)
+ active: lime fill, ink label, 22px outer glow · inactive: 60% grey, icon only above 5 tabs
+ horizontally scrollable — required at large Dynamic Type, where 5 labels stop fitting
+ badge ¹ = new trending data since last open · targets 48×48dp minimum, 8dp apart</i></pre>
+  <p class="prose">The nav on this page is that spec, running. Tab bars this app's size do not need to scroll at default type size &mdash; they need to <em>survive</em> scrolling when a label grows, which is the failure mode a fixed five-column grid hits at accessibility text sizes.</p>
+
+  <div class="lab">Palette</div>
+  <div class="sw">
+    <div><span style="background:#0B0C12;border:1px solid rgba(255,255,255,.14)"></span><span class="n">INK</span><span class="h">#0B0C12 · ground</span></div>
+    <div><span style="background:#151A2B"></span><span class="n">PANEL</span><span class="h">#151A2B · glass fill</span></div>
+    <div><span style="background:#C6FF3D"></span><span class="n">LIME</span><span class="h">#C6FF3D · primary CTA</span></div>
+    <div><span style="background:#FF3DBE"></span><span class="n">MAGENTA</span><span class="h">#FF3DBE · recipes</span></div>
+    <div><span style="background:#33E6FF"></span><span class="n">CYAN</span><span class="h">#33E6FF · live / network</span></div>
+    <div><span style="background:#FFB43D"></span><span class="n">AMBER</span><span class="h">#FFB43D · warning · low</span></div>
+    <div><span style="background:#A855F7"></span><span class="n">VIOLET</span><span class="h">#A855F7 · trending</span></div>
+    <div><span style="background:#949AB4"></span><span class="n">DIM</span><span class="h">#949AB4 · secondary text</span></div>
+  </div>
+  <ul class="dash">
+    <li><strong>One primary, four assigned accents.</strong> Lime is the only colour that means "press me." Cyan means live data, amber means attention, violet is trending, magenta is the drink book. A colour that means something everywhere means nothing.</li>
+    <li><strong>Glass recipe:</strong> <code>rgba(255,255,255,.055)</code> fill, 1px <code>rgba(255,255,255,.09)</code> border, 14&ndash;20px radius, blur 6&ndash;16. Glow is <code>box-shadow</code> at negative spread on lime only.</li>
+    <li><strong>Neutrals carry a blue-violet bias</strong> (#949AB4, not #999) so grey text sits inside the palette rather than beside it.</li>
+    <li><strong>Contrast:</strong> lime on ink and all body text clear 4.5:1. Never set lime text on a lime fill; the pill's active state flips to ink.</li>
+  </ul>
+
+  <div class="lab">Type</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Role</th><th>Face</th><th>Spec</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Display</strong></td><td>Bricolage Grotesque 800</td><td>Screen titles, drink names. 28&ndash;44px, -2% tracking, balanced wrap</td></tr>
+      <tr><td><strong>Body</strong></td><td>IBM Plex Sans 400/600</td><td>15&ndash;17px, 1.6 line-height, max 65ch in detail sheets</td></tr>
+      <tr><td><strong>Utility</strong></td><td>JetBrains Mono 400/600</td><td>Measurements, tab labels, timestamps, ABV. Tabular figures everywhere numbers stack</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="lab">Screens</div>
+  <pre class="frame"><b>AGE GATE</b> (first launch, blocking, no skip)
+  logo · "Enter your date of birth" · date wheel · Continue
+  under-21 → a closing screen, no retry loop. Stored locally as a date, never uploaded.
+
+<b>SHAKER</b> — the home tab
+  [ vibe chips · zero-proof toggle ]
+  ┌────────────────────────────┐
+  │        (( SHAKE IT UP ))   │   ← lime pill, glow pulse, haptic on press,
+  │                            │      also fires on a physical device shake
+  └────────────────────────────┘
+  ┌ result ────────────────────┐
+  │ art │ TROPICAL SUNSET PUNCH│
+  │     │ 2 oz pineapple juice │
+  │     │ 1 oz orange juice    │
+  │     │ ½ oz grenadine  ⇄ sub│  ← substitutions marked, never silent
+  │ Save to book · Shake again │
+  └────────────────────────────┘
+
+<b>MY KIT</b>
+  9 category tiles (beverage mixer garnish flavor ice glass sweet tool vibe)
+  tile → filtered grid of ItemCards · level ring on each · + Add More
+  empty → "Add the 8 bottles most bars start with" (one tap, 8 rows)
+
+<b>RECIPES</b>
+  2-col card grid, gradient per drink, origin badge, "made 3×"
+  + Surprise Me (from book only) · + New recipe (name is the only required field)
+
+<b>TRENDING</b>
+  ┌ Live · retrieved 2h ago ───────────── global ▾ ┐
+  #1 Watermelon Mint Cooler
+     why: named in 3 of 5 bar-trend roundups this month
+     [watermelon] [mint] [lime] [soda]
+     ─ Punch · 12 Aug · Difford's Guide · 20 Aug  ← tappable sources
+  offline → banner flips to "Offline · showing 14 Aug"
+
+<b>EXPLORE</b>
+  spirit-type chips → catalog list → detail sheet
+  detail: blurb · ABV · flavor notes · "makes 12 drinks you can pour" · Add to Kit</pre>
+
+  <div class="lab">Motion</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Hook</th><th>Trigger</th><th>Spec</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Shake</strong></td><td>Press or device shake</td><td>Shaker icon rotates ±8&deg;, 3 cycles, 420ms, spring. Medium haptic on start, success haptic on reveal</td></tr>
+      <tr><td><strong>Reveal</strong></td><td>Result ready</td><td>Card scales 0.94&rarr;1 with 12px rise, 260ms ease-out. Ingredients stagger in at 40ms</td></tr>
+      <tr><td><strong>Glow pulse</strong></td><td>Idle CTA</td><td>Shadow opacity .55&rarr;.85, 2.4s, infinite, ease-in-out. Stops while a sheet is open</td></tr>
+      <tr><td><strong>Level ring</strong></td><td>Tap an item</td><td>Arc redraws 180ms; colour full lime &rarr; amber &rarr; grey at "out"</td></tr>
+      <tr><td><strong>Confetti</strong></td><td>"I made this"</td><td>Once, 900ms, ~24 particles. Deliberately rare &mdash; it marks the one action worth celebrating</td></tr>
+      <tr><td><strong>Refresh</strong></td><td>Pull on Trending</td><td>Ice-cube spinner; resolves into the "retrieved just now" banner</td></tr>
+    </tbody>
+  </table></div>
+  <p class="prose"><strong>Reduced motion:</strong> every hook above collapses to a 120ms opacity fade. The shake result still arrives; it just doesn't shake. Haptics stay &mdash; they're an accessibility win, not a flourish.</p>
+</section>
+
+<section class="phase" id="p5">
+  <div class="phase-head"><span class="num">05</span><div><h2>Trending search</h2>
+  <p class="phase-sub">The one networked feature, and the one place the app can lie. The design goal is that fabrication is structurally impossible: no URL, no card.</p></div></div>
+
+  <div class="flag"><b>Verify before building</b>
+    <p>Search-API terms move fast. Microsoft retired the standalone Bing Search APIs in 2025, and <strong>Brave removed its free tier for new signups in February 2026</strong> &mdash; new accounts now get about $5/month in credits instead of the old 2,000&ndash;5,000 free queries. <strong>Re-confirm availability, pricing, and each provider's attribution clauses before committing.</strong> Checked 28 Aug 2026. The architecture below is provider-swappable on purpose: one adapter interface, one config value.</p></div>
+
+  <div class="grid g2">
+    <div class="card pick">
+      <div class="role win">Recommended &mdash; free, and it cites</div>
+      <h5>Gemini Flash + Google Search grounding</h5>
+      <p>A grounded model call returns synthesized trend findings <strong>with citations attached to the claims</strong> &mdash; ranked drinks, a one-line reason, and URLs, which is exactly this feature's shape. Grounding metadata gives the source list without a second parsing step.</p>
+      <p><strong>Free allowance:</strong> ~5,000 grounded prompts/month on the Gemini 3.x family, plus the Flash / Flash-Lite free request tier. This app needs roughly <strong>240 a month</strong>. Same adapter accepts Anthropic's web-search tool or OpenAI's if you'd rather pay for a different voice.</p>
+    </div>
+    <div class="card">
+      <div class="role">Free backup &mdash; retrieval only</div>
+      <h5>Exa, or Serper</h5>
+      <p><strong>Exa</strong> refills ~$10 of credits monthly with no card on file, so an overrun is impossible by construction &mdash; the safest thing to prototype against. <strong>Serper</strong> gives 2,500 free queries then roughly $0.30&ndash;$1 per 1,000, which at this volume is pennies.</p>
+      <p>Both return links and snippets and leave ranking to you &mdash; so something still has to read the pages and decide what's trending. Use as the retrieval half of a hybrid, or as the failover when grounding quota runs out.</p>
+    </div>
+    <div class="card">
+      <div class="role">Enrichment, not trends</div>
+      <h5>TheCocktailDB &amp; friends</h5>
+      <p>Useful for canonical ingredients, glassware, and images once a drink name is known. <strong>Not a trend source</strong> &mdash; a static recipe database has no concept of what bars are pouring this month. Use it to fill in the ingredient chips, never to rank.</p>
+      <p><strong>Free with the public test key</strong> for development; a one-off premium key is required to ship publicly on an app store. That fee is the only unavoidable API cost in the whole build, and it buys enrichment, not trends &mdash; so it stays optional.</p>
+    </div>
+  </div>
+  <p class="prose"><strong>The build:</strong> search-with-citations for the ranking and the "why," then enrich each name against the local catalog and a recipe API for ingredient chips. If enrichment fails, the card still renders &mdash; name, reason, and sources are the required fields.</p>
+
+  <div class="lab">Running it on $0</div>
+  <p class="prose">The cache is what makes this free. Because the proxy stores one shared result per region, upstream volume is set by the <em>refresh schedule</em>, not by how many people open the app &mdash; four regions refreshed twice a day is <strong>8 upstream calls, about 240 a month, whether you have 10 users or 100,000</strong>. Every number below is a free-tier ceiling.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Piece</th><th>Free allowance</th><th>This app uses</th><th>Headroom</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Cloudflare Workers</strong><br><span class="ty">the proxy</span></td><td>100,000 requests/day</td><td>1 per app open<br><span class="ty">all cache hits</span></td><td>~100k opens/day</td></tr>
+      <tr><td><strong>Workers KV</strong><br><span class="ty">the cache</span></td><td>100k reads &amp; 1,000 writes/day, 1&nbsp;GB</td><td>8 writes/day<br><span class="ty">4 regions &times; 2 refreshes</span></td><td>125&times; on writes</td></tr>
+      <tr><td><strong>Gemini grounding</strong><br><span class="ty">search + citations</span></td><td>~5,000 grounded prompts/month</td><td>~240/month</td><td>20&times;</td></tr>
+      <tr><td><strong>Exa</strong><br><span class="ty">failover retrieval</span></td><td>~$10 credits/month, refilled, no card</td><td>0 unless grounding fails</td><td>overrun impossible</td></tr>
+      <tr><td><strong>TheCocktailDB</strong><br><span class="ty">enrichment</span></td><td>free test key in dev</td><td>cached per drink name</td><td>one-off fee to ship publicly</td></tr>
+    </tbody>
+  </table></div>
+  <div class="flag note"><b>What "free" doesn't cover</b>
+    <p><strong>Store fees are the real cost of shipping native:</strong> Apple's developer program is ~$99/year and Google Play is a one-time ~$25. Nothing in the architecture avoids that. Shipping the Expo <em>web</em> build as an installable PWA does &mdash; static hosting is free on Cloudflare Pages, and it is the genuinely $0 path to putting this in someone's hand at a party.</p>
+    <p><strong>The self-hosted floor:</strong> a SearXNG instance removes every third party, but you are then running and maintaining a search server, and result quality and uptime become your problem. Only worth it if avoiding vendors is itself the goal.</p></div>
+
+  <div class="lab">Query strategy</div>
+  <p class="prose">Fan out across several phrasings rather than trusting one query, then merge. Year and quarter are injected at runtime, never hardcoded &mdash; a stale year is the most common way this kind of feature silently rots.</p>
+  <pre class="frame">Q1  "top trending cocktails global bars {year}"
+Q2  "cocktail trends {quarter} {year} bartenders"
+Q3  "World's 50 Best Bars {year} signature cocktails"
+Q4  "most ordered cocktails {region} bars {year}"
+Q5  "{year} drink trends" site-biased toward bar & drinks trade press
+Q6  <i>zero-proof variant:</i> "non-alcoholic cocktail trends {year}"
+
+merge → normalize names (case, "the", punctuation, known aliases)
+      → cluster near-duplicates ("Spicy Marg" = "Spicy Margarita")
+      → drop anything published &gt; 12 months ago
+      → drop anything with zero resolvable URLs</pre>
+
+  <div class="lab">Ranking</div>
+  <ul class="dash">
+    <li><strong>Independent-source count</strong> is the dominant term &mdash; a drink named by four unrelated publishers outranks one with a single enthusiastic write-up.</li>
+    <li><strong>Recency decay</strong> over the last 12 months.</li>
+    <li><strong>Publisher weight:</strong> drinks trade press and bar-industry awards above general lifestyle aggregators, which are frequently recycling each other.</li>
+    <li><strong>Confidence label:</strong> 3+ independent sources = normal card. 1&ndash;2 = the card renders with a <em>"single source"</em> tag rather than being hidden, so the user judges it.</li>
+    <li><strong>No bar recommendations</strong> unless a source names the bar. The feature surfaces <em>drinks</em>; venue claims require an explicit citation on that specific claim or they are dropped upstream.</li>
+  </ul>
+
+  <div class="lab">Citation display</div>
+  <div class="srcdemo">
+    <div class="rk">TRENDING &nbsp;#1</div>
+    <h5>Watermelon Mint Cooler</h5>
+    <p>Named in 3 of 5 bar-trend roundups this month; cited alongside the wider low-ABV shift.</p>
+    <span class="live">Live &middot; retrieved 2h ago</span>
+    <div class="src">Sources<br><u>Punch</u> &mdash; "Summer cocktail trends" &middot; 12 Aug<br><u>Difford's Guide</u> &mdash; "What bars are pouring" &middot; 20 Aug<br><u>Imbibe</u> &mdash; "Low-ABV report" &middot; 03 Aug</div>
+  </div>
+  <ul class="dash">
+    <li><strong>Every card carries a retrieval timestamp</strong>, live or stale. There is no state where the feed looks current and isn't.</li>
+    <li><strong>Publisher name is always visible</strong> on the card &mdash; not hidden behind a tap. Titles and dates live in the source sheet.</li>
+    <li><strong>Links open in the system browser</strong> with their original URL. No redirect wrapper, no reader-mode reproduction of the article.</li>
+    <li><strong>Server-side guardrail:</strong> the proxy drops any item whose sources array is empty before it ever reaches a device. The client has no code path that renders an uncited card.</li>
+  </ul>
+
+  <div class="lab">Caching &amp; cost</div>
+  <div class="scroll"><table>
+    <thead><tr><th>Layer</th><th>TTL</th><th>Behavior</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Server KV</strong></td><td>6&ndash;12h per region</td><td>One upstream call serves every user in the window. Scheduled warm at 06:00 local per region so the cache is never cold at peak</td></tr>
+      <tr><td><strong>Client query cache</strong></td><td>24h, persisted</td><td>Opens offline with a dated banner</td></tr>
+      <tr><td><strong>Manual refresh</strong></td><td>1 / 10 min / device</td><td>429 re-serves cache silently &mdash; a rate limit is not an error the user should see</td></tr>
+      <tr><td><strong>Stale-if-error</strong></td><td>up to 7 days</td><td>Upstream failure serves old data with <code>degraded:true</code>; past 7 days the feed shows the honest empty state</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="phase" id="p6">
+  <div class="phase-head"><span class="num">06</span><div><h2>Suggested build order</h2>
+  <p class="phase-sub">Each milestone is independently demoable, and the offline core is complete before any network work starts.</p></div></div>
+  <ol class="steps" style="--c:var(--lime)">
+    <li><strong>Shell + age gate + seeded catalog.</strong> Tabs, tokens, SQLite migrations, the bundled catalog landing in the DB. Nothing to show but everything downstream depends on it.</li>
+    <li><strong>My Kit CRUD.</strong> First real demo: add, level, delete, undo, starter kit.</li>
+    <li><strong>Shaker.</strong> The matching algorithm and all three fallback states. Ship the fallbacks in the same milestone &mdash; they are the feature, not an edge case.</li>
+    <li><strong>Drink Book.</strong> Editor, grid, Surprise Me, catalog-resolving autocomplete.</li>
+    <li><strong>Explore.</strong> Mostly read-only over data that already exists by now.</li>
+    <li><strong>Trending.</strong> Proxy first with a hardcoded fixture, then the live adapter, then the cache and degraded states.</li>
+    <li><strong>Polish.</strong> Motion, haptics, reduced-motion path, Dynamic Type audit, contrast pass.</li>
+  </ol>
+  <div class="flag note"><b>Still open</b>
+    <p>Multi-device sync (currently local-only by design &mdash; adding accounts changes the privacy story and the backend). Sharing a kit between guests at the same party. Shopping-list export from the "one bottle away" fallback. Whether the seed recipe library ships bundled or downloads on first run.</p></div>
+</section>
+
+<footer>
+  The Drink Shaker &mdash; architecture &amp; specification draft v0.1<br>
+  Phases 1&ndash;5 are specification only; no implementation code is included by design.<br>
+  Search-provider availability should be re-verified before Phase 5 begins.
+</footer>
+</div>
+
+<nav class="pill" aria-label="Spec sections">
+  <ul>
+    <li><a href="#p0"><i>00</i>Assume</a></li>
+    <li><a href="#p1" class="on"><i>01</i>Stack</a></li>
+    <li><a href="#p2"><i>02</i>Models</a></li>
+    <li><a href="#p3"><i>03</i>Features</a></li>
+    <li><a href="#p4"><i>04</i>UI/UX</a></li>
+    <li><a href="#p5"><i>05</i>Trending</a></li>
+    <li><a href="#p6"><i>06</i>Order</a></li>
+  </ul>
+</nav>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.pill a'));
+  var secs = links.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      var i = secs.indexOf(e.target);
+      if(i < 0) return;
+      links.forEach(function(a){ a.classList.remove('on'); });
+      links[i].classList.add('on');
+      links[i].scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+    });
+  }, {rootMargin:'-15% 0px -70% 0px'});
+  secs.forEach(function(s){ if(s) obs.observe(s); });
+})();
+</script>
