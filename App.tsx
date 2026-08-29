@@ -3,11 +3,12 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  useFonts,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
-} from '@expo-google-fonts/nunito';
+// Imported by weight, not from the package root — the root re-exports all 18
+// Nunito faces and the bundler ships every one of them (~2.4 MB) even though
+// the app uses two.
+import { useFonts } from 'expo-font';
+import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
+import { Nunito_800ExtraBold } from '@expo-google-fonts/nunito/800ExtraBold';
 
 import { C } from './src/theme';
 import { DataProvider, useData } from './src/store';

@@ -46,6 +46,28 @@ blocked by things genuinely not on the shelf: fresh mint, orange juice,
 grapefruit juice, cachaça, jalapeño, basil, cucumber, watermelon, lemonade,
 espresso, cranberry, worcestershire and hot sauce.
 
+## Hosting on Vercel
+
+`vercel.json` is configured: build `npx expo export --platform web`, serve
+`dist/`, SPA rewrites, and immutable caching on hashed assets.
+
+Easiest path is importing the GitHub repo at vercel.com/new — it reads
+`vercel.json`, needs no dashboard settings, and redeploys on every push to
+`main`. Or from this folder:
+
+```bash
+npx vercel --prod
+```
+
+The web build stores everything in `localStorage`, so it is per-browser and
+per-device: whoever opens the link gets their own kit and book, and nothing is
+shared or uploaded. That is the right model for a link you pass around, but it
+is not sync — the phone build with real SQLite is still the primary target.
+
+Bundle is ~0.93 MB. Note that fonts are imported by weight
+(`@expo-google-fonts/nunito/800ExtraBold`) rather than from the package root,
+which re-exports all 18 faces and adds ~2.4 MB of unused ttf to the export.
+
 ## Layout
 
 ```

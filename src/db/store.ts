@@ -1,41 +1,32 @@
-import { Platform } from 'react-native';
+import * as SQLite from 'expo-sqlite';
 import { DrinkRecipe, InventoryItem, Prefs } from '../types';
 import { SEED_RECIPES } from '../data/recipes';
 
 /**
- * Persistence.
+ * Persistence — native.
  *
- * Native uses expo-sqlite with real tables, as specced. Web falls back to
- * localStorage — expo-sqlite on web needs a wasm pipeline that buys nothing at
- * this data size, and the web build exists so the app can be checked in a
- * browser, not as the primary target.
- *
- * Both implementations satisfy the same exported functions, so nothing above
- * this file knows which one is running.
+ * Metro resolves `store.web.ts` instead of this file on web, which is what
+ * keeps expo-sqlite's native module out of the web bundle entirely. Both files
+ * export the same functions, so nothing above this layer knows the difference.
  */
 
 const SCHEMA_VERSION = 1;
-const isWeb = Platform.OS === 'web';
 
-// ── Native: expo-sqlite ────────────────────────────────────────────────────
+let db: SQLite.SQLiteDatabase | null = null;
 
-let db: any = null;
-
-function sqlite() {
+function sqlite(): SQLite.SQLiteDatabase {
   if (!db) {
-    const SQLite = require('expo-sqlite');
     db = SQLite.openDatabaseSync('shaker.db');
-    migrate();
+    migrate(db);
   }
   return db;
 }
 
-function migrate() {
-  const row = db.getFirstSync('PRAGMA user_version') as { user_version: number } | null;
-  const current = row?.user_version ?? 0;
-  if (current >= SCHEMA_VERSION) return;
+function migrate(handle: SQLite.SQLiteDatabase) {
+  const row = handle.getFirstSync('PRAGMA user_version') as { user_version: number } | null;
+  if ((row?.user_version ?? 0) >= SCHEMA_VERSION) return;
 
-  db.execSync(`
+  handle.execSync(`
     CREATE TABLE IF NOT EXISTS inventory (
       id TEXT PRIMARY KEY NOT NULL,
       catalogItemId TEXT,
@@ -75,29 +66,8 @@ function migrate() {
       value TEXT NOT NULL
     );
   `);
-  db.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+  handle.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
-
-// ── Web: localStorage ──────────────────────────────────────────────────────
-
-function lsGet<T>(key: string, fallback: T): T {
-  try {
-    const raw = globalThis.localStorage?.getItem('shaker:' + key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function lsSet(key: string, value: unknown) {
-  try {
-    globalThis.localStorage?.setItem('shaker:' + key, JSON.stringify(value));
-  } catch {
-    /* private mode, quota — the app still works, it just forgets */
-  }
-}
-
-// ── Row mapping ────────────────────────────────────────────────────────────
 
 function rowToRecipe(r: any): DrinkRecipe {
   return {
@@ -110,28 +80,14 @@ function rowToRecipe(r: any): DrinkRecipe {
   };
 }
 
-function rowToItem(r: any): InventoryItem {
-  return { ...r, isStaple: !!r.isStaple };
-}
-
 // ── Inventory ──────────────────────────────────────────────────────────────
 
 export function loadKit(): InventoryItem[] {
-  if (isWeb) return lsGet<InventoryItem[]>('kit', []);
-  return sqlite()
-    .getAllSync('SELECT * FROM inventory ORDER BY addedAt DESC')
-    .map(rowToItem);
+  const rows = sqlite().getAllSync('SELECT * FROM inventory ORDER BY addedAt DESC') as any[];
+  return rows.map((r) => ({ ...r, isStaple: !!r.isStaple }));
 }
 
 export function saveKitItem(item: InventoryItem) {
-  if (isWeb) {
-    const kit = lsGet<InventoryItem[]>('kit', []);
-    const i = kit.findIndex((k) => k.id === item.id);
-    if (i >= 0) kit[i] = item;
-    else kit.unshift(item);
-    lsSet('kit', kit);
-    return;
-  }
   sqlite().runSync(
     `INSERT INTO inventory
        (id, catalogItemId, name, category, brand, level, isStaple, icon, addedAt, updatedAt)
@@ -141,56 +97,17 @@ export function saveKitItem(item: InventoryItem) {
        level=excluded.level, isStaple=excluded.isStaple, icon=excluded.icon,
        updatedAt=excluded.updatedAt`,
     [
-      item.id,
-      item.catalogItemId,
-      item.name,
-      item.category,
-      item.brand,
-      item.level,
-      item.isStaple ? 1 : 0,
-      item.icon,
-      item.addedAt,
-      item.updatedAt,
+      item.id, item.catalogItemId, item.name, item.category, item.brand,
+      item.level, item.isStaple ? 1 : 0, item.icon, item.addedAt, item.updatedAt,
     ]
   );
 }
 
 export function deleteKitItem(id: string) {
-  if (isWeb) {
-    lsSet('kit', lsGet<InventoryItem[]>('kit', []).filter((k) => k.id !== id));
-    return;
-  }
   sqlite().runSync('DELETE FROM inventory WHERE id = ?', [id]);
 }
 
 // ── Recipes ────────────────────────────────────────────────────────────────
-
-/**
- * Loads recipes, adding any seed recipes the store has not seen before.
- *
- * Merging by id rather than seeding once means a library added in a later
- * release actually reaches people who already opened the app — while edits to
- * an existing recipe, seed or not, are never overwritten.
- */
-export function loadRecipes(): DrinkRecipe[] {
-  if (isWeb) {
-    const stored = lsGet<DrinkRecipe[]>('recipes', []);
-    const known = new Set(stored.map((r) => r.id));
-    const missing = SEED_RECIPES.filter((r) => !known.has(r.id));
-    if (missing.length === 0) return stored;
-    const merged = [...missing, ...stored];
-    lsSet('recipes', merged);
-    return merged;
-  }
-
-  const db = sqlite();
-  const existing = db.getAllSync('SELECT id FROM recipes') as { id: string }[];
-  const known = new Set(existing.map((r) => r.id));
-  for (const r of SEED_RECIPES) {
-    if (!known.has(r.id)) insertRecipe(r);
-  }
-  return db.getAllSync('SELECT * FROM recipes ORDER BY createdAt DESC').map(rowToRecipe);
-}
 
 function insertRecipe(r: DrinkRecipe) {
   sqlite().runSync(
@@ -205,56 +122,47 @@ function insertRecipe(r: DrinkRecipe) {
        isZeroProof=excluded.isZeroProof, timesMade=excluded.timesMade,
        lastMadeAt=excluded.lastMadeAt, isFavorite=excluded.isFavorite`,
     [
-      r.id,
-      r.name,
-      r.origin,
-      r.method,
-      r.glass,
-      JSON.stringify(r.ingredients),
-      JSON.stringify(r.steps),
-      r.garnish,
-      JSON.stringify(r.vibeTags),
-      r.accent,
-      r.isZeroProof ? 1 : 0,
-      r.timesMade,
-      r.lastMadeAt,
-      r.isFavorite ? 1 : 0,
-      r.sourceUrl,
-      r.createdAt,
+      r.id, r.name, r.origin, r.method, r.glass,
+      JSON.stringify(r.ingredients), JSON.stringify(r.steps), r.garnish,
+      JSON.stringify(r.vibeTags), r.accent, r.isZeroProof ? 1 : 0,
+      r.timesMade, r.lastMadeAt, r.isFavorite ? 1 : 0, r.sourceUrl, r.createdAt,
     ]
   );
 }
 
-export function saveRecipe(recipe: DrinkRecipe) {
-  if (isWeb) {
-    const all = lsGet<DrinkRecipe[]>('recipes', []);
-    const i = all.findIndex((r) => r.id === recipe.id);
-    if (i >= 0) all[i] = recipe;
-    else all.unshift(recipe);
-    lsSet('recipes', all);
-    return;
+/**
+ * Adds any seed recipes the database has not seen before. Merging by id means
+ * a library added in a later release reaches people who already opened the
+ * app, while edits to an existing recipe are never overwritten.
+ */
+export function loadRecipes(): DrinkRecipe[] {
+  const handle = sqlite();
+  const existing = handle.getAllSync('SELECT id FROM recipes') as { id: string }[];
+  const known = new Set(existing.map((r) => r.id));
+  for (const r of SEED_RECIPES) {
+    if (!known.has(r.id)) insertRecipe(r);
   }
+  const rows = handle.getAllSync('SELECT * FROM recipes ORDER BY createdAt DESC') as any[];
+  return rows.map(rowToRecipe);
+}
+
+export function saveRecipe(recipe: DrinkRecipe) {
   insertRecipe(recipe);
 }
 
 export function deleteRecipe(id: string) {
-  if (isWeb) {
-    lsSet('recipes', lsGet<DrinkRecipe[]>('recipes', []).filter((r) => r.id !== id));
-    return;
-  }
   sqlite().runSync('DELETE FROM recipes WHERE id = ?', [id]);
 }
 
 // ── Prefs ──────────────────────────────────────────────────────────────────
 
-const DEFAULT_PREFS: Prefs = {
+export const DEFAULT_PREFS: Prefs = {
   ageGateAcceptedAt: null,
   zeroProofMode: false,
   allowSubstitutes: true,
 };
 
 export function loadPrefs(): Prefs {
-  if (isWeb) return { ...DEFAULT_PREFS, ...lsGet<Partial<Prefs>>('prefs', {}) };
   const rows = sqlite().getAllSync('SELECT * FROM prefs') as { key: string; value: string }[];
   const out: any = { ...DEFAULT_PREFS };
   for (const row of rows) {
@@ -268,13 +176,9 @@ export function loadPrefs(): Prefs {
 }
 
 export function savePrefs(prefs: Prefs) {
-  if (isWeb) {
-    lsSet('prefs', prefs);
-    return;
-  }
-  const db = sqlite();
+  const handle = sqlite();
   for (const [key, value] of Object.entries(prefs)) {
-    db.runSync(
+    handle.runSync(
       'INSERT INTO prefs (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
       [key, JSON.stringify(value)]
     );
