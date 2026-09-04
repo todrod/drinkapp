@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { C, CATEGORY_COLOR, F, R, S } from '../theme';
+import { C, CATEGORY_COLOR, F, GLASS, R, S, SHADOW } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   Body,
   Chip,
@@ -22,7 +23,7 @@ import {
   Panel,
   PrimaryButton,
   QuantityBar,
-  Title,
+  Wordmark,
 } from '../components/ui';
 import { useData } from '../store';
 import { CATALOG } from '../data/catalog';
@@ -83,7 +84,7 @@ export function CabinetScreen() {
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
-          <Title style={{ flex: 1, fontSize: 24, letterSpacing: 1 }}>MY CABINET</Title>
+          <Wordmark style={{ flex: 1, fontSize: 21, letterSpacing: 4.5 }}>MY CABINET</Wordmark>
           <Pressable
             onPress={() => setSettings(true)}
             hitSlop={10}
@@ -296,7 +297,13 @@ function ItemCard({
   onRemove: () => void;
 }) {
   return (
-    <View style={[styles.card, item.level === 'out' && { opacity: 0.5 }]}>
+    <LinearGradient
+      colors={GLASS.card}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={[styles.card, item.level === 'out' ? { opacity: 0.45 } : null]}
+    >
+      <View style={styles.cardEdge} pointerEvents="none" />
       <Pressable
         onPress={onRemove}
         hitSlop={8}
@@ -315,7 +322,7 @@ function ItemCard({
       </Text>
       <Text style={styles.cardMeta}>Remaining quantity</Text>
       <QuantityBar level={item.level} onChange={onLevel} />
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -505,9 +512,18 @@ const styles = StyleSheet.create({
     borderRadius: R.md,
     borderWidth: 1,
     borderColor: C.line,
-    backgroundColor: C.glass,
     padding: S.md,
     gap: 5,
+    overflow: 'hidden',
+    ...SHADOW.card,
+  },
+  cardEdge: {
+    position: 'absolute',
+    top: 0,
+    left: 14,
+    right: 14,
+    height: 1,
+    backgroundColor: C.edge,
   },
   cardX: { position: 'absolute', top: 6, right: 6, padding: 6, zIndex: 2 },
 

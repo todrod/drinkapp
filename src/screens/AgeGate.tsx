@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     borderColor: C.line2,
     borderRadius: R.sm,
     color: C.text,
-    fontFamily: F.display,
+    fontFamily: F.semibold,
     fontSize: 26,
     letterSpacing: 6,
     textAlign: 'center',

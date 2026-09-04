@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { accentOf, C, F, R, S } from '../theme';
+import { accentOf, C, F, GLASS, R, S, SHADOW } from '../theme';
 import {
   Body,
   Chip,
@@ -22,8 +22,10 @@ import {
   Label,
   Panel,
   PrimaryButton,
+  Press,
   Stars,
   Title,
+  Wordmark,
 } from '../components/ui';
 import { useData } from '../store';
 import { CATALOG } from '../data/catalog';
@@ -82,7 +84,7 @@ export function RecipesScreen() {
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
-          <Title style={{ flex: 1, fontSize: 24, letterSpacing: 1 }}>RECIPE LIBRARY</Title>
+          <Wordmark style={{ flex: 1, fontSize: 21, letterSpacing: 4.5 }}>RECIPE LIBRARY</Wordmark>
           <Pressable
             onPress={() => setEditing(blankRecipe())}
             hitSlop={10}
@@ -154,12 +156,14 @@ export function RecipesScreen() {
               const total = r.ingredients.filter((i) => !i.isOptional).length;
               const have = total - m.missing.length - m.softMissing.length;
               return (
-                <Pressable
+                <Press
                   key={r.id}
                   onPress={() => setDetail(r)}
+                  scaleTo={0.965}
                   accessibilityRole="button"
-                  style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+                  style={styles.card}
                 >
+                  <View style={styles.cardEdge} pointerEvents="none" />
                   <LinearGradient
                     colors={[accentOf(r.accent) + 'AA', accentOf(r.accent) + '14']}
                     start={{ x: 0, y: 0 }}
@@ -201,7 +205,7 @@ export function RecipesScreen() {
                     <HaveCount have={have} total={total} />
                     <Dim style={{ fontSize: 10 }}>Tap to expand details</Dim>
                   </View>
-                </Pressable>
+                </Press>
               );
             })}
           </View>
@@ -440,7 +444,7 @@ function Editor({
               onChangeText={(t) => setDraft({ ...draft, name: t })}
               placeholder="What do you call it?"
               placeholderTextColor={C.faint}
-              style={[styles.search, { fontSize: 19, fontFamily: F.display }]}
+              style={[styles.search, { fontSize: 19, fontFamily: F.semibold }]}
               accessibilityLabel="Recipe name"
             />
 
@@ -615,8 +619,18 @@ const styles = StyleSheet.create({
     borderRadius: R.md,
     borderWidth: 1,
     borderColor: C.line,
-    backgroundColor: C.glass,
+    backgroundColor: 'rgba(190,250,246,0.05)',
     overflow: 'hidden',
+    ...SHADOW.card,
+  },
+  cardEdge: {
+    position: 'absolute',
+    top: 0,
+    left: 14,
+    right: 14,
+    height: 1,
+    backgroundColor: C.edge,
+    zIndex: 3,
   },
   cardArt: { height: 96, alignItems: 'center', justifyContent: 'center' },
 
@@ -632,7 +646,7 @@ const styles = StyleSheet.create({
   },
   themeTagText: { color: C.text, fontSize: 8.5, fontWeight: '800', letterSpacing: 0.4 },
   cardBody: { padding: S.md, gap: 4 },
-  cardName: { color: C.text, fontFamily: F.display, fontSize: 12.5, letterSpacing: 0.3, lineHeight: 15, minHeight: 30 },
+  cardName: { color: C.text, fontFamily: F.semibold, fontSize: 12.5, letterSpacing: 0.3, lineHeight: 15, minHeight: 30 },
 
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: {

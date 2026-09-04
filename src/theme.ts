@@ -1,33 +1,80 @@
+import { Platform } from 'react-native';
+
 // Design tokens.
 //
-// Teal-on-near-black, after the Mixologist reference: one aqua primary, a
-// smoky blue-black ground, and warm accents held back for state (low stock,
-// destructive) rather than decoration.
+// Teal-on-near-black. The look leans on four things rather than colour alone:
+// layered translucency, a light edge on every raised surface, real shadow, and
+// a grain overlay — flat fills on flat ground are what read as unfinished.
 
 export const C = {
-  ink: '#070B11',
-  ink2: '#0B1219',
-  panel: '#101A22',
-  raise: '#17242E',
+  // Ground gets three steps so panels can sit *on* something rather than float
+  // on one flat colour.
+  ink: '#05090D',
+  ink2: '#080E14',
+  ink3: '#0B141B',
+  panel: '#0F1A22',
+  raise: '#152430',
 
-  line: 'rgba(140, 220, 220, 0.10)',
-  line2: 'rgba(140, 220, 220, 0.22)',
-  glass: 'rgba(190, 245, 245, 0.045)',
+  line: 'rgba(150, 226, 224, 0.09)',
+  line2: 'rgba(150, 226, 224, 0.20)',
+  /** The 1px light catch along the top of a raised surface. */
+  edge: 'rgba(190, 250, 246, 0.16)',
+  /** Flat translucent fill for surfaces that do not warrant a gradient. */
+  glass: 'rgba(190, 250, 246, 0.05)',
 
-  text: '#E6F1F4',
-  dim: '#8FA8B2',
-  faint: '#5C7480',
+  text: '#EAF4F6',
+  dim: '#93AEB7',
+  faint: '#5D7783',
 
-  teal: '#35D6C4', // primary — the only "press me" colour
-  tealSoft: '#6EE7DB',
-  tealDeep: '#1B8C86',
-  cyan: '#5BC8E8', // information, live state
-  amber: '#E8B54A', // low stock, warnings
-  rose: '#E86A8A', // destructive, missing
-  violet: '#9D8CF0', // themed collections
+  teal: '#2FD4C6',
+  tealSoft: '#7BEFE2',
+  tealDeep: '#12706C',
+  cyan: '#54C7EA',
+  amber: '#E5B457',
+  gold: '#C9A227',
+  rose: '#E86A8C',
+  violet: '#9E8CF2',
 } as const;
 
-// Per-drink card accents, retuned to sit inside the aqua palette.
+/** Translucent fills for glass surfaces, lightest at the top of the stack. */
+export const GLASS = {
+  card: ['rgba(190, 250, 246, 0.075)', 'rgba(190, 250, 246, 0.018)'] as const,
+  raised: ['rgba(190, 250, 246, 0.11)', 'rgba(190, 250, 246, 0.03)'] as const,
+  sheet: ['rgba(22, 40, 50, 0.96)', 'rgba(10, 20, 27, 0.98)'] as const,
+};
+
+/**
+ * Shadows.
+ *
+ * React Native Web does not honour `shadowRadius`, so the native shadow props
+ * render as a hard offset rectangle rather than a blur. Web gets a real
+ * `boxShadow` string instead; native keeps the props it understands.
+ */
+const rgba = (hex: string, a: number) => {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+};
+
+function shadow(color: string, opacity: number, radius: number, y: number, elevation: number) {
+  if (Platform.OS === 'web') {
+    return { boxShadow: `0px ${y}px ${radius}px ${rgba(color, opacity)}` } as any;
+  }
+  return {
+    shadowColor: color,
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    shadowOffset: { width: 0, height: y },
+    elevation,
+  };
+}
+
+export const SHADOW = {
+  card: shadow('#000000', 0.45, 18, 10, 6),
+  lift: shadow('#000000', 0.55, 28, 16, 12),
+  glow: (color: string, strength = 0.55) => shadow(color, strength, 20, 0, 8),
+};
+
 export const ACCENTS = [C.teal, C.cyan, C.violet, C.amber, C.rose];
 
 export const CATEGORY_COLOR: Record<string, string> = {
@@ -49,7 +96,6 @@ export const LEVEL_COLOR: Record<string, string> = {
   out: C.faint,
 };
 
-/** Fraction of the quantity bar each level fills. */
 export const LEVEL_FILL: Record<string, number> = {
   full: 1,
   half: 0.6,
@@ -57,11 +103,6 @@ export const LEVEL_FILL: Record<string, number> = {
   out: 0.04,
 };
 
-/**
- * Recipe accents were authored against the previous lime/magenta palette and
- * are persisted in the database, so they cannot simply be edited in the data
- * files. Map them at render time instead.
- */
 const LEGACY_ACCENT: Record<string, string> = {
   '#C6FF3D': C.teal,
   '#33E6FF': C.cyan,
@@ -69,25 +110,40 @@ const LEGACY_ACCENT: Record<string, string> = {
   '#FFB43D': C.amber,
   '#A855F7': C.violet,
   '#EAEDF6': C.tealSoft,
+  '#35D6C4': C.teal,
+  '#6EE7DB': C.tealSoft,
+  '#5BC8E8': C.cyan,
+  '#E8B54A': C.amber,
+  '#E86A8A': C.rose,
+  '#9D8CF0': C.violet,
 };
 
 export const accentOf = (hex: string): string =>
   LEGACY_ACCENT[(hex || '').toUpperCase()] ?? hex;
 
-export const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
-export const R = { sm: 10, md: 14, lg: 20, xl: 26, pill: 999 } as const;
+export const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 36 } as const;
+export const R = { sm: 10, md: 16, lg: 22, xl: 30, pill: 999 } as const;
 
+/**
+ * Outfit — geometric, and available in weights light enough for the wide
+ * letter-spaced treatment the design calls for. The previous rounded
+ * extra-bold face was working against it.
+ */
 export const F = {
-  display: 'Nunito_800ExtraBold',
-  displayMid: 'Nunito_700Bold',
-  body: undefined as string | undefined,
+  light: 'Outfit_300Light',
+  regular: 'Outfit_400Regular',
+  medium: 'Outfit_500Medium',
+  semibold: 'Outfit_600SemiBold',
+  bold: 'Outfit_700Bold',
 };
 
 export const type = {
-  h1: { fontSize: 30, lineHeight: 34, letterSpacing: -0.4 },
-  h2: { fontSize: 23, lineHeight: 27, letterSpacing: -0.3 },
-  h3: { fontSize: 18, lineHeight: 23, letterSpacing: -0.2 },
-  body: { fontSize: 15, lineHeight: 22 },
-  small: { fontSize: 13, lineHeight: 18 },
-  label: { fontSize: 11, letterSpacing: 1.5 },
+  wordmark: { fontFamily: F.light, fontSize: 30, letterSpacing: 7 },
+  h1: { fontFamily: F.semibold, fontSize: 26, lineHeight: 31, letterSpacing: 0.4 },
+  h2: { fontFamily: F.semibold, fontSize: 21, lineHeight: 26, letterSpacing: 0.2 },
+  h3: { fontFamily: F.medium, fontSize: 17, lineHeight: 22 },
+  body: { fontFamily: F.regular, fontSize: 15, lineHeight: 22 },
+  small: { fontFamily: F.regular, fontSize: 13, lineHeight: 18 },
+  label: { fontFamily: F.semibold, fontSize: 10.5, letterSpacing: 1.8 },
+  mono: { fontFamily: F.medium, fontSize: 11, letterSpacing: 0.6 },
 } as const;

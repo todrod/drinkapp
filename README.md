@@ -160,6 +160,35 @@ exposes one set of functions, so no screen knows which is running.
 Teal-on-near-black, one aqua primary, warm accents held back for state. Tokens
 live in `src/theme.ts`.
 
+What stops it reading as flat vector, in rough order of impact:
+
+- **Atmosphere** (`src/components/Atmosphere.tsx`) — three drifting radial
+  colour fields plus a grain overlay at 3.5%. The grain is the single biggest
+  contributor; flat fills on flat ground are most of what looks unfinished.
+  Radial gradients come from react-native-svg because expo-linear-gradient is
+  linear only, and a hard-edged disc reads as a shape rather than light.
+- **A light edge on every raised surface** — a 1px inset highlight along the
+  top. Without it a translucent rectangle just looks like a lighter rectangle.
+- **Type** — Outfit, whose light weights suit the wide letter-spaced treatment.
+  The previous rounded extra-bold face was fighting the design.
+- **Spring press physics** on every target (`Press` in `ui.tsx`) rather than an
+  opacity flash.
+- **A tab bar with one sliding indicator** instead of four independent
+  highlights, so it reads as a single object.
+
+Two web-specific traps, both hit and fixed:
+
+1. React Native Web ignores `shadowRadius`, so native shadow props render as a
+   hard offset rectangle. `SHADOW` in `theme.ts` emits a real `boxShadow`
+   string on web and keeps the native props elsewhere.
+2. A glow must sit on an element that already has the border radius. On a
+   square parent the halo stops at the rectangle and the pill's corners show as
+   dark notches.
+
+**Deliberately not used: react-native-skia.** It is the obvious reach for
+shaders and real blur, but on web it loads CanvasKit — 2.9 MB of wasm, more
+than double the entire current bundle. Everything above costs nothing.
+
 Recipe accents were authored against an earlier lime/magenta palette and are
 persisted in the database, so they cannot simply be edited in the data files —
 `accentOf()` maps the legacy hexes onto the current palette at render time.

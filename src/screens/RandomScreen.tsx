@@ -486,14 +486,14 @@ const styles = StyleSheet.create({
   scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130, gap: S.lg },
   masthead: { alignItems: 'center', gap: 4 },
   wordmark: {
-    fontFamily: F.display,
+    fontFamily: F.light,
     fontSize: 30,
-    letterSpacing: 3,
+    letterSpacing: 7,
     color: C.text,
-    textShadowColor: 'rgba(53,214,196,0.5)',
-    textShadowRadius: 18,
+    textShadowColor: 'rgba(47,212,198,0.55)',
+    textShadowRadius: 22,
   },
-  tagline: { color: C.dim, fontSize: 10.5, letterSpacing: 2.6, fontWeight: '700' },
+  tagline: { color: C.dim, fontFamily: F.regular, fontSize: 10, letterSpacing: 3.4 },
 
   orbWrap: { alignItems: 'center', justifyContent: 'center', height: ORB + 24 },
   orbGlow: { position: 'absolute', backgroundColor: C.teal },
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
   orbMark: {
-    fontFamily: F.display,
+    fontFamily: F.semibold,
     fontSize: 76,
     color: '#EAFFFB',
     textShadowColor: 'rgba(53,214,196,0.8)',
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  resultName: { color: C.text, fontFamily: F.display, fontSize: 19, lineHeight: 23 },
+  resultName: { color: C.text, fontFamily: F.semibold, fontSize: 19, lineHeight: 23 },
   resultBody: {
     paddingHorizontal: S.md,
     paddingBottom: S.md,

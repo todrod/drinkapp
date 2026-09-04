@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { accentOf, C, F, R, S } from '../theme';
+import { accentOf, C, F, R, S, SHADOW } from '../theme';
 import {
   Body,
   Chip,
@@ -14,7 +14,7 @@ import {
   Label,
   Panel,
   PrimaryButton,
-  Title,
+  Wordmark,
 } from '../components/ui';
 import { useData } from '../store';
 import { CATALOG_BY_ID } from '../data/catalog';
@@ -169,7 +169,7 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
   if (kit.length === 0) {
     return (
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Title style={styles.screenTitle}>DRINK BUILDER</Title>
+        <Wordmark style={styles.screenTitle}>DRINK BUILDER</Wordmark>
         <EmptyState
           icon="glass-cocktail"
           title="Nothing to build with"
@@ -182,7 +182,7 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Title style={styles.screenTitle}>DRINK BUILDER</Title>
+      <Wordmark style={styles.screenTitle}>DRINK BUILDER</Wordmark>
 
       {/* ── Stepper ─────────────────────────────────────────────────────── */}
       <View style={styles.stepper}>
@@ -390,7 +390,7 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
 
 const styles = StyleSheet.create({
   scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130, gap: S.md },
-  screenTitle: { fontSize: 24, letterSpacing: 1 },
+  screenTitle: { fontSize: 21, letterSpacing: 4.5 },
 
   stepper: { flexDirection: 'row', alignItems: 'center', marginVertical: S.sm },
   stepItem: { alignItems: 'center', gap: 5 },
@@ -442,6 +442,7 @@ const styles = StyleSheet.create({
   },
   tileOn: {
     borderColor: C.teal,
+    ...SHADOW.glow(C.teal, 0.45),
     backgroundColor: 'rgba(53,214,196,0.12)',
     shadowColor: C.teal,
     shadowOpacity: 0.5,

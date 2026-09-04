@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-// Imported by weight, not from the package root — the root re-exports all 18
-// Nunito faces and the bundler ships every one of them (~2.4 MB) even though
-// the app uses two.
+// Imported by weight, not from the package root — the root re-exports every
+// face in the family and the bundler ships all of them even though the app
+// uses four.
 import { useFonts } from 'expo-font';
-import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
-import { Nunito_800ExtraBold } from '@expo-google-fonts/nunito/800ExtraBold';
+import { Outfit_300Light } from '@expo-google-fonts/outfit/300Light';
+import { Outfit_400Regular } from '@expo-google-fonts/outfit/400Regular';
+import { Outfit_500Medium } from '@expo-google-fonts/outfit/500Medium';
+import { Outfit_600SemiBold } from '@expo-google-fonts/outfit/600SemiBold';
 
 import { C } from './src/theme';
 import { DataProvider, useData } from './src/store';
 import { NavPill, TabKey } from './src/components/NavPill';
+import { Atmosphere } from './src/components/Atmosphere';
 import { AgeGate } from './src/screens/AgeGate';
 import { RandomScreen } from './src/screens/RandomScreen';
 import { CabinetScreen } from './src/screens/CabinetScreen';
@@ -50,8 +52,10 @@ function Shell() {
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
+    Outfit_300Light,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
     // Subset icon face — see scripts/build-icon-font.py
     ShakerIcons: require('./assets/fonts/ShakerIcons.ttf'),
   });
@@ -60,20 +64,7 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <View style={styles.root}>
-        {/* Smoky bar-room ground, painted once behind everything. */}
-        <LinearGradient
-          colors={['#0C1A20', C.ink, '#0A1017']}
-          locations={[0, 0.5, 1]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={['rgba(53,214,196,0.14)', 'transparent']}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.6 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
+        <Atmosphere />
         {fontsLoaded ? (
           <DataProvider>
             <Shell />
