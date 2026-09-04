@@ -103,7 +103,19 @@ export function matchRecipe(
     }
   }
 
-  return { ok: missing.length === 0, substitutions, missing, softMissing };
+  // A recipe with nothing in it satisfies "every required ingredient resolves"
+  // vacuously, which let a half-written user recipe be served as a pourable
+  // drink reading "0/0 ON HAND". Pourable requires something to pour.
+  const pourable = recipe.ingredients.some(
+    (i) => !i.isOptional && HARD_ROLES.has(i.role)
+  );
+
+  return {
+    ok: pourable && missing.length === 0,
+    substitutions,
+    missing,
+    softMissing,
+  };
 }
 
 export interface GenerateOptions {

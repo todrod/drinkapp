@@ -24,7 +24,8 @@ export const C = {
 
   text: '#EAF4F6',
   dim: '#93AEB7',
-  faint: '#5D7783',
+  // 5.13:1 on the ground — the previous #5D7783 was 3.92 and failed AA.
+  faint: '#6E8B96',
 
   teal: '#2FD4C6',
   tealSoft: '#7BEFE2',
@@ -102,24 +103,6 @@ export const LEVEL_FILL: Record<string, number> = {
   low: 0.28,
   out: 0.04,
 };
-
-const LEGACY_ACCENT: Record<string, string> = {
-  '#C6FF3D': C.teal,
-  '#33E6FF': C.cyan,
-  '#FF3DBE': C.rose,
-  '#FFB43D': C.amber,
-  '#A855F7': C.violet,
-  '#EAEDF6': C.tealSoft,
-  '#35D6C4': C.teal,
-  '#6EE7DB': C.tealSoft,
-  '#5BC8E8': C.cyan,
-  '#E8B54A': C.amber,
-  '#E86A8A': C.rose,
-  '#9D8CF0': C.violet,
-};
-
-export const accentOf = (hex: string): string =>
-  LEGACY_ACCENT[(hex || '').toUpperCase()] ?? hex;
 
 export const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 36 } as const;
 export const R = { sm: 10, md: 16, lg: 22, xl: 30, pill: 999 } as const;

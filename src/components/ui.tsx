@@ -62,6 +62,7 @@ export function Press({
   disabled,
   scaleTo = 0.97,
   style,
+  hitSlop,
   ...a11y
 }: {
   children: React.ReactNode;
@@ -70,6 +71,7 @@ export function Press({
   disabled?: boolean;
   scaleTo?: number;
   style?: StyleProp<ViewStyle>;
+  hitSlop?: any;
   [key: string]: any;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -92,6 +94,7 @@ export function Press({
       disabled={disabled}
       onPressIn={() => to(scaleTo)}
       onPressOut={() => to(1)}
+      hitSlop={hitSlop}
       style={style}
       {...a11y}
     >
@@ -181,6 +184,9 @@ export function Chip({
       onPress={onPress}
       scaleTo={0.94}
       style={styles.pillRadius}
+      // Chips sit at ~34px tall by design; hitSlop brings the touch area up to
+      // the 44px guidance without inflating the visual.
+      hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
     >
@@ -377,16 +383,6 @@ export function QuantityBar({
           />
         ))}
       </View>
-    </View>
-  );
-}
-
-/** Small-caps label with a rule running off to the right. */
-export function SectionRule({ label, color = C.faint }: { label: string; color?: string }) {
-  return (
-    <View style={styles.ruleRow}>
-      <Text style={[styles.label, { color }]}>{label.toUpperCase()}</Text>
-      <View style={styles.ruleLine} />
     </View>
   );
 }

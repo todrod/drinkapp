@@ -172,15 +172,6 @@ const BY_KIND: Record<string, GlyphName> = {
   extra: 'party-popper',
 };
 
-export function glyphForCatalog(catalogId: string | null, category: Category): GlyphName {
-  if (catalogId) {
-    if (BY_ID[catalogId]) return BY_ID[catalogId];
-    const cat = CATALOG_BY_ID[catalogId];
-    if (cat && BY_KIND[cat.kind]) return BY_KIND[cat.kind];
-  }
-  return CATEGORY_GLYPH[category] ?? 'bottle-wine';
-}
-
 /** The big glyph on a recipe card — chosen by what it's served in. */
 export function glyphForRecipe(r: DrinkRecipe): GlyphName {
   if (r.method === 'blend') return 'blender';
