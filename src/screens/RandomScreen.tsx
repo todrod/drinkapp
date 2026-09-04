@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { accentOf, C, F, R, S } from '../theme';
+import { C, F, R, S } from '../theme';
+import { accentForRecipe } from '../data/liquids';
 import {
   Body,
   Chip,
@@ -344,11 +345,11 @@ function ResultCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <Panel accent={accentOf(recipe.accent)} style={{ padding: 0, overflow: 'hidden' }}>
+    <Panel accent={accentForRecipe(recipe)} style={{ padding: 0, overflow: 'hidden' }}>
       <Pressable onPress={() => setExpanded((v) => !v)} accessibilityRole="button">
         <View style={styles.resultTop}>
           <LinearGradient
-            colors={[accentOf(recipe.accent) + 'CC', accentOf(recipe.accent) + '22']}
+            colors={[accentForRecipe(recipe) + 'DD', accentForRecipe(recipe) + '22']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.thumb}
@@ -375,7 +376,7 @@ function ResultCard({
           <View style={{ marginTop: S.sm, gap: 5 }}>
             {recipe.ingredients.map((ing, i) => (
               <View key={i} style={styles.ingRow}>
-                <View style={[styles.dot, { backgroundColor: accentOf(recipe.accent) }]} />
+                <View style={[styles.dot, { backgroundColor: accentForRecipe(recipe) }]} />
                 <Body style={{ flex: 1 }}>{formatIngredient(ing)}</Body>
               </View>
             ))}

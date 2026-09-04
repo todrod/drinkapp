@@ -1,0 +1,62 @@
+{
+  "_note": "The style contract is the whole point. STYLE_SUFFIX is appended byte-identically to every prompt. Never edit it mid-batch — if you change it, regenerate everything or you get drift.",
+
+  "styleSuffix": "fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+
+  "shapes": {
+    "tall-slim":     "a tall slender unlabeled glass liquor bottle with a long neck and a black cap",
+    "tall-shoulder": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork",
+    "squat-round":   "a short wide round unlabeled glass bottle with broad shoulders and a stout cork stopper",
+    "flask-liqueur": "a small squared-off unlabeled decanter-style liqueur bottle with a flat stopper",
+    "bitters-dash":  "a very small unlabeled apothecary dasher bottle with a narrow dropper neck",
+    "mini":          "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap",
+    "can":           "a plain unlabeled aluminium beverage can",
+    "carton":        "a plain unlabeled beverage carton with a screw spout",
+    "jar":           "a small unlabeled glass jar with a metal lid"
+  },
+
+  "liquids": {
+    "clear":      { "desc": "filled with a colourless transparent liquid",        "hex": "#F2F6F5" },
+    "pale-gold":  { "desc": "filled with a pale straw-gold liquid",               "hex": "#E8C87A" },
+    "yellow":     { "desc": "filled with a bright lemon-yellow liquid",           "hex": "#E8D24A" },
+    "amber":      { "desc": "filled with a warm amber liquid",                    "hex": "#C77B32" },
+    "dark-brown": { "desc": "filled with a deep coffee-brown liquid",             "hex": "#6B3410" },
+    "black":      { "desc": "filled with a near-black opaque liquid",             "hex": "#241C18" },
+    "red":        { "desc": "filled with a deep ruby-red liquid",                 "hex": "#B0203A" },
+    "orange":     { "desc": "filled with a vivid burnt-orange liquid",            "hex": "#E2611E" },
+    "green":      { "desc": "filled with a translucent herbal green liquid",      "hex": "#4E7C3A" },
+    "cream":      { "desc": "filled with an opaque cream-coloured liquid",        "hex": "#E8DCC0" },
+    "pink":       { "desc": "filled with a pale rose-pink liquid",                "hex": "#D9738C" }
+  },
+
+  "glassware": {
+    "coupe":      "an empty coupe cocktail glass, shallow rounded bowl on a stem",
+    "rocks":      "an empty short heavy-bottomed rocks glass",
+    "collins":    "an empty tall narrow collins glass",
+    "martini":    "an empty V-shaped martini glass on a stem",
+    "flute":      "an empty tall narrow champagne flute",
+    "highball":   "an empty straight-sided highball glass",
+    "nick-nora":  "an empty small bell-shaped nick and nora glass on a short stem",
+    "mule-mug":   "an empty copper mule mug with a handle",
+    "hurricane":  "an empty curved hurricane glass with a flared rim",
+    "shot":       "an empty small straight shot glass"
+  },
+
+  "garnishes": {
+    "lemon-twist":     "a single curled lemon peel twist",
+    "orange-twist":    "a single curled orange peel twist",
+    "lime-wedge":      "a single lime wedge",
+    "lemon-wheel":     "a single thin lemon wheel slice",
+    "orange-wheel":    "a single thin orange wheel slice",
+    "cherry":          "a single dark cocktail cherry on a pick",
+    "olive":           "two green olives on a cocktail pick",
+    "mint-sprig":      "a single sprig of fresh mint leaves",
+    "pineapple-wedge": "a single pineapple wedge",
+    "cinnamon-stick":  "a single cinnamon stick",
+    "star-anise":      "a single star anise pod",
+    "nutmeg-grating":  "a light scatter of grated nutmeg",
+    "cucumber-ribbon": "a single thin cucumber ribbon",
+    "salt-rim":        "a crescent of coarse salt crystals forming a glass rim arc",
+    "sugar-rim":       "a crescent of fine sugar crystals forming a glass rim arc"
+  }
+}

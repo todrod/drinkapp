@@ -233,6 +233,39 @@ That gives ~150 distinct ingredient icons for a few kilobytes of code, with no
 image licensing, no network, and clean scaling. Each carries the teal-and-gold
 label band from the reference.
 
+## Generated bottle assets
+
+`scripts/assets/` is the image pipeline: 117 inventory items collapse to **74
+generated assets** (49 bottles as shape x liquid, 10 glasses, 15 garnishes),
+because nothing is generated per bottle.
+
+```bash
+cd scripts/assets
+node generate-assets.mjs plan          # free, no API calls
+export IMAGE_API_KEY=...               # Google Generative Language
+node generate-assets.mjs generate --only=glass   # 10-image smoke test first
+```
+
+`generate` is a **billed run against an external API** and has not been
+executed — it needs your key. `plan` has been run and verified: 117 -> 74.
+
+Two things to know before running it:
+
+- The `styleSuffix` in `taxonomy.json` is what makes 74 separate generations
+  look like one set. Do not edit it between batches, or delete `out/` and
+  regenerate everything.
+- The bottles are deliberately unlabelled. Brand names go on as text at render
+  time — real labels are live trademarks.
+
+**Colour already uses this vocabulary.** `src/data/liquids.ts` holds the same
+eleven liquids as `taxonomy.json`, so a card, a bottle drawn in code and a
+rendered asset all agree on what "amber" is.
+
+One caveat found while wiring it up: card accents deliberately do *not* snap to
+those eleven. The canonical set is warm by design, so snapping sends
+juniper-blue gin to cream and the card washes out. Snapping is for matching a
+rendered asset; accents use the vivid `art.ts` value.
+
 ## How matching works
 
 `src/logic/generator.ts`. An ingredient resolves if the user owns its

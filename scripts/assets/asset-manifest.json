@@ -1,0 +1,763 @@
+{
+  "generatedAt": "2026-09-04T21:57:49.509Z",
+  "model": "gemini-2.5-flash-image",
+  "specs": [
+    {
+      "key": "bottle/flask-liqueur--pale-gold",
+      "kind": "bottle",
+      "shape": "flask-liqueur",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a small squared-off unlabeled decanter-style liqueur bottle with a flat stopper, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "drillaud-apricot"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--clear",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "clear",
+      "hex": "#F2F6F5",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a colourless transparent liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "luxardo-maraschino",
+        "bacardi-white",
+        "ocho-tequila",
+        "dekuyper-triple-sec",
+        "skyy-vodka",
+        "lychee-syrup",
+        "simple-syrup",
+        "wheatley-vodka",
+        "st-george-terroir",
+        "probitas"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--amber",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "amber",
+      "hex": "#C77B32",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a warm amber liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "evan-williams-cider",
+        "ej-apple-brandy",
+        "bacardi-anejo",
+        "plantation-5",
+        "smith-cross",
+        "el-dorado-12",
+        "black-velvet-caramel",
+        "four-roses"
+      ]
+    },
+    {
+      "key": "bottle/squat-round--cream",
+      "kind": "bottle",
+      "shape": "squat-round",
+      "liquid": "cream",
+      "hex": "#E8DCC0",
+      "prompt": "a short wide round unlabeled glass bottle with broad shoulders and a stout cork stopper, filled with an opaque cream-coloured liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "odonnells-irish-cream",
+        "baileys"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--pale-gold",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "st-germain",
+        "martini-rossi-dry",
+        "white-wine",
+        "dolin-dry"
+      ]
+    },
+    {
+      "key": "bottle/squat-round--dark-brown",
+      "kind": "bottle",
+      "shape": "squat-round",
+      "liquid": "dark-brown",
+      "hex": "#6B3410",
+      "prompt": "a short wide round unlabeled glass bottle with broad shoulders and a stout cork stopper, filled with a deep coffee-brown liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "kahlua"
+      ]
+    },
+    {
+      "key": "bottle/flask-liqueur--amber",
+      "kind": "bottle",
+      "shape": "flask-liqueur",
+      "liquid": "amber",
+      "hex": "#C77B32",
+      "prompt": "a small squared-off unlabeled decanter-style liqueur bottle with a flat stopper, filled with a warm amber liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "frangelico",
+        "disaronno"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--red",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "red",
+      "hex": "#B0203A",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a deep ruby-red liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "martini-rossi-rosso",
+        "red-wine"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--yellow",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "yellow",
+      "hex": "#E8D24A",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a bright lemon-yellow liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "limoncello",
+        "lawn-dart-lemon"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--dark-brown",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "dark-brown",
+      "hex": "#6B3410",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a deep coffee-brown liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "myers-dark",
+        "allspice-dram",
+        "hamilton-86",
+        "cruzan-5-dark",
+        "demerara-syrup"
+      ]
+    },
+    {
+      "key": "bottle/squat-round--clear",
+      "kind": "bottle",
+      "shape": "squat-round",
+      "liquid": "clear",
+      "hex": "#F2F6F5",
+      "prompt": "a short wide round unlabeled glass bottle with broad shoulders and a stout cork stopper, filled with a colourless transparent liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "barr-hill-gin",
+        "cointreau",
+        "hendricks-orbium",
+        "monkey-47",
+        "hendricks-solstice",
+        "tanqueray",
+        "drumshanbo"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--red",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "red",
+      "hex": "#B0203A",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a deep ruby-red liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "campari",
+        "grenadine"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--orange",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "orange",
+      "hex": "#E2611E",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a vivid burnt-orange liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "aperol",
+        "ferrand-dry-curacao",
+        "passion-fruit-syrup"
+      ]
+    },
+    {
+      "key": "bottle/squat-round--amber",
+      "kind": "bottle",
+      "shape": "squat-round",
+      "liquid": "amber",
+      "hex": "#C77B32",
+      "prompt": "a short wide round unlabeled glass bottle with broad shoulders and a stout cork stopper, filled with a warm amber liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "appleton-12",
+        "grand-marnier",
+        "buffalo-trace",
+        "papas-pilar",
+        "benedictine"
+      ]
+    },
+    {
+      "key": "bottle/squat-round--pale-gold",
+      "kind": "bottle",
+      "shape": "squat-round",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a short wide round unlabeled glass bottle with broad shoulders and a stout cork stopper, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "crown-royal-peach"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--dark-brown",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "dark-brown",
+      "hex": "#6B3410",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a deep coffee-brown liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "blandys-madeira",
+        "amaro-montenegro",
+        "cocchi-torino"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--pale-gold",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "butterscotch-schnapps",
+        "plum-brandy",
+        "velvet-falernum"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--black",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "black",
+      "hex": "#241C18",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with a near-black opaque liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "black-seal",
+        "fernet-branca"
+      ]
+    },
+    {
+      "key": "bottle/mini--black",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "black",
+      "hex": "#241C18",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a near-black opaque liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "underberg"
+      ]
+    },
+    {
+      "key": "bottle/carton--yellow",
+      "kind": "bottle",
+      "shape": "carton",
+      "liquid": "yellow",
+      "hex": "#E8D24A",
+      "prompt": "a plain unlabeled beverage carton with a screw spout, filled with a bright lemon-yellow liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "pineapple-juice"
+      ]
+    },
+    {
+      "key": "bottle/carton--pale-gold",
+      "kind": "bottle",
+      "shape": "carton",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a plain unlabeled beverage carton with a screw spout, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "lemon-juice"
+      ]
+    },
+    {
+      "key": "bottle/carton--dark-brown",
+      "kind": "bottle",
+      "shape": "carton",
+      "liquid": "dark-brown",
+      "hex": "#6B3410",
+      "prompt": "a plain unlabeled beverage carton with a screw spout, filled with a deep coffee-brown liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "black-tea"
+      ]
+    },
+    {
+      "key": "bottle/carton--cream",
+      "kind": "bottle",
+      "shape": "carton",
+      "liquid": "cream",
+      "hex": "#E8DCC0",
+      "prompt": "a plain unlabeled beverage carton with a screw spout, filled with an opaque cream-coloured liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "milk",
+        "half-and-half",
+        "creamer"
+      ]
+    },
+    {
+      "key": "bottle/carton--green",
+      "kind": "bottle",
+      "shape": "carton",
+      "liquid": "green",
+      "hex": "#4E7C3A",
+      "prompt": "a plain unlabeled beverage carton with a screw spout, filled with a translucent herbal green liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "lime-juice"
+      ]
+    },
+    {
+      "key": "bottle/can--cream",
+      "kind": "bottle",
+      "shape": "can",
+      "liquid": "cream",
+      "hex": "#E8DCC0",
+      "prompt": "a plain unlabeled aluminium beverage can, filled with an opaque cream-coloured liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "coco-lopez"
+      ]
+    },
+    {
+      "key": "bottle/can--clear",
+      "kind": "bottle",
+      "shape": "can",
+      "liquid": "clear",
+      "hex": "#F2F6F5",
+      "prompt": "a plain unlabeled aluminium beverage can, filled with a colourless transparent liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "soda-water",
+        "tonic-water"
+      ]
+    },
+    {
+      "key": "bottle/can--amber",
+      "kind": "bottle",
+      "shape": "can",
+      "liquid": "amber",
+      "hex": "#C77B32",
+      "prompt": "a plain unlabeled aluminium beverage can, filled with a warm amber liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "pumpkin-ale"
+      ]
+    },
+    {
+      "key": "bottle/can--black",
+      "kind": "bottle",
+      "shape": "can",
+      "liquid": "black",
+      "hex": "#241C18",
+      "prompt": "a plain unlabeled aluminium beverage can, filled with a near-black opaque liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "coke",
+        "guinness"
+      ]
+    },
+    {
+      "key": "bottle/can--pale-gold",
+      "kind": "bottle",
+      "shape": "can",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a plain unlabeled aluminium beverage can, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "ginger-beer"
+      ]
+    },
+    {
+      "key": "bottle/can--red",
+      "kind": "bottle",
+      "shape": "can",
+      "liquid": "red",
+      "hex": "#B0203A",
+      "prompt": "a plain unlabeled aluminium beverage can, filled with a deep ruby-red liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "tomato-juice"
+      ]
+    },
+    {
+      "key": "bottle/jar--green",
+      "kind": "bottle",
+      "shape": "jar",
+      "liquid": "green",
+      "hex": "#4E7C3A",
+      "prompt": "a small unlabeled glass jar with a metal lid, filled with a translucent herbal green liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "olives"
+      ]
+    },
+    {
+      "key": "bottle/bitters-dash--dark-brown",
+      "kind": "bottle",
+      "shape": "bitters-dash",
+      "liquid": "dark-brown",
+      "hex": "#6B3410",
+      "prompt": "a very small unlabeled apothecary dasher bottle with a narrow dropper neck, filled with a deep coffee-brown liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "bittermens-tiki",
+        "el-guapo-polynesian",
+        "angostura-aromatic",
+        "bokers",
+        "woodford-aromatic",
+        "woodford-sassafras",
+        "woodford-chocolate"
+      ]
+    },
+    {
+      "key": "bottle/bitters-dash--red",
+      "kind": "bottle",
+      "shape": "bitters-dash",
+      "liquid": "red",
+      "hex": "#B0203A",
+      "prompt": "a very small unlabeled apothecary dasher bottle with a narrow dropper neck, filled with a deep ruby-red liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "peychauds",
+        "woodford-spiced-cherry"
+      ]
+    },
+    {
+      "key": "bottle/mini--green",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "green",
+      "hex": "#4E7C3A",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a translucent herbal green liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "oregon-absinthe-mini"
+      ]
+    },
+    {
+      "key": "bottle/bitters-dash--orange",
+      "kind": "bottle",
+      "shape": "bitters-dash",
+      "liquid": "orange",
+      "hex": "#E2611E",
+      "prompt": "a very small unlabeled apothecary dasher bottle with a narrow dropper neck, filled with a vivid burnt-orange liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "angostura-orange",
+        "woodford-orange"
+      ]
+    },
+    {
+      "key": "bottle/bitters-dash--yellow",
+      "kind": "bottle",
+      "shape": "bitters-dash",
+      "liquid": "yellow",
+      "hex": "#E8D24A",
+      "prompt": "a very small unlabeled apothecary dasher bottle with a narrow dropper neck, filled with a bright lemon-yellow liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "fee-lemon"
+      ]
+    },
+    {
+      "key": "bottle/bitters-dash--pink",
+      "kind": "bottle",
+      "shape": "bitters-dash",
+      "liquid": "pink",
+      "hex": "#D9738C",
+      "prompt": "a very small unlabeled apothecary dasher bottle with a narrow dropper neck, filled with a pale rose-pink liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "scrappys-lavender"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--amber",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "amber",
+      "hex": "#C77B32",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a warm amber liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "haut-de-vigne-vsop"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--black",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "black",
+      "hex": "#241C18",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a near-black opaque liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "jagermeister"
+      ]
+    },
+    {
+      "key": "bottle/tall-slim--cream",
+      "kind": "bottle",
+      "shape": "tall-slim",
+      "liquid": "cream",
+      "hex": "#E8DCC0",
+      "prompt": "a tall slender unlabeled glass liquor bottle with a long neck and a black cap, filled with an opaque cream-coloured liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "orgeat"
+      ]
+    },
+    {
+      "key": "bottle/mini--clear",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "clear",
+      "hex": "#F2F6F5",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a colourless transparent liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "esme-gin-mini",
+        "clusius-tulip-vodka-mini",
+        "greenhouse-gin-mini",
+        "tanns-gin-mini",
+        "peppermint-schnapps-mini"
+      ]
+    },
+    {
+      "key": "bottle/mini--red",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "red",
+      "hex": "#B0203A",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a deep ruby-red liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "hofland-sloe-mini",
+        "cherry-schnapps-mini"
+      ]
+    },
+    {
+      "key": "bottle/mini--dark-brown",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "dark-brown",
+      "hex": "#6B3410",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a deep coffee-brown liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "hofland-meesterbitter-mini",
+        "curacao-chocolate-mini",
+        "curacao-coffee-mini"
+      ]
+    },
+    {
+      "key": "bottle/mini--amber",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "amber",
+      "hex": "#C77B32",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a warm amber liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "hazelnut-schnapps-mini"
+      ]
+    },
+    {
+      "key": "bottle/mini--orange",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "orange",
+      "hex": "#E2611E",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a vivid burnt-orange liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "blood-orange-schnapps-mini",
+        "morey-mandarine-mini"
+      ]
+    },
+    {
+      "key": "bottle/mini--pale-gold",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "pale-gold",
+      "hex": "#E8C87A",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with a pale straw-gold liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "pear-schnapps-mini"
+      ]
+    },
+    {
+      "key": "bottle/mini--cream",
+      "kind": "bottle",
+      "shape": "mini",
+      "liquid": "cream",
+      "hex": "#E8DCC0",
+      "prompt": "a 50ml unlabeled miniature liquor bottle, airline size, with a screw cap, filled with an opaque cream-coloured liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "odonnells-caramel-mini",
+        "odonnells-tiramisu-mini",
+        "skrewball-pbj-mini",
+        "sheep-dog-pb-mini"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--clear",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "clear",
+      "hex": "#F2F6F5",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a colourless transparent liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "italicus"
+      ]
+    },
+    {
+      "key": "bottle/tall-shoulder--green",
+      "kind": "bottle",
+      "shape": "tall-shoulder",
+      "liquid": "green",
+      "hex": "#4E7C3A",
+      "prompt": "a tall unlabeled glass bottle with sloped wine-style shoulders and a foil-capped cork, filled with a translucent herbal green liquid, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": [
+        "absente"
+      ]
+    },
+    {
+      "key": "glass/coupe",
+      "kind": "glass",
+      "prompt": "an empty coupe cocktail glass, shallow rounded bowl on a stem, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/rocks",
+      "kind": "glass",
+      "prompt": "an empty short heavy-bottomed rocks glass, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/collins",
+      "kind": "glass",
+      "prompt": "an empty tall narrow collins glass, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/martini",
+      "kind": "glass",
+      "prompt": "an empty V-shaped martini glass on a stem, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/flute",
+      "kind": "glass",
+      "prompt": "an empty tall narrow champagne flute, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/highball",
+      "kind": "glass",
+      "prompt": "an empty straight-sided highball glass, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/nick-nora",
+      "kind": "glass",
+      "prompt": "an empty small bell-shaped nick and nora glass on a short stem, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/mule-mug",
+      "kind": "glass",
+      "prompt": "an empty copper mule mug with a handle, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/hurricane",
+      "kind": "glass",
+      "prompt": "an empty curved hurricane glass with a flared rim, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "glass/shot",
+      "kind": "glass",
+      "prompt": "an empty small straight shot glass, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/lemon-twist",
+      "kind": "garnish",
+      "prompt": "a single curled lemon peel twist, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/orange-twist",
+      "kind": "garnish",
+      "prompt": "a single curled orange peel twist, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/lime-wedge",
+      "kind": "garnish",
+      "prompt": "a single lime wedge, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/lemon-wheel",
+      "kind": "garnish",
+      "prompt": "a single thin lemon wheel slice, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/orange-wheel",
+      "kind": "garnish",
+      "prompt": "a single thin orange wheel slice, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/cherry",
+      "kind": "garnish",
+      "prompt": "a single dark cocktail cherry on a pick, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/olive",
+      "kind": "garnish",
+      "prompt": "two green olives on a cocktail pick, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/mint-sprig",
+      "kind": "garnish",
+      "prompt": "a single sprig of fresh mint leaves, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/pineapple-wedge",
+      "kind": "garnish",
+      "prompt": "a single pineapple wedge, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/cinnamon-stick",
+      "kind": "garnish",
+      "prompt": "a single cinnamon stick, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/star-anise",
+      "kind": "garnish",
+      "prompt": "a single star anise pod, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/nutmeg-grating",
+      "kind": "garnish",
+      "prompt": "a light scatter of grated nutmeg, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/cucumber-ribbon",
+      "kind": "garnish",
+      "prompt": "a single thin cucumber ribbon, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/salt-rim",
+      "kind": "garnish",
+      "prompt": "a crescent of coarse salt crystals forming a glass rim arc, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    },
+    {
+      "key": "garnish/sugar-rim",
+      "kind": "garnish",
+      "prompt": "a crescent of fine sugar crystals forming a glass rim arc, fully transparent background, semi-realistic 3D product render, deep teal-black palette, cyan #4DD8E0 rim light from the upper left, soft glass refraction, subtle contact reflection at the base, matte finish, no text, no lettering, no label artwork, no logo, no branding, no hands, no background scenery, centered, square composition",
+      "usedBy": []
+    }
+  ]
+}

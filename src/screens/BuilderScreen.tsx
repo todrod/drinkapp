@@ -2,7 +2,8 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { accentOf, C, F, R, S, SHADOW } from '../theme';
+import { C, F, R, S, SHADOW } from '../theme';
+import { accentForRecipe } from '../data/liquids';
 import {
   Body,
   Chip,
@@ -248,7 +249,7 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
             <View style={{ gap: S.sm, marginTop: S.sm }}>
               {matches.map((m) => (
                 <View key={m.recipe.id} style={styles.matchRow}>
-                  <View style={[styles.matchDot, { backgroundColor: accentOf(m.recipe.accent) }]} />
+                  <View style={[styles.matchDot, { backgroundColor: accentForRecipe(m.recipe) }]} />
                   <View style={{ flex: 1 }}>
                     <Body>{m.recipe.name}</Body>
                     <Dim>

@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { accentOf, C, F, GLASS, R, S, SHADOW } from '../theme';
+import { C, F, GLASS, R, S, SHADOW } from '../theme';
+import { accentForRecipe } from '../data/liquids';
 import {
   Body,
   Chip,
@@ -165,7 +166,7 @@ export function RecipesScreen() {
                 >
                   <View style={styles.cardEdge} pointerEvents="none" />
                   <LinearGradient
-                    colors={[accentOf(r.accent) + 'AA', accentOf(r.accent) + '14']}
+                    colors={[accentForRecipe(r) + 'CC', accentForRecipe(r) + '18']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.cardArt}
@@ -304,7 +305,7 @@ function DetailSheet({
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.sheetHeader}>
               <View style={{ flex: 1 }}>
-                <Label color={accentOf(recipe.accent)}>
+                <Label color={accentForRecipe(recipe)}>
                   {recipe.method}
                   {recipe.glass ? ` · ${recipe.glass.replace('gl-', '')}` : ''}
                 </Label>
