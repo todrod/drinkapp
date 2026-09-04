@@ -1,5 +1,7 @@
 import { CATALOG_BY_ID } from './catalog';
-import { DrinkRecipe, Method, RecipeIngredient, Role, Unit } from '../types';
+import { BOOK_SEEDS, THEMED_SEEDS } from './library';
+import { Ing, Seed } from './seed';
+import { DrinkRecipe, RecipeIngredient } from '../types';
 
 /**
  * Bundled recipe library. Every ingredient resolves to a catalog id, which is
@@ -8,19 +10,6 @@ import { DrinkRecipe, Method, RecipeIngredient, Role, Unit } from '../types';
  *
  * Tuple form: [catalogId, amount, unit, role, optional?]
  */
-type Ing = [string, number | null, Unit, Role] | [string, number | null, Unit, Role, true];
-
-type Seed = {
-  name: string;
-  method: Method;
-  glass: string;
-  ing: Ing[];
-  steps: string[];
-  garnish?: string;
-  tags: string[];
-  accent: string;
-};
-
 const seeds: Seed[] = [
   {
     name: 'Margarita', method: 'shake', glass: 'gl-rocks', accent: '#C6FF3D',
@@ -807,16 +796,16 @@ function expand(ing: Ing): RecipeIngredient {
   };
 }
 
-export const SEED_RECIPES: DrinkRecipe[] = seeds.map((s, i) => {
+function toRecipe(s: Seed, id: string): DrinkRecipe {
   const ingredients = s.ing.map(expand);
   const isZeroProof = ingredients.every((ri) => {
     const cat = ri.catalogItemId ? CATALOG_BY_ID[ri.catalogItemId] : null;
     return !cat || cat.typicalAbv === 0;
   });
   return {
-    id: `seed-${i + 1}`,
+    id,
     name: s.name,
-    origin: 'seed' as const,
+    origin: 'seed',
     method: s.method,
     glass: s.glass,
     ingredients,
@@ -829,13 +818,23 @@ export const SEED_RECIPES: DrinkRecipe[] = seeds.map((s, i) => {
     lastMadeAt: null,
     isFavorite: false,
     sourceUrl: null,
+    sourceNote: s.source ?? null,
+    theme: s.theme ?? null,
     createdAt: Date.now(),
   };
-});
+}
+
+/**
+ * Id prefixes are stable per collection, so adding a recipe to one list never
+ * renumbers another — which matters because loadRecipes merges by id.
+ */
+export const SEED_RECIPES: DrinkRecipe[] = [
+  ...seeds.map((s, i) => toRecipe(s, `seed-${i + 1}`)),
+  ...BOOK_SEEDS.map((s, i) => toRecipe(s, `book-${i + 1}`)),
+  ...THEMED_SEEDS.map((s, i) => toRecipe(s, `theme-${i + 1}`)),
+];
 
 /** Every distinct vibe tag in the library, for the Shaker filter rail. */
-export const VIBE_TAGS = Array.from(
-  new Set(SEED_RECIPES.flatMap((r) => r.vibeTags))
-)
+export const VIBE_TAGS = Array.from(new Set(SEED_RECIPES.flatMap((r) => r.vibeTags)))
   .filter((t) => t !== 'zero-proof')
   .sort();

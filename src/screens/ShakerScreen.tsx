@@ -27,12 +27,15 @@ import { useData } from '../store';
 import { generate } from '../logic/generator';
 import { GeneratorResult, DrinkRecipe } from '../types';
 import { VIBE_TAGS } from '../data/recipes';
+import { THEMES } from '../data/seed';
+import { useShakeDetector } from '../hooks/useShakeDetector';
 import { formatIngredient, pluralize } from '../format';
 import { TabKey } from '../components/NavPill';
 
 export function ShakerScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
   const { recipes, kit, prefs, setPref, markMade, saveRecipe } = useData();
   const [vibes, setVibes] = useState<string[]>([]);
+  const [themes, setThemes] = useState<string[]>([]);
   const [result, setResult] = useState<GeneratorResult | null>(null);
   const [recent, setRecent] = useState<string[]>([]);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -71,6 +74,7 @@ export function ShakerScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
       allowSubstitutes: prefs.allowSubstitutes,
       zeroProofMode: prefs.zeroProofMode,
       vibes,
+      themes,
       recentIds: recent,
     });
 
@@ -105,6 +109,20 @@ export function ShakerScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
       Animated.timing(shake, { toValue: 0, duration: 70, useNativeDriver: true }),
     ]).start(show);
   };
+
+  // Physical shake fires the same handler as the button.
+  const shakeSensor = useShakeDetector({ enabled: prefs.shakeToShake, onShake });
+
+  const toggleShakeSensor = async () => {
+    if (!prefs.shakeToShake && shakeSensor.needsPermission) {
+      const ok = await shakeSensor.requestPermission();
+      if (!ok) return;
+    }
+    setPref('shakeToShake', !prefs.shakeToShake);
+  };
+
+  const toggleTheme = (id: string) =>
+    setThemes((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 
   const toggleVibe = (tag: string) =>
     setVibes((prev) => (prev.includes(tag) ? prev.filter((v) => v !== tag) : [...prev, tag]));
@@ -143,11 +161,36 @@ export function ShakerScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
           color={C.amber}
           onPress={() => setPref('allowSubstitutes', !prefs.allowSubstitutes)}
         />
+        {shakeSensor.available ? (
+          <Chip
+            label={prefs.shakeToShake ? '📳 Shake on' : '📳 Shake off'}
+            active={prefs.shakeToShake}
+            color={C.violet}
+            onPress={toggleShakeSensor}
+          />
+        ) : null}
         {vibes.length ? (
           <Chip label={`clear ${vibes.length}`} color={C.magenta} onPress={() => setVibes([])} />
         ) : null}
         {VIBE_TAGS.map((t) => (
           <Chip key={t} label={t} active={vibes.includes(t)} onPress={() => toggleVibe(t)} />
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.railScroll}
+        contentContainerStyle={styles.filters}
+      >
+        {THEMES.map((t) => (
+          <Chip
+            key={t.id}
+            label={`${t.icon} ${t.label}`}
+            active={themes.includes(t.id)}
+            color={t.accent}
+            onPress={() => toggleTheme(t.id)}
+          />
         ))}
       </ScrollView>
 
@@ -163,7 +206,11 @@ export function ShakerScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
           <Dim style={{ textAlign: 'center' }}>
             {kit.length === 0
               ? "Your kit is empty — the generator has nothing to work with yet."
-              : `${kit.length} ${pluralize(kit.length, 'item')} in your kit. Give it a shake.`}
+              : `${kit.length} ${pluralize(kit.length, 'item')} in your kit.${
+                  prefs.shakeToShake && shakeSensor.available
+                    ? ' Tap the button, or just shake your phone.'
+                    : ' Give it a shake.'
+                }`}
           </Dim>
           {kit.length === 0 ? (
             <GhostButton
@@ -203,6 +250,7 @@ export function ShakerScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
               vibes={vibes}
               onClearFilters={() => {
                 setVibes([]);
+                setThemes([]);
                 setPref('zeroProofMode', false);
                 setResult(null);
               }}
@@ -285,6 +333,12 @@ function ResultCard({
           <Label style={{ marginTop: S.lg }}>Garnish</Label>
           <Body style={{ marginTop: 4 }}>{r.garnish}</Body>
         </>
+      ) : null}
+
+      {r.sourceNote ? (
+        <View style={styles.sourceRow}>
+          <Dim>📖  {r.sourceNote}</Dim>
+        </View>
       ) : null}
 
       <View style={styles.actions}>
@@ -428,6 +482,12 @@ const styles = StyleSheet.create({
     color: C.amber,
     fontSize: 11,
     fontWeight: '600',
+  },
+  sourceRow: {
+    marginTop: S.lg,
+    paddingTop: S.sm,
+    borderTopWidth: 1,
+    borderTopColor: C.line,
   },
   subNote: {
     marginTop: S.md,

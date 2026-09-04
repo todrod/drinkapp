@@ -80,6 +80,7 @@ export const DEFAULT_PREFS: Prefs = {
   ageGateAcceptedAt: null,
   zeroProofMode: false,
   allowSubstitutes: true,
+  shakeToShake: true,
 };
 
 export function loadPrefs(): Prefs {

@@ -26,6 +26,7 @@ import {
 import { useData } from '../store';
 import { CATALOG } from '../data/catalog';
 import { DrinkRecipe, Method, RecipeIngredient, Unit } from '../types';
+import { THEMES, THEME_BY_ID } from '../data/seed';
 import { buildOwned, matchRecipe } from '../logic/generator';
 import { formatIngredient, pluralize } from '../format';
 
@@ -37,12 +38,18 @@ export function BookScreen() {
   const [editing, setEditing] = useState<DrinkRecipe | null>(null);
   const [surprise, setSurprise] = useState<DrinkRecipe | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
+  const [theme, setTheme] = useState<string | null>(null);
 
   const owned = useMemo(() => buildOwned(kit), [kit]);
 
   const visible = useMemo(
-    () => (onlyMine ? recipes.filter((r) => r.origin === 'user') : recipes),
-    [recipes, onlyMine]
+    () =>
+      recipes.filter((r) => {
+        if (onlyMine && r.origin !== 'user') return false;
+        if (theme && r.theme !== theme) return false;
+        return true;
+      }),
+    [recipes, onlyMine, theme]
   );
 
   const pickSurprise = () => {
@@ -64,9 +71,24 @@ export function BookScreen() {
         />
 
         <View style={styles.filterRow}>
-          <Chip label="All" active={!onlyMine} onPress={() => setOnlyMine(false)} />
-          <Chip label="Mine only" active={onlyMine} color={C.magenta} onPress={() => setOnlyMine(true)} />
+          <Chip label="All" active={!onlyMine && !theme} onPress={() => { setOnlyMine(false); setTheme(null); }} />
+          <Chip label="Mine only" active={onlyMine} color={C.magenta} onPress={() => setOnlyMine(!onlyMine)} />
         </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+          <View style={styles.filterRow}>
+            {THEMES.map((t) => (
+              <Chip
+                key={t.id}
+                label={`${t.icon} ${t.label}`}
+                active={theme === t.id}
+                color={t.accent}
+                onPress={() => setTheme(theme === t.id ? null : t.id)}
+              />
+            ))}
+          </View>
+        </ScrollView>
+        {theme ? <Dim style={{ textAlign: 'center' }}>{THEME_BY_ID[theme]?.blurb}</Dim> : null}
 
         <View style={styles.actions}>
           <PrimaryButton label="Surprise me" onPress={pickSurprise} style={{ flex: 1 }} />
@@ -103,8 +125,19 @@ export function BookScreen() {
                 >
                   <View style={[styles.cardGlow, { backgroundColor: r.accent }]} />
                   <View style={styles.cardTop}>
-                    <Text style={styles.cardBadge}>
-                      {r.origin === 'user' ? 'MINE' : r.origin === 'trending' ? 'TRENDING' : 'CLASSIC'}
+                    <Text
+                      style={[
+                        styles.cardBadge,
+                        r.theme ? { color: THEME_BY_ID[r.theme]?.accent ?? C.faint } : null,
+                      ]}
+                    >
+                      {r.theme
+                        ? (THEME_BY_ID[r.theme]?.label ?? r.theme).toUpperCase()
+                        : r.origin === 'user'
+                          ? 'MINE'
+                          : r.sourceNote
+                            ? 'FROM A BOOK'
+                            : 'CLASSIC'}
                     </Text>
                     {r.isFavorite ? <Text style={styles.star}>★</Text> : null}
                   </View>
@@ -178,6 +211,8 @@ function blankRecipe(): DrinkRecipe {
     lastMadeAt: null,
     isFavorite: false,
     sourceUrl: null,
+    sourceNote: null,
+    theme: null,
     createdAt: Date.now(),
   };
 }
@@ -223,6 +258,9 @@ function DetailSheet({
               </Pressable>
             </View>
 
+            {recipe.sourceNote ? (
+              <Dim style={{ marginBottom: S.md }}>📖  {recipe.sourceNote}</Dim>
+            ) : null}
             {recipe.sourceUrl ? (
               <Dim style={{ marginBottom: S.md }}>Source: {recipe.sourceUrl}</Dim>
             ) : null}

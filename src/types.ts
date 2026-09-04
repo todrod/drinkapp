@@ -156,6 +156,10 @@ export interface DrinkRecipe {
   lastMadeAt: number | null;
   isFavorite: boolean;
   sourceUrl: string | null;
+  /** Attribution for recipes taken from a book, e.g. "Jerry Thomas, 1862". */
+  sourceNote: string | null;
+  /** Optional themed collection this drink belongs to. */
+  theme: string | null;
   createdAt: number;
 }
 
@@ -163,6 +167,8 @@ export interface Prefs {
   ageGateAcceptedAt: number | null;
   zeroProofMode: boolean;
   allowSubstitutes: boolean;
+  /** Physical shake of the device triggers the generator. */
+  shakeToShake: boolean;
 }
 
 // ── Generator result shapes ───────────────────────────────────────────────

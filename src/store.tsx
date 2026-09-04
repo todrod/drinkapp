@@ -53,6 +53,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     ageGateAcceptedAt: null,
     zeroProofMode: false,
     allowSubstitutes: true,
+    shakeToShake: true,
   });
 
   useEffect(() => {

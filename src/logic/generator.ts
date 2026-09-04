@@ -113,6 +113,8 @@ export interface GenerateOptions {
   zeroProofMode: boolean;
   /** Active vibe chips. Empty means no filtering. */
   vibes: string[];
+  /** Active themed collections. Empty means no filtering. */
+  themes?: string[];
   /** Catalog id the drink must use. */
   lockedIngredientId?: string | null;
   /** Recipe ids from the last few runs, pushed down the ranking. */
@@ -122,6 +124,7 @@ export interface GenerateOptions {
 function passesFilters(r: DrinkRecipe, o: GenerateOptions): boolean {
   if (o.zeroProofMode && !r.isZeroProof) return false;
   if (o.vibes.length && !o.vibes.some((v) => r.vibeTags.includes(v))) return false;
+  if (o.themes?.length && (!r.theme || !o.themes.includes(r.theme))) return false;
   if (o.lockedIngredientId) {
     const uses = r.ingredients.some((i) => i.catalogItemId === o.lockedIngredientId);
     if (!uses) return false;
@@ -183,7 +186,10 @@ export function generate(o: GenerateOptions): GeneratorResult {
 
   const filtersAreTheProblem =
     unfilteredMakeable > 0 &&
-    (o.vibes.length > 0 || !!o.lockedIngredientId || o.zeroProofMode);
+    (o.vibes.length > 0 ||
+      !!o.lockedIngredientId ||
+      o.zeroProofMode ||
+      (o.themes?.length ?? 0) > 0);
 
   if (filtersAreTheProblem) {
     return {

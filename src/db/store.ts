@@ -10,7 +10,7 @@ import { SEED_RECIPES } from '../data/recipes';
  * export the same functions, so nothing above this layer knows the difference.
  */
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -22,50 +22,73 @@ function sqlite(): SQLite.SQLiteDatabase {
   return db;
 }
 
+/**
+ * Stepwise migrations. Each step runs only if the database is below it, so a
+ * fresh install and an install from an earlier release converge on the same
+ * schema without either being special-cased.
+ */
 function migrate(handle: SQLite.SQLiteDatabase) {
   const row = handle.getFirstSync('PRAGMA user_version') as { user_version: number } | null;
-  if ((row?.user_version ?? 0) >= SCHEMA_VERSION) return;
+  const from = row?.user_version ?? 0;
+  if (from >= SCHEMA_VERSION) return;
 
-  handle.execSync(`
-    CREATE TABLE IF NOT EXISTS inventory (
-      id TEXT PRIMARY KEY NOT NULL,
-      catalogItemId TEXT,
-      name TEXT NOT NULL,
-      category TEXT NOT NULL,
-      brand TEXT,
-      level TEXT NOT NULL DEFAULT 'full',
-      isStaple INTEGER NOT NULL DEFAULT 0,
-      icon TEXT NOT NULL DEFAULT '',
-      addedAt INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_inventory_category ON inventory(category);
-    CREATE INDEX IF NOT EXISTS idx_inventory_catalog ON inventory(catalogItemId);
+  if (from < 1) {
+    handle.execSync(`
+      CREATE TABLE IF NOT EXISTS inventory (
+        id TEXT PRIMARY KEY NOT NULL,
+        catalogItemId TEXT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        brand TEXT,
+        level TEXT NOT NULL DEFAULT 'full',
+        isStaple INTEGER NOT NULL DEFAULT 0,
+        icon TEXT NOT NULL DEFAULT '',
+        addedAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_inventory_category ON inventory(category);
+      CREATE INDEX IF NOT EXISTS idx_inventory_catalog ON inventory(catalogItemId);
 
-    CREATE TABLE IF NOT EXISTS recipes (
-      id TEXT PRIMARY KEY NOT NULL,
-      name TEXT NOT NULL,
-      origin TEXT NOT NULL,
-      method TEXT NOT NULL,
-      glass TEXT,
-      ingredients TEXT NOT NULL,
-      steps TEXT NOT NULL,
-      garnish TEXT,
-      vibeTags TEXT NOT NULL,
-      accent TEXT NOT NULL,
-      isZeroProof INTEGER NOT NULL DEFAULT 0,
-      timesMade INTEGER NOT NULL DEFAULT 0,
-      lastMadeAt INTEGER,
-      isFavorite INTEGER NOT NULL DEFAULT 0,
-      sourceUrl TEXT,
-      createdAt INTEGER NOT NULL
-    );
+      CREATE TABLE IF NOT EXISTS recipes (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        method TEXT NOT NULL,
+        glass TEXT,
+        ingredients TEXT NOT NULL,
+        steps TEXT NOT NULL,
+        garnish TEXT,
+        vibeTags TEXT NOT NULL,
+        accent TEXT NOT NULL,
+        isZeroProof INTEGER NOT NULL DEFAULT 0,
+        timesMade INTEGER NOT NULL DEFAULT 0,
+        lastMadeAt INTEGER,
+        isFavorite INTEGER NOT NULL DEFAULT 0,
+        sourceUrl TEXT,
+        createdAt INTEGER NOT NULL
+      );
 
-    CREATE TABLE IF NOT EXISTS prefs (
-      key TEXT PRIMARY KEY NOT NULL,
-      value TEXT NOT NULL
-    );
-  `);
+      CREATE TABLE IF NOT EXISTS prefs (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+  }
+
+  if (from < 2) {
+    // Book attribution and themed collections. ALTER is wrapped because a
+    // fresh v1 table created above already lacks them, but a database that
+    // somehow has them must not abort the whole migration.
+    for (const col of ['sourceNote TEXT', 'theme TEXT']) {
+      try {
+        handle.execSync(`ALTER TABLE recipes ADD COLUMN ${col}`);
+      } catch {
+        /* column already present */
+      }
+    }
+    handle.execSync('CREATE INDEX IF NOT EXISTS idx_recipes_theme ON recipes(theme)');
+  }
+
   handle.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
@@ -77,6 +100,8 @@ function rowToRecipe(r: any): DrinkRecipe {
     vibeTags: JSON.parse(r.vibeTags),
     isZeroProof: !!r.isZeroProof,
     isFavorite: !!r.isFavorite,
+    sourceNote: r.sourceNote ?? null,
+    theme: r.theme ?? null,
   };
 }
 
@@ -113,19 +138,22 @@ function insertRecipe(r: DrinkRecipe) {
   sqlite().runSync(
     `INSERT INTO recipes
        (id, name, origin, method, glass, ingredients, steps, garnish, vibeTags,
-        accent, isZeroProof, timesMade, lastMadeAt, isFavorite, sourceUrl, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        accent, isZeroProof, timesMade, lastMadeAt, isFavorite, sourceUrl,
+        sourceNote, theme, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        name=excluded.name, method=excluded.method, glass=excluded.glass,
        ingredients=excluded.ingredients, steps=excluded.steps,
        garnish=excluded.garnish, vibeTags=excluded.vibeTags, accent=excluded.accent,
        isZeroProof=excluded.isZeroProof, timesMade=excluded.timesMade,
-       lastMadeAt=excluded.lastMadeAt, isFavorite=excluded.isFavorite`,
+       lastMadeAt=excluded.lastMadeAt, isFavorite=excluded.isFavorite,
+       sourceNote=excluded.sourceNote, theme=excluded.theme`,
     [
       r.id, r.name, r.origin, r.method, r.glass,
       JSON.stringify(r.ingredients), JSON.stringify(r.steps), r.garnish,
       JSON.stringify(r.vibeTags), r.accent, r.isZeroProof ? 1 : 0,
-      r.timesMade, r.lastMadeAt, r.isFavorite ? 1 : 0, r.sourceUrl, r.createdAt,
+      r.timesMade, r.lastMadeAt, r.isFavorite ? 1 : 0, r.sourceUrl,
+      r.sourceNote, r.theme, r.createdAt,
     ]
   );
 }
@@ -160,6 +188,7 @@ export const DEFAULT_PREFS: Prefs = {
   ageGateAcceptedAt: null,
   zeroProofMode: false,
   allowSubstitutes: true,
+  shakeToShake: true,
 };
 
 export function loadPrefs(): Prefs {
