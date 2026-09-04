@@ -14,20 +14,19 @@ import { C } from './src/theme';
 import { DataProvider, useData } from './src/store';
 import { NavPill, TabKey } from './src/components/NavPill';
 import { AgeGate } from './src/screens/AgeGate';
-import { ShakerScreen } from './src/screens/ShakerScreen';
-import { KitScreen } from './src/screens/KitScreen';
-import { BookScreen } from './src/screens/BookScreen';
-import { ExploreScreen } from './src/screens/ExploreScreen';
-import { TrendingScreen } from './src/screens/TrendingScreen';
+import { RandomScreen } from './src/screens/RandomScreen';
+import { CabinetScreen } from './src/screens/CabinetScreen';
+import { RecipesScreen } from './src/screens/RecipesScreen';
+import { BuilderScreen } from './src/screens/BuilderScreen';
 
 function Shell() {
   const { ready, prefs, setPref } = useData();
-  const [tab, setTab] = useState<TabKey>('shaker');
+  const [tab, setTab] = useState<TabKey>('random');
 
   if (!ready) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={C.lime} />
+        <ActivityIndicator color={C.teal} />
       </View>
     );
   }
@@ -39,11 +38,10 @@ function Shell() {
   return (
     <View style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        {tab === 'shaker' && <ShakerScreen goTo={setTab} />}
-        {tab === 'kit' && <KitScreen />}
-        {tab === 'recipes' && <BookScreen />}
-        {tab === 'trending' && <TrendingScreen />}
-        {tab === 'explore' && <ExploreScreen />}
+        {tab === 'random' && <RandomScreen goTo={setTab} />}
+        {tab === 'cabinet' && <CabinetScreen />}
+        {tab === 'recipes' && <RecipesScreen />}
+        {tab === 'builder' && <BuilderScreen goTo={setTab} />}
       </SafeAreaView>
       <NavPill active={tab} onChange={setTab} />
     </View>
@@ -57,10 +55,17 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <View style={styles.root}>
-        {/* Ambient glow — the party surface, painted once behind everything. */}
+        {/* Smoky bar-room ground, painted once behind everything. */}
         <LinearGradient
-          colors={['#16210E', C.ink, '#1A1226']}
-          locations={[0, 0.45, 1]}
+          colors={['#0C1A20', C.ink, '#0A1017']}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <LinearGradient
+          colors={['rgba(53,214,196,0.14)', 'transparent']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 0.6 }}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
@@ -70,7 +75,7 @@ export default function App() {
           </DataProvider>
         ) : (
           <View style={styles.loading}>
-            <ActivityIndicator color={C.lime} />
+            <ActivityIndicator color={C.teal} />
           </View>
         )}
       </View>
@@ -79,14 +84,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: C.ink,
-  },
-  loading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: C.ink,
-  },
+  root: { flex: 1, backgroundColor: C.ink },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.ink },
 });

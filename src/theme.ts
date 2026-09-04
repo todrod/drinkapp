@@ -1,77 +1,93 @@
-// Design tokens — see Phase 04 of the build spec.
-// One primary (lime). Four accents, each with an assigned job.
+// Design tokens.
+//
+// Teal-on-near-black, after the Mixologist reference: one aqua primary, a
+// smoky blue-black ground, and warm accents held back for state (low stock,
+// destructive) rather than decoration.
 
 export const C = {
-  ink: '#0B0C12',
-  ink2: '#0F1119',
-  panel: '#151A2B',
-  raise: '#232A42',
+  ink: '#070B11',
+  ink2: '#0B1219',
+  panel: '#101A22',
+  raise: '#17242E',
 
-  line: 'rgba(255,255,255,0.09)',
-  line2: 'rgba(255,255,255,0.16)',
-  glass: 'rgba(255,255,255,0.055)',
+  line: 'rgba(140, 220, 220, 0.10)',
+  line2: 'rgba(140, 220, 220, 0.22)',
+  glass: 'rgba(190, 245, 245, 0.045)',
 
-  text: '#EAEDF6',
-  dim: '#949AB4',
-  faint: '#6B7191',
+  text: '#E6F1F4',
+  dim: '#8FA8B2',
+  faint: '#5C7480',
 
-  lime: '#C6FF3D', // primary CTA — the only "press me" colour
-  cyan: '#33E6FF', // live / network
-  magenta: '#FF3DBE', // drink book
-  amber: '#FFB43D', // warning / low
-  violet: '#A855F7', // trending
+  teal: '#35D6C4', // primary — the only "press me" colour
+  tealSoft: '#6EE7DB',
+  tealDeep: '#1B8C86',
+  cyan: '#5BC8E8', // information, live state
+  amber: '#E8B54A', // low stock, warnings
+  rose: '#E86A8A', // destructive, missing
+  violet: '#9D8CF0', // themed collections
 } as const;
 
-// Category accent — keeps the kit tiles legible at a glance.
+// Per-drink card accents, retuned to sit inside the aqua palette.
+export const ACCENTS = [C.teal, C.cyan, C.violet, C.amber, C.rose];
+
 export const CATEGORY_COLOR: Record<string, string> = {
-  beverage: C.magenta,
+  beverage: C.teal,
   mixer: C.cyan,
-  garnish: C.lime,
+  garnish: C.tealSoft,
   flavor: C.violet,
-  ice: '#7FD8FF',
-  glass: '#B9C2E0',
+  ice: '#8FD8EC',
+  glass: '#AEC4CE',
   sweet: C.amber,
-  tool: '#9BA3C4',
-  vibe: '#FF7ED4',
+  tool: '#7E96A2',
+  vibe: C.rose,
 };
 
 export const LEVEL_COLOR: Record<string, string> = {
-  full: C.lime,
-  half: '#DDE85C',
+  full: C.teal,
+  half: C.tealSoft,
   low: C.amber,
   out: C.faint,
 };
 
-export const S = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  xxl: 32,
-} as const;
+/** Fraction of the quantity bar each level fills. */
+export const LEVEL_FILL: Record<string, number> = {
+  full: 1,
+  half: 0.6,
+  low: 0.28,
+  out: 0.04,
+};
 
-export const R = {
-  sm: 10,
-  md: 14,
-  lg: 20,
-  pill: 999,
-} as const;
+/**
+ * Recipe accents were authored against the previous lime/magenta palette and
+ * are persisted in the database, so they cannot simply be edited in the data
+ * files. Map them at render time instead.
+ */
+const LEGACY_ACCENT: Record<string, string> = {
+  '#C6FF3D': C.teal,
+  '#33E6FF': C.cyan,
+  '#FF3DBE': C.rose,
+  '#FFB43D': C.amber,
+  '#A855F7': C.violet,
+  '#EAEDF6': C.tealSoft,
+};
 
-// Display face is loaded from @expo-google-fonts/nunito; body falls back to
-// the platform sans, which is the right call on both iOS and Android.
+export const accentOf = (hex: string): string =>
+  LEGACY_ACCENT[(hex || '').toUpperCase()] ?? hex;
+
+export const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
+export const R = { sm: 10, md: 14, lg: 20, xl: 26, pill: 999 } as const;
+
 export const F = {
   display: 'Nunito_800ExtraBold',
   displayMid: 'Nunito_700Bold',
   body: undefined as string | undefined,
-  mono: undefined as string | undefined,
 };
 
 export const type = {
-  h1: { fontSize: 32, lineHeight: 36, letterSpacing: -0.6 },
-  h2: { fontSize: 24, lineHeight: 28, letterSpacing: -0.4 },
-  h3: { fontSize: 19, lineHeight: 24, letterSpacing: -0.2 },
+  h1: { fontSize: 30, lineHeight: 34, letterSpacing: -0.4 },
+  h2: { fontSize: 23, lineHeight: 27, letterSpacing: -0.3 },
+  h3: { fontSize: 18, lineHeight: 23, letterSpacing: -0.2 },
   body: { fontSize: 15, lineHeight: 22 },
   small: { fontSize: 13, lineHeight: 18 },
-  label: { fontSize: 11, letterSpacing: 1.4 },
+  label: { fontSize: 11, letterSpacing: 1.5 },
 } as const;

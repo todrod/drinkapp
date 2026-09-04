@@ -155,6 +155,8 @@ export interface DrinkRecipe {
   timesMade: number;
   lastMadeAt: number | null;
   isFavorite: boolean;
+  /** User rating, 1-5. Null until they set one. */
+  rating: number | null;
   sourceUrl: string | null;
   /** Attribution for recipes taken from a book, e.g. "Jerry Thomas, 1862". */
   sourceNote: string | null;

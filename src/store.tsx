@@ -25,7 +25,7 @@ interface Ctx {
 
   addFromCatalog: (catalogId: string) => void;
   addCustom: (name: string, category: InventoryItem['category']) => void;
-  cycleLevel: (id: string) => void;
+  setLevel: (id: string, level: Level) => void;
   removeFromKit: (id: string) => void;
   restoreKitItem: (item: InventoryItem) => void;
   addStarterKit: () => void;
@@ -35,6 +35,7 @@ interface Ctx {
   removeRecipe: (id: string) => void;
   markMade: (id: string) => void;
   toggleFavorite: (id: string) => void;
+  rateRecipe: (id: string, rating: number) => void;
 
   setPref: <K extends keyof Prefs>(key: K, value: Prefs[K]) => void;
 }
@@ -106,12 +107,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setKit((prev) => [item, ...prev]);
   }, []);
 
-  const cycleLevel = useCallback((id: string) => {
+  const setLevel = useCallback((id: string, level: Level) => {
     setKit((prev) =>
       prev.map((k) => {
         if (k.id !== id) return k;
-        const next = LEVEL_CYCLE[(LEVEL_CYCLE.indexOf(k.level) + 1) % LEVEL_CYCLE.length];
-        const updated = { ...k, level: next, updatedAt: Date.now() };
+        const updated = { ...k, level, updatedAt: Date.now() };
         store.saveKitItem(updated);
         return updated;
       })
@@ -204,6 +204,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const rateRecipe = useCallback((id: string, rating: number) => {
+    setRecipes((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        // Tapping the current rating clears it, so a misfire is undoable.
+        const updated = { ...r, rating: r.rating === rating ? null : rating };
+        store.saveRecipe(updated);
+        return updated;
+      })
+    );
+  }, []);
+
   const setPref = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
     setPrefs((prev) => {
       const next = { ...prev, [key]: value };
@@ -220,7 +232,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       prefs,
       addFromCatalog,
       addCustom,
-      cycleLevel,
+      setLevel,
       removeFromKit,
       restoreKitItem,
       addStarterKit,
@@ -229,12 +241,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       removeRecipe,
       markMade,
       toggleFavorite,
+      rateRecipe,
       setPref,
     }),
     [
       ready, kit, recipes, prefs,
-      addFromCatalog, addCustom, cycleLevel, removeFromKit, restoreKitItem,
-      addStarterKit, saveRecipe, removeRecipe, markMade, toggleFavorite, setPref,
+      addFromCatalog, addCustom, setLevel, removeFromKit, restoreKitItem,
+      addStarterKit, loadMyBar, saveRecipe, removeRecipe, markMade, toggleFavorite,
+      rateRecipe, setPref,
     ]
   );
 

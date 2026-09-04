@@ -10,7 +10,7 @@ import { SEED_RECIPES } from '../data/recipes';
  * export the same functions, so nothing above this layer knows the difference.
  */
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -89,6 +89,14 @@ function migrate(handle: SQLite.SQLiteDatabase) {
     handle.execSync('CREATE INDEX IF NOT EXISTS idx_recipes_theme ON recipes(theme)');
   }
 
+  if (from < 3) {
+    try {
+      handle.execSync('ALTER TABLE recipes ADD COLUMN rating INTEGER');
+    } catch {
+      /* column already present */
+    }
+  }
+
   handle.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
@@ -100,6 +108,7 @@ function rowToRecipe(r: any): DrinkRecipe {
     vibeTags: JSON.parse(r.vibeTags),
     isZeroProof: !!r.isZeroProof,
     isFavorite: !!r.isFavorite,
+    rating: r.rating ?? null,
     sourceNote: r.sourceNote ?? null,
     theme: r.theme ?? null,
   };
@@ -138,21 +147,21 @@ function insertRecipe(r: DrinkRecipe) {
   sqlite().runSync(
     `INSERT INTO recipes
        (id, name, origin, method, glass, ingredients, steps, garnish, vibeTags,
-        accent, isZeroProof, timesMade, lastMadeAt, isFavorite, sourceUrl,
+        accent, isZeroProof, timesMade, lastMadeAt, isFavorite, rating, sourceUrl,
         sourceNote, theme, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        name=excluded.name, method=excluded.method, glass=excluded.glass,
        ingredients=excluded.ingredients, steps=excluded.steps,
        garnish=excluded.garnish, vibeTags=excluded.vibeTags, accent=excluded.accent,
        isZeroProof=excluded.isZeroProof, timesMade=excluded.timesMade,
        lastMadeAt=excluded.lastMadeAt, isFavorite=excluded.isFavorite,
-       sourceNote=excluded.sourceNote, theme=excluded.theme`,
+       rating=excluded.rating, sourceNote=excluded.sourceNote, theme=excluded.theme`,
     [
       r.id, r.name, r.origin, r.method, r.glass,
       JSON.stringify(r.ingredients), JSON.stringify(r.steps), r.garnish,
       JSON.stringify(r.vibeTags), r.accent, r.isZeroProof ? 1 : 0,
-      r.timesMade, r.lastMadeAt, r.isFavorite ? 1 : 0, r.sourceUrl,
+      r.timesMade, r.lastMadeAt, r.isFavorite ? 1 : 0, r.rating, r.sourceUrl,
       r.sourceNote, r.theme, r.createdAt,
     ]
   );

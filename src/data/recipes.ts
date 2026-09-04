@@ -817,6 +817,7 @@ function toRecipe(s: Seed, id: string): DrinkRecipe {
     timesMade: 0,
     lastMadeAt: null,
     isFavorite: false,
+    rating: null,
     sourceUrl: null,
     sourceNote: s.source ?? null,
     theme: s.theme ?? null,

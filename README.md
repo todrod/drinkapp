@@ -16,13 +16,15 @@ in a browser instead, which is useful for quick checks but not the target.
 
 ## What's built
 
+Four tabs: **Random · Cabinet · Recipes · Builder.**
+
 | Feature | Status |
 |---|---|
-| My Kit — inventory CRUD | Done |
-| Shaker — random generator | Done, including all three fallback states |
-| My Drink Book — manual recipes | Done |
-| Explore — bottle catalog | Done |
-| Trending — live cited feed | **Deferred.** Tab is a stub; see `src/api/trending.ts` |
+| Random — spin for a drink | Done, including all three fallback states |
+| Cabinet — inventory CRUD | Done, grouped by category with quantity bars |
+| Recipes — searchable library | Done, with filters, ratings and favourites |
+| Builder — build from stock | Done, three steps then match against the library |
+| Trending — live cited feed | **Deferred.** No tab; see `src/api/trending.ts` |
 | Shake the phone to re-roll | Done — `src/hooks/useShakeDetector.ts` |
 | Installable as a phone app | Done — PWA via `public/` + `scripts/postbuild.mjs` |
 | Themed collections | Done — 4 themes, `src/data/library.ts` |
@@ -136,8 +138,9 @@ src/
   logic/generator.ts    The matching algorithm and the miss analysis
   store.tsx             In-memory mirror + mutators
   api/trending.ts       Deferred network layer — types settled, fetch stubbed
-  components/           NavPill, shared UI primitives
-  screens/              One file per tab, plus the age gate
+  components/           NavPill, shared UI primitives (Stars, QuantityBar, HaveCount)
+  screens/              RandomScreen, CabinetScreen, RecipesScreen,
+                        BuilderScreen, plus the age gate
 ```
 
 ## Two deliberate deviations from the spec
@@ -151,6 +154,25 @@ is unchanged, so Drizzle can be layered on later without touching the data.
 **2. localStorage on web.** `expo-sqlite` on web needs a wasm pipeline that buys
 nothing at this data size. `src/db/store.ts` picks its backend by platform and
 exposes one set of functions, so no screen knows which is running.
+
+## The interface
+
+Teal-on-near-black, one aqua primary, warm accents held back for state. Tokens
+live in `src/theme.ts`.
+
+Recipe accents were authored against an earlier lime/magenta palette and are
+persisted in the database, so they cannot simply be edited in the data files —
+`accentOf()` maps the legacy hexes onto the current palette at render time.
+
+Two notes on the Builder. Selection is keyed by **inventory row id, not catalog
+id**: several bottles deliberately share one catalog id (eight gins all resolve
+`sp-gin`), so keying by catalog id lit up every gin at once. And the option grid
+scrolls inside a capped height so the glass and the Next button stay on screen.
+
+`QuantityBar` renders as a slider but the model underneath is still the
+four-stop `full / half / low / out` enum — `out` has to remain a distinct state
+because the generator keys off it — so the track has four tap zones rather than
+a drag.
 
 ## How matching works
 
