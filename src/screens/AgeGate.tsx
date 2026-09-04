@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { C, F, R, S, type } from '../theme';
+import { Icon } from '../icons';
 import { Body, Dim, Label, Panel, PrimaryButton, Title } from '../components/ui';
 
 /**
@@ -20,7 +21,7 @@ export function AgeGate({ onAccept }: { onAccept: () => void }) {
     return (
       <View style={styles.wrap}>
         <View style={styles.center}>
-          <Text style={styles.mark}>🍸</Text>
+          <Icon name="glass-cocktail" size={54} color={C.teal} style={styles.mark} />
           <Title style={{ textAlign: 'center' }}>Come back another time</Title>
           <Dim style={styles.blockedBody}>
             The Drink Shaker is for people of legal drinking age. There's nothing
@@ -34,7 +35,7 @@ export function AgeGate({ onAccept }: { onAccept: () => void }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.center}>
-        <Text style={styles.mark}>🍸</Text>
+        <Icon name="glass-cocktail" size={54} color={C.teal} style={styles.mark} />
         <Title style={{ textAlign: 'center' }}>The Drink Shaker</Title>
         <Dim style={{ textAlign: 'center', marginTop: S.sm, maxWidth: 300 }}>
           Recipes, your bar inventory, and a generator that only pours what you
@@ -82,10 +83,7 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
   },
-  mark: {
-    fontSize: 56,
-    marginBottom: S.md,
-  },
+  mark: { marginBottom: S.md },
   panel: {
     marginTop: S.xl,
     width: '100%',

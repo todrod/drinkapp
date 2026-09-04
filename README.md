@@ -174,6 +174,36 @@ four-stop `full / half / low / out` enum — `out` has to remain a distinct stat
 because the generator keys off it — so the track has four tap zones rather than
 a drag.
 
+## Icons
+
+Two systems, deliberately separate.
+
+**UI chrome** — MaterialCommunityIcons, which ships inside `@expo/vector-icons`
+(MIT code, OFL font) so it costs no network and works offline. It has real
+barware glyphs rather than generic food icons: `shaker`, `keg`, `hops`, and
+every glass shape.
+
+Two traps worth knowing about:
+
+1. `import { createIconSet } from '@expo/vector-icons'` pulls the package index,
+   which imports *every* icon set and therefore every bundled font — about 4 MB
+   of TTFs. Import `@expo/vector-icons/build/createIconSet` directly instead.
+2. The full MaterialCommunityIcons face is 1.3 MB for 7,448 glyphs and this app
+   draws about fifty. `scripts/build-icon-font.py` subsets it to **12 KB**. Run
+   it after adding an icon; the outputs are committed so the Vercel build needs
+   no Python. `GlyphName` is keyed off the generated map, so referencing a glyph
+   outside the subset is a type error rather than a blank box.
+
+**Ingredient art** — `src/components/IngredientArt.tsx` draws parametric SVG
+bottles: a silhouette chosen by what the thing is (`tall`, `wide`, `wine`,
+`squat`, `dasher`, `soda`, `can`, `carton`, `squeeze`, plus fruit, leaf, cube
+and glassware) filled with a liquid colour chosen per ingredient in
+`src/data/art.ts`. Agave gold, sugarcane clear, coffee brown, deep tomato red.
+
+That gives ~150 distinct ingredient icons for a few kilobytes of code, with no
+image licensing, no network, and clean scaling. Each carries the teal-and-gold
+label band from the reference.
+
 ## How matching works
 
 `src/logic/generator.ts`. An ingredient resolves if the user owns its

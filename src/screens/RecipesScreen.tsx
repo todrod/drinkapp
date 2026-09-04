@@ -32,6 +32,7 @@ import { THEMES, THEME_BY_ID } from '../data/seed';
 import { buildOwned, matchRecipe } from '../logic/generator';
 import { formatIngredient, pluralize } from '../format';
 import { ACCENTS } from '../theme';
+import { glyphForRecipe, Icon } from '../icons';
 
 type Filter = 'on-hand' | 'classic' | 'books' | 'themed' | 'mine';
 
@@ -88,7 +89,7 @@ export function RecipesScreen() {
             accessibilityRole="button"
             accessibilityLabel="New recipe"
           >
-            <Text style={styles.plus}>＋</Text>
+            <Icon name="plus" size={24} color={C.teal} />
           </Pressable>
         </View>
 
@@ -124,7 +125,7 @@ export function RecipesScreen() {
               {THEMES.map((t) => (
                 <Chip
                   key={t.id}
-                  label={`${t.icon} ${t.label}`}
+                  label={t.label}
                   active={theme === t.id}
                   color={t.accent}
                   onPress={() => setTheme(theme === t.id ? null : t.id)}
@@ -141,7 +142,7 @@ export function RecipesScreen() {
 
         {visible.length === 0 ? (
           <EmptyState
-            icon="📋"
+            icon="book-open-variant"
             title="Nothing matches"
             body="Try clearing the filters, or write the drink down yourself."
             action={<PrimaryButton label="NEW RECIPE" onPress={() => setEditing(blankRecipe())} />}
@@ -165,7 +166,7 @@ export function RecipesScreen() {
                     end={{ x: 1, y: 1 }}
                     style={styles.cardArt}
                   >
-                    <Text style={styles.cardGlyph}>{glyphFor(r)}</Text>
+                    <Icon name={glyphForRecipe(r)} size={40} color="rgba(255,255,255,0.92)" />
                     <Pressable
                       onPress={() => toggleFavorite(r.id)}
                       hitSlop={8}
@@ -173,19 +174,21 @@ export function RecipesScreen() {
                       accessibilityLabel={r.isFavorite ? 'Unfavorite' : 'Favorite'}
                       style={styles.heart}
                     >
-                      <Text style={{ fontSize: 15, color: r.isFavorite ? C.rose : '#FFFFFFAA' }}>
-                        {r.isFavorite ? '♥' : '♡'}
-                      </Text>
+                      <Icon
+                        name={r.isFavorite ? 'heart' : 'heart-outline'}
+                        size={17}
+                        color={r.isFavorite ? C.rose : 'rgba(255,255,255,0.75)'}
+                      />
                     </Pressable>
                     {r.theme ? (
                       <View style={styles.themeTag}>
                         <Text style={styles.themeTagText}>
-                          {THEME_BY_ID[r.theme]?.icon} {THEME_BY_ID[r.theme]?.label}
+                          {THEME_BY_ID[r.theme]?.label}
                         </Text>
                       </View>
                     ) : r.sourceNote ? (
                       <View style={styles.themeTag}>
-                        <Text style={styles.themeTagText}>📖 Book</Text>
+                        <Text style={styles.themeTagText}>FROM A BOOK</Text>
                       </View>
                     ) : null}
                   </LinearGradient>
@@ -237,14 +240,6 @@ export function RecipesScreen() {
       />
     </View>
   );
-}
-
-function glyphFor(r: DrinkRecipe) {
-  if (r.method === 'blend') return '🥤';
-  if (r.glass === 'gl-flute') return '🥂';
-  if (r.glass === 'gl-mug') return '🍺';
-  if (r.glass === 'gl-hurricane') return '🍹';
-  return '🍸';
 }
 
 export function blankRecipe(): DrinkRecipe {
@@ -322,7 +317,10 @@ function DetailSheet({
             </View>
 
             {recipe.sourceNote ? (
-              <Dim style={{ marginTop: S.md }}>📖  {recipe.sourceNote}</Dim>
+              <View style={styles.sourceRow}>
+                <Icon name="book-open-variant" size={13} color={C.faint} />
+                <Dim>{recipe.sourceNote}</Dim>
+              </View>
             ) : null}
 
             <Label style={{ marginTop: S.lg }}>Ingredients</Label>
@@ -367,7 +365,7 @@ function DetailSheet({
               <PrimaryButton label="MAKE IT" onPress={() => onMade(recipe)} />
               <View style={{ flexDirection: 'row', gap: S.sm }}>
                 <GhostButton
-                  label={recipe.isFavorite ? '♥ Favorited' : '♡ Favorite'}
+                  label={recipe.isFavorite ? 'Favorited' : 'Favorite'}
                   color={recipe.isFavorite ? C.rose : C.text}
                   onPress={() => onFavorite(recipe)}
                   style={{ flex: 1 }}
@@ -488,7 +486,7 @@ function Editor({
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${ing.displayName}`}
                 >
-                  <Text style={styles.remove}>✕</Text>
+                  <Icon name="close" size={15} color={C.faint} />
                 </Pressable>
               </View>
             ))}
@@ -533,7 +531,7 @@ function Editor({
                   hitSlop={10}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.remove}>✕</Text>
+                  <Icon name="close" size={15} color={C.faint} />
                 </Pressable>
               </View>
             ))}
@@ -596,7 +594,7 @@ function Editor({
 const styles = StyleSheet.create({
   scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md },
-  plus: { color: C.teal, fontSize: 24, fontWeight: '800' },
+
   search: {
     backgroundColor: C.ink2,
     borderWidth: 1,
@@ -621,7 +619,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardArt: { height: 96, alignItems: 'center', justifyContent: 'center' },
-  cardGlyph: { fontSize: 38 },
+
   heart: { position: 'absolute', top: 7, right: 8, padding: 3 },
   themeTag: {
     position: 'absolute',
@@ -674,5 +672,6 @@ const styles = StyleSheet.create({
     paddingVertical: 11, paddingHorizontal: S.md,
     borderBottomWidth: 1, borderBottomColor: C.line,
   },
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: S.md },
   matchTag: { color: C.teal, fontSize: 9, fontWeight: '800', letterSpacing: 0.8 },
 });

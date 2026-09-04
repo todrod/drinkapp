@@ -29,13 +29,15 @@ import { CATALOG } from '../data/catalog';
 import { MY_BAR } from '../data/bar';
 import {
   CATEGORIES,
-  CATEGORY_ICON,
   CATEGORY_LABEL,
   Category,
   InventoryItem,
   Level,
 } from '../types';
 import { countMakeable, countUnlockedBy } from '../logic/generator';
+import { CATEGORY_GLYPH, Icon } from '../icons';
+import { IngredientArt } from '../components/IngredientArt';
+import { artForCatalog } from '../data/art';
 import { pluralize } from '../format';
 
 export function CabinetScreen() {
@@ -88,7 +90,7 @@ export function CabinetScreen() {
             accessibilityRole="button"
             accessibilityLabel="Cabinet settings"
           >
-            <Text style={styles.gear}>⚙️</Text>
+            <Icon name="cog-outline" size={20} color={C.dim} />
           </Pressable>
         </View>
 
@@ -115,7 +117,7 @@ export function CabinetScreen() {
 
         {kit.length === 0 ? (
           <EmptyState
-            icon="🗄️"
+            icon="cupboard"
             title="The cabinet is empty"
             body={`Load your bar — all ${MY_BAR.length} bottles, mixers and bitters, with the near-empties already marked low.`}
             action={
@@ -155,13 +157,13 @@ export function CabinetScreen() {
                     accessibilityState={{ expanded: open }}
                     style={styles.sectionHead}
                   >
-                    <Text style={styles.sectionIcon}>{CATEGORY_ICON[cat]}</Text>
+                    <Icon name={CATEGORY_GLYPH[cat]} size={15} color={CATEGORY_COLOR[cat]} />
                     <Text style={[styles.sectionTitle, { color: CATEGORY_COLOR[cat] }]}>
                       {CATEGORY_LABEL[cat].toUpperCase()}
                     </Text>
                     <Text style={styles.sectionCount}>({items.length})</Text>
                     <View style={{ flex: 1 }} />
-                    <Text style={styles.chevron}>{open ? '⌃' : '⌄'}</Text>
+                    <Icon name={open ? 'chevron-up' : 'chevron-down'} size={18} color={C.faint} />
                   </Pressable>
 
                   {open ? (
@@ -302,10 +304,12 @@ function ItemCard({
         accessibilityLabel={`Remove ${item.name}`}
         style={styles.cardX}
       >
-        <Text style={styles.cardXText}>✕</Text>
+        <Icon name="close" size={13} color={C.faint} />
       </Pressable>
 
-      <Text style={styles.cardIcon}>{item.icon}</Text>
+      <View style={styles.cardIcon}>
+        <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} size={54} />
+      </View>
       <Text style={styles.cardName} numberOfLines={2}>
         {item.name}
       </Text>
@@ -395,7 +399,9 @@ function AddSheet({
                   accessibilityRole="button"
                   style={({ pressed }) => [styles.row, pressed && !owned && { opacity: 0.6 }]}
                 >
-                  <Text style={styles.rowIcon}>{item.icon}</Text>
+                  <View style={styles.rowIcon}>
+                    <IngredientArt {...artForCatalog(item.id, item.category)} size={32} />
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Body>{item.name}</Body>
                     <Dim numberOfLines={1}>
@@ -445,7 +451,7 @@ function AddSheet({
 const styles = StyleSheet.create({
   scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md, marginBottom: S.md },
-  gear: { fontSize: 18 },
+
 
   countRow: { flexDirection: 'row', gap: S.sm, alignItems: 'center' },
   countChip: {
@@ -488,10 +494,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: C.line,
   },
-  sectionIcon: { fontSize: 14 },
+
   sectionTitle: { fontSize: 12, fontWeight: '800', letterSpacing: 1.4 },
   sectionCount: { color: C.faint, fontSize: 12, fontWeight: '700' },
-  chevron: { color: C.faint, fontSize: 14 },
+
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, marginTop: S.md },
   card: {
@@ -504,8 +510,8 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   cardX: { position: 'absolute', top: 6, right: 6, padding: 6, zIndex: 2 },
-  cardXText: { color: C.faint, fontSize: 12 },
-  cardIcon: { fontSize: 24 },
+
+  cardIcon: { marginBottom: 6, height: 56, justifyContent: 'center' },
   cardName: { color: C.text, fontSize: 13.5, fontWeight: '700', minHeight: 36 },
   cardMeta: { color: C.faint, fontSize: 9.5, letterSpacing: 0.4, marginBottom: 4 },
 
@@ -574,7 +580,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: C.line,
   },
-  rowIcon: { fontSize: 22, width: 28, textAlign: 'center' },
+  rowIcon: { width: 34, alignItems: 'center' },
   add: { color: C.teal, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
   customBox: {
     marginTop: S.xl,

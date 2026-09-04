@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, F, LEVEL_COLOR, LEVEL_FILL, R, S, type } from '../theme';
 import { Level, LEVELS } from '../types';
+import { GlyphName, Icon } from '../icons';
 
 export function Title({ children, style, ...rest }: TextProps) {
   return <Text {...rest} style={[styles.title, style]}>{children}</Text>;
@@ -179,14 +180,14 @@ export function EmptyState({
   body,
   action,
 }: {
-  icon: string;
+  icon: GlyphName;
   title: string;
   body: string;
   action?: React.ReactNode;
 }) {
   return (
     <Panel style={{ alignItems: 'center', paddingVertical: S.xl }}>
-      <Text style={{ fontSize: 40, marginBottom: S.md }}>{icon}</Text>
+      <Icon name={icon} size={38} color={C.teal} style={{ marginBottom: S.md }} />
       <Heading style={{ textAlign: 'center' }}>{title}</Heading>
       <Dim style={{ textAlign: 'center', marginTop: S.sm, maxWidth: 300 }}>{body}</Dim>
       {action ? <View style={{ marginTop: S.lg, width: '100%' }}>{action}</View> : null}

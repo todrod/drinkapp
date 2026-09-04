@@ -35,17 +35,6 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   vibe: 'Vibe',
 };
 
-export const CATEGORY_ICON: Record<Category, string> = {
-  beverage: '🥃',
-  mixer: '🥤',
-  garnish: '🍋',
-  flavor: '🌿',
-  ice: '🧊',
-  glass: '🥂',
-  sweet: '🍯',
-  tool: '🍸',
-  vibe: '🎉',
-};
 
 export type Kind =
   | 'spirit'

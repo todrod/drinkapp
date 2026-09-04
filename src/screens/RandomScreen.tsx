@@ -32,6 +32,7 @@ import { THEMES } from '../data/seed';
 import { useShakeDetector } from '../hooks/useShakeDetector';
 import { formatIngredient, pluralize } from '../format';
 import { TabKey } from '../components/NavPill';
+import { glyphForRecipe, Icon } from '../icons';
 
 export function RandomScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
   const { recipes, kit, prefs, setPref, markMade, rateRecipe } = useData();
@@ -236,7 +237,7 @@ export function RandomScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
               {THEMES.map((t) => (
                 <Chip
                   key={t.id}
-                  label={`${t.icon} ${t.label}`}
+                  label={t.label}
                   active={themes.includes(t.id)}
                   color={t.accent}
                   onPress={() =>
@@ -352,7 +353,7 @@ function ResultCard({
             end={{ x: 1, y: 1 }}
             style={styles.thumb}
           >
-            <Text style={styles.thumbGlyph}>{glyphFor(recipe)}</Text>
+            <Icon name={glyphForRecipe(recipe)} size={36} color="rgba(255,255,255,0.95)" />
           </LinearGradient>
 
           <View style={{ flex: 1, gap: 4 }}>
@@ -398,7 +399,10 @@ function ResultCard({
           ) : null}
 
           {recipe.sourceNote ? (
-            <Dim style={{ marginTop: S.lg }}>📖  {recipe.sourceNote}</Dim>
+            <View style={styles.sourceRow}>
+              <Icon name="book-open-variant" size={13} color={C.faint} />
+              <Dim>{recipe.sourceNote}</Dim>
+            </View>
           ) : null}
           {substitutions ? (
             <Dim style={{ marginTop: S.sm, color: C.amber }}>
@@ -416,14 +420,6 @@ function ResultCard({
   );
 }
 
-function glyphFor(r: DrinkRecipe) {
-  if (r.method === 'blend') return '🥤';
-  if (r.glass === 'gl-flute') return '🥂';
-  if (r.glass === 'gl-mug') return '🍺';
-  if (r.glass === 'gl-hurricane') return '🍹';
-  return '🍸';
-}
-
 function FallbackPanel({
   result,
   onClear,
@@ -436,7 +432,7 @@ function FallbackPanel({
   if (result.reason === 'filters') {
     return (
       <Panel accent={C.amber} style={styles.fallback}>
-        <Text style={styles.fallbackIcon}>🎚️</Text>
+        <Icon name="tune-variant" size={34} color={C.amber} style={styles.fallbackIcon} />
         <Heading style={{ textAlign: 'center' }}>Filters are too tight</Heading>
         <Dim style={styles.fallbackBody}>
           Nothing matches those settings — but{' '}
@@ -454,7 +450,7 @@ function FallbackPanel({
     const top = result.suggestions[0];
     return (
       <Panel accent={C.amber} style={styles.fallback}>
-        <Text style={styles.fallbackIcon}>🛒</Text>
+        <Icon name="cart-outline" size={34} color={C.amber} style={styles.fallbackIcon} />
         <Heading style={{ textAlign: 'center' }}>You're one bottle away</Heading>
         <Dim style={styles.fallbackBody}>
           Add <Text style={{ color: C.teal, fontWeight: '800' }}>{top.name}</Text> and {top.unlocks}{' '}
@@ -474,7 +470,7 @@ function FallbackPanel({
 
   return (
     <Panel accent={C.amber} style={styles.fallback}>
-      <Text style={styles.fallbackIcon}>🫙</Text>
+      <Icon name="bottle-tonic-outline" size={34} color={C.amber} style={styles.fallbackIcon} />
       <Heading style={{ textAlign: 'center' }}>Nothing makes a full drink yet</Heading>
       <Dim style={styles.fallbackBody}>
         You need at least a base spirit and something to mix it with.
@@ -543,7 +539,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  thumbGlyph: { fontSize: 34 },
+
   resultName: { color: C.text, fontFamily: F.display, fontSize: 19, lineHeight: 23 },
   resultBody: {
     paddingHorizontal: S.md,
@@ -563,8 +559,9 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
 
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: S.lg },
   fallback: { alignItems: 'center', paddingVertical: S.xl },
-  fallbackIcon: { fontSize: 36, marginBottom: S.md },
+  fallbackIcon: { marginBottom: S.md },
   fallbackBody: { textAlign: 'center', marginTop: S.sm, maxWidth: 320, lineHeight: 20 },
   fallbackBtn: { marginTop: S.lg, alignSelf: 'stretch' },
   suggestRow: { flexDirection: 'row', gap: 6, marginTop: S.md, flexWrap: 'wrap', justifyContent: 'center' },

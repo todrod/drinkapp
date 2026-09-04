@@ -49,7 +49,12 @@ function Shell() {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({ Nunito_700Bold, Nunito_800ExtraBold });
+  const [fontsLoaded] = useFonts({
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    // Subset icon face — see scripts/build-icon-font.py
+    ShakerIcons: require('./assets/fonts/ShakerIcons.ttf'),
+  });
 
   return (
     <SafeAreaProvider>

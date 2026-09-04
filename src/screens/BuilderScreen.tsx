@@ -20,6 +20,9 @@ import { useData } from '../store';
 import { CATALOG_BY_ID } from '../data/catalog';
 import { Category, DrinkRecipe, InventoryItem } from '../types';
 import { pluralize } from '../format';
+import { Icon } from '../icons';
+import { IngredientArt } from '../components/IngredientArt';
+import { artForCatalog } from '../data/art';
 import { blankRecipe } from './RecipesScreen';
 import { TabKey } from '../components/NavPill';
 
@@ -168,7 +171,7 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Title style={styles.screenTitle}>DRINK BUILDER</Title>
         <EmptyState
-          icon="🍸"
+          icon="glass-cocktail"
           title="Nothing to build with"
           body="The builder works from what's actually in your cabinet, so it needs stock first."
           action={<PrimaryButton label="OPEN MY CABINET" onPress={() => goTo('cabinet')} />}
@@ -207,7 +210,7 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
                     state === 'done' && styles.stepDotDone,
                   ]}
                 >
-                  {state === 'done' ? <Text style={styles.stepTick}>✓</Text> : null}
+                  {state === 'done' ? <Icon name="check" size={11} color={C.ink} /> : null}
                 </View>
                 <Text style={[styles.stepLabel, state !== 'todo' && { color: C.teal }]}>
                   {i + 1}. {s.label}
@@ -310,11 +313,11 @@ export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
                     ]}
                   >
                     <View style={[styles.tilePlus, on && { backgroundColor: C.teal }]}>
-                      <Text style={[styles.tilePlusText, on && { color: C.ink }]}>
-                        {on ? '✓' : '+'}
-                      </Text>
+                      <Icon name={on ? 'check' : 'plus'} size={11} color={on ? C.ink : C.dim} />
                     </View>
-                    <Text style={styles.tileIcon}>{item.icon}</Text>
+                    <View style={styles.tileIcon}>
+                      <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} size={40} />
+                    </View>
                     <Text style={styles.tileName} numberOfLines={2}>
                       {item.name}
                     </Text>
@@ -409,7 +412,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
   },
   stepDotDone: { borderColor: C.teal, backgroundColor: C.teal },
-  stepTick: { color: C.ink, fontSize: 10, fontWeight: '900' },
+
   stepLabel: { color: C.faint, fontSize: 9, fontWeight: '800', letterSpacing: 0.8 },
   stepLine: { flex: 1, height: 1, backgroundColor: C.line2, marginHorizontal: 6, marginBottom: 14 },
   stepLineOn: { backgroundColor: C.teal },
@@ -457,8 +460,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tilePlusText: { color: C.dim, fontSize: 10, fontWeight: '900' },
-  tileIcon: { fontSize: 20 },
+
+  tileIcon: { marginBottom: 4, height: 42, justifyContent: 'flex-end' },
   tileName: { color: C.text, fontSize: 10, fontWeight: '700', lineHeight: 13 },
 
   glassCol: { width: 76, alignItems: 'center', gap: 6 },

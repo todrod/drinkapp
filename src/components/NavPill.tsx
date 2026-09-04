@@ -3,14 +3,15 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, R, S } from '../theme';
+import { Icon, TAB_ICON } from '../icons';
 
 export type TabKey = 'random' | 'cabinet' | 'recipes' | 'builder';
 
-export const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'random', label: 'Random', icon: '🔀' },
-  { key: 'cabinet', label: 'Cabinet', icon: '🗄️' },
-  { key: 'recipes', label: 'Recipes', icon: '📋' },
-  { key: 'builder', label: 'Builder', icon: '🍸' },
+export const TABS: { key: TabKey; label: string }[] = [
+  { key: 'random', label: 'Random' },
+  { key: 'cabinet', label: 'Cabinet' },
+  { key: 'recipes', label: 'Recipes' },
+  { key: 'builder', label: 'Builder' },
 ];
 
 /**
@@ -51,7 +52,7 @@ export function NavPill({
               style={styles.tab}
             >
               <View style={[styles.rule, on && styles.ruleOn]} />
-              <Text style={[styles.icon, on && styles.iconOn]}>{t.icon}</Text>
+              <Icon name={TAB_ICON[t.key]} size={19} color={on ? C.teal : C.faint} />
               <Text style={[styles.label, on && styles.labelOn]} numberOfLines={1}>
                 {t.label.toUpperCase()}
               </Text>
@@ -103,8 +104,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
   },
-  icon: { fontSize: 16, opacity: 0.5 },
-  iconOn: { opacity: 1 },
   label: {
     color: C.faint,
     fontSize: 9.5,
