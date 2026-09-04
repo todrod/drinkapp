@@ -7,7 +7,7 @@
  * cache-first safe: a new build produces new URLs rather than stale hits.
  */
 
-const CACHE = 'shaker-v1';
+const CACHE = 'shaker-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
@@ -38,11 +38,15 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Navigations: try the network so a redeploy is picked up, fall back to the
-  // cached shell when offline.
+  // Navigations: always go to the network so a redeploy is picked up, falling
+  // back to the cached shell only when offline.
+  //
+  // `cache: 'no-store'` matters. A plain fetch() still consults the HTTP cache,
+  // which served a stale index.html — and therefore the previous bundle — after
+  // a deploy, leaving installed copies of the app showing the old version.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put('/index.html', copy));
