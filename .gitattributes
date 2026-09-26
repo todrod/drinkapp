@@ -1,0 +1,18 @@
+# Git was applying line-ending conversion to CONTEXT.pdf, which would corrupt a
+# binary on checkout. Mark everything binary that is.
+*.pdf   binary
+*.ttf   binary
+*.otf   binary
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.webp  binary
+
+# Keep source and config normalised.
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.py    text eol=lf
