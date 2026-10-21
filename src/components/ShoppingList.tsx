@@ -169,6 +169,7 @@ export function ShoppingList() {
                 <View style={styles.sugInner}>
                   <IngredientArt
                     {...artForCatalog(sug.catalogItemId, CATALOG_BY_ID[sug.catalogItemId].category)}
+                    seed={sug.name}
                     size={30}
                   />
                   <View style={{ flex: 1 }}>
@@ -252,7 +253,7 @@ function Row({
       </Pressable>
 
       {cat ? (
-        <IngredientArt {...artForCatalog(item.catalogItemId, cat.category)} size={28} />
+        <IngredientArt {...artForCatalog(item.catalogItemId, cat.category)} seed={item.name} size={28} />
       ) : (
         <Icon name="cart-outline" size={20} color={C.faint} />
       )}

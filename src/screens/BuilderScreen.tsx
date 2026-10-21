@@ -321,7 +321,7 @@ export function BuilderScreen({
                       <Icon name={on ? 'check' : 'plus'} size={11} color={on ? C.ink : C.dim} />
                     </View>
                     <View style={styles.tileIcon}>
-                      <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} size={40} />
+                      <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={40} />
                     </View>
                     <Text style={styles.tileName} numberOfLines={2}>
                       {item.name}

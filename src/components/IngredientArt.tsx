@@ -7,6 +7,7 @@ import Svg, {
   Path,
   Rect,
   Ellipse,
+  Text,
 } from 'react-native-svg';
 import { C } from '../theme';
 
@@ -61,14 +62,41 @@ const FILL: Partial<Record<Shape, number>> = {
   soda: 0.82, can: 0.86, carton: 0.8, squeeze: 0.74, cup: 0.6, glass: 0.55,
 };
 
+function tintLiquid(liquid: string, name: string): string {
+  if (!name || !/^#[0-9a-f]{6}$/i.test(liquid)) return liquid;
+
+  // Hash the bottle's name, since several inventory rows share a catalog id.
+  let hash = 2166136261;
+  for (let i = 0; i < name.length; i++) {
+    hash = Math.imul(hash ^ name.charCodeAt(i), 16777619);
+  }
+  const shift = ((hash >>> 0) / 0xffffffff * 2 - 1) * 8;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(liquid.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  const lightness = (max + min) / 2;
+  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+  const hue = delta === 0 ? 0 : 60 * (
+    max === r ? ((g - b) / delta + 6) % 6 :
+    max === g ? (b - r) / delta + 2 : (r - g) / delta + 4
+  );
+
+  // Keep hue and saturation: gin stays blue and whiskey stays amber.
+  const shiftedLightness = Math.max(0, Math.min(100, lightness * 100 + shift));
+  return `hsl(${hue}, ${saturation * 100}%, ${shiftedLightness}%)`;
+}
+
 export function IngredientArt({
   shape,
   liquid,
   size = 34,
+  seed,
 }: {
   shape: Shape;
   liquid: string;
   size?: number;
+  seed?: string;
 }) {
   const w = size * (40 / 64);
   const common = { width: w, height: size, viewBox: '0 0 40 64' } as const;
@@ -151,6 +179,8 @@ export function IngredientArt({
   const fillFrac = FILL[shape] ?? 0.6;
   const liquidTop = 64 - 64 * fillFrac;
   const clipId = `clip-${shape}`;
+  const name = seed?.trim() ?? '';
+  const initial = name ? Array.from(name)[0].toUpperCase() : '';
 
   return (
     <Svg {...common}>
@@ -165,13 +195,18 @@ export function IngredientArt({
 
       <G clipPath={`url(#${clipId})`}>
         {/* liquid */}
-        <Rect x={0} y={liquidTop} width={40} height={64 - liquidTop} fill={liquid} />
+        <Rect x={0} y={liquidTop} width={40} height={64 - liquidTop} fill={tintLiquid(liquid, name)} />
         {/* meniscus */}
         <Ellipse cx={20} cy={liquidTop} rx={16} ry={2} fill="#FFFFFF" opacity={0.18} />
         {/* label band — kept narrow so the liquid colour still reads at 24px */}
         <Rect x={0} y={42} width={40} height={10} fill="#F5F1E6" opacity={0.94} />
         <Rect x={0} y={42} width={40} height={1.8} fill={C.teal} opacity={0.9} />
         <Rect x={0} y={50.2} width={40} height={1.8} fill="#C9A227" opacity={0.95} />
+        {initial ? (
+          <Text x={20} y={49.5} textAnchor="middle" fontFamily="sans-serif" fontSize={8} fontWeight="700" fill={C.ink}>
+            {initial}
+          </Text>
+        ) : null}
         {/* highlight */}
         <Rect x={9.5} y={6} width={3.6} height={52} rx={1.8} fill="#FFFFFF" opacity={0.16} />
       </G>

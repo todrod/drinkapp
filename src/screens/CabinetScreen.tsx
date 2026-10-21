@@ -354,7 +354,7 @@ function ItemCard({
       </Pressable>
 
       <View style={styles.cardIcon}>
-        <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} size={54} />
+        <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={54} />
       </View>
       <Text style={styles.cardName} numberOfLines={2}>
         {item.name}
@@ -448,7 +448,7 @@ function AddSheet({
                   style={({ pressed }) => [styles.row, pressed && !owned && { opacity: 0.6 }]}
                 >
                   <View style={styles.rowIcon}>
-                    <IngredientArt {...artForCatalog(item.id, item.category)} size={32} />
+                    <IngredientArt {...artForCatalog(item.id, item.category)} seed={item.name} size={32} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Body>{item.name}</Body>
