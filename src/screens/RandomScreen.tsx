@@ -56,15 +56,23 @@ export function RandomScreen({
   const [recent, setRecent] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
+  const [animationPaused, setAnimationPaused] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
   const spinning = useRef(false);
+  const mounted = useRef(true);
+  const selectionAnimation = useRef<Animated.CompositeAnimation | null>(null);
+  const finishSelection = useRef<(() => void) | null>(null);
+  const heroBounds = useRef({ top: 0, bottom: Infinity });
   const { width } = useWindowDimensions();
   const wide = width >= 640;
+  const motionEnabled = !reduceMotion && !animationPaused;
+  const animateScroll = useRef(motionEnabled);
+  animateScroll.current = motionEnabled;
   const scrollRef = useRef<ScrollView>(null);
   const resultOffset = useRef(0);
 
   const spin = useRef(new Animated.Value(0)).current;
-  const pulse = useRef(new Animated.Value(0)).current;
   const reveal = useRef(new Animated.Value(0)).current;
 
   const owned = useMemo(() => buildOwned(kit), [kit]);
@@ -83,28 +91,33 @@ export function RandomScreen({
   useEffect(() => {
     if (!result) return;
     // The recipe can land below the hero on short screens. Bring it into view.
-    const frame = requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: Math.max(0, resultOffset.current - 24), animated: !reduceMotion }));
+    const frame = requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: Math.max(0, resultOffset.current - 24), animated: animateScroll.current }));
     return () => cancelAnimationFrame(frame);
-  }, [result, reduceMotion]);
+  }, [result]);
 
   useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+    let active = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => { if (active) setReduceMotion(enabled); }).catch(() => {});
     const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => subscription.remove();
+    return () => { active = false; subscription.remove(); };
   }, []);
 
-  // A quiet float at rest; reduced motion leaves the crystal still.
   useEffect(() => {
-    if (reduceMotion) return;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.quad), useNativeDriver: Platform.OS !== 'web' }),
-        Animated.timing(pulse, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.quad), useNativeDriver: Platform.OS !== 'web' }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse, reduceMotion]);
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      finishSelection.current = null;
+      selectionAnimation.current?.stop();
+      reveal.stopAnimation();
+    };
+  }, [reveal]);
+
+  useEffect(() => {
+    if (motionEnabled || !spinning.current) return;
+    selectionAnimation.current?.stop();
+    spin.setValue(1);
+    finishSelection.current?.();
+  }, [motionEnabled, spin]);
 
   const onSpin = () => {
     // A tap and a sensor callback can land before React renders the busy state.
@@ -125,6 +138,8 @@ export function RandomScreen({
     });
 
     const show = () => {
+      if (!mounted.current || !spinning.current) return;
+      finishSelection.current = null;
       spinning.current = false;
       setIsSpinning(false);
       setResult(next);
@@ -137,24 +152,26 @@ export function RandomScreen({
       reveal.setValue(0);
       Animated.timing(reveal, {
         toValue: 1,
-        duration: reduceMotion ? 120 : 300,
+        duration: motionEnabled ? 300 : 120,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: Platform.OS !== 'web',
       }).start();
     };
+    finishSelection.current = show;
 
-    if (reduceMotion) {
+    if (!motionEnabled) {
       show();
       return;
     }
 
     spin.setValue(0);
-    Animated.timing(spin, {
+    selectionAnimation.current = Animated.timing(spin, {
       toValue: 1,
-      duration: 850,
-      easing: Easing.out(Easing.cubic),
+      duration: 1100,
+      easing: Easing.inOut(Easing.cubic),
       useNativeDriver: Platform.OS !== 'web',
-    }).start(show);
+    });
+    selectionAnimation.current.start(({ finished }) => { if (finished) show(); });
   };
 
   const shakeSensor = useShakeDetector({ enabled: prefs.shakeToShake, onShake: onSpin });
@@ -171,18 +188,21 @@ export function RandomScreen({
   const filterCount =
     vibes.length + themes.length + (prefs.zeroProofMode ? 1 : 0);
 
-  const rotate = spin.interpolate({ inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1], outputRange: ['0deg', '-9deg', '9deg', '-6deg', '6deg', '0deg'] });
-  const float = pulse.interpolate({ inputRange: [0, 1], outputRange: [0, -7] });
   const revealStyle = {
     opacity: reveal,
-    transform: [
+    transform: motionEnabled ? [
       { scale: reveal.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
       { translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) },
-    ],
+    ] : [],
   };
 
   return (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
+      scrollEventThrottle={100} onScroll={({ nativeEvent }) => {
+        const top = nativeEvent.contentOffset.y;
+        const visible = top < heroBounds.current.bottom && top + nativeEvent.layoutMeasurement.height > heroBounds.current.top;
+        setHeroVisible((previous) => previous === visible ? previous : visible);
+      }}>
       <View style={styles.brandRow}>
         <View style={styles.brandLockup}>
           <View style={styles.brandIcon}><Icon name="shaker" size={22} color={C.accent} /></View>
@@ -195,6 +215,7 @@ export function RandomScreen({
       </View>
 
       <LinearGradient colors={GLASS.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        onLayout={({ nativeEvent: { layout } }) => { heroBounds.current = { top: layout.y, bottom: layout.y + layout.height }; }}
         style={[styles.hero, wide && styles.heroWide]}>
         <View style={[styles.heroCopy, wide && { flex: 1 }]}>
           <Text style={styles.eyebrow}>A LITTLE SPONTANEITY, PERFECTLY MIXED</Text>
@@ -204,13 +225,21 @@ export function RandomScreen({
           <ShakeControl status={shakeSensor.status} onToggle={toggleShakeSensor} />
         </View>
         <View style={[styles.crystalStage, wide && { flex: 1 }]}>
-          <Animated.View style={{ transform: [{ translateY: reduceMotion ? 0 : float }, { rotate }] }}>
-            <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Find a drink with the crystal ball"
-              style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }, styles.crystalButton]}>
-              <CrystalBall size={width >= 1000 ? 316 : wide ? 232 : 248} />
-            </Pressable>
-          </Animated.View>
-          <View style={styles.crystalCaption}><Icon name="shuffle-variant" size={13} color={C.accent} /><Text style={styles.crystalCaptionText}>GOOD TASTE. A LITTLE FATE.</Text></View>
+          <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Find a drink with the crystal ball"
+            accessibilityState={{ busy: isSpinning, disabled: isSpinning }}
+            style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, styles.crystalButton]}>
+            <CrystalBall size={width >= 1000 ? 340 : wide ? 264 : Math.min(300, width - 98)}
+              motionEnabled={motionEnabled} visible={heroVisible} selection={spin} />
+          </Pressable>
+          <View style={styles.crystalCaption}>
+            <Icon name="shuffle-variant" size={13} color={C.accent} />
+            <Text style={styles.crystalCaptionText}>{isSpinning ? 'A LITTLE MAGIC IN THE MIX…' : 'TAP TO FIND YOUR POUR'}</Text>
+            {!reduceMotion ? <Pressable onPress={() => setAnimationPaused((paused) => !paused)} disabled={isSpinning}
+              accessibilityRole="button" accessibilityLabel={animationPaused ? 'Play crystal animation' : 'Pause crystal animation'}
+              style={({ pressed }) => [styles.motionToggle, { opacity: pressed || isSpinning ? 0.5 : 1 }]}>
+              <Icon name={animationPaused ? 'play-outline' : 'pause'} size={14} color={C.dim} />
+            </Pressable> : null}
+          </View>
         </View>
       </LinearGradient>
 
@@ -554,8 +583,9 @@ const styles = StyleSheet.create({
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
   crystalStage: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
   crystalButton: { borderRadius: 160 },
-  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: -12, paddingBottom: 6 },
-  crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 9, letterSpacing: 1.7 },
+  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: -18 },
+  crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 9, letterSpacing: 1.2 },
+  motionToggle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   moodHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 },
   sectionTitle: { fontFamily: F.medium, fontSize: 20, letterSpacing: -0.3, color: C.text },
   filterToggle: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },

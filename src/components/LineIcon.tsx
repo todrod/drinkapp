@@ -4,6 +4,8 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 // Shared 24-unit grid and stroke give navigation and actions one visual voice.
 const PATHS = {
+  pause: 'M8 5v14 M16 5v14',
+  'play-outline': 'm8 4 12 8-12 8Z',
   'phone-shake': 'M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z M11 17h2 M3 7 1 10l2 3-2 3 M21 7l2 3-2 3 2 3',
   'shuffle-variant': 'M12 3l2.1 6.9L21 12l-6.9 2.1L12 21l-2.1-6.9L3 12l6.9-2.1Z M20 2v4 M18 4h4',
   cupboard: 'M4 21V9h16v12 M2 21h20 M4 15h16 M7 9V5h3v4 M8 5V2 M14 9V4h3v5 M15.5 4V2 M7 19v-2 M16 19v-2',

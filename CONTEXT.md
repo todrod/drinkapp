@@ -107,7 +107,7 @@ src/
     Atmosphere.tsx        Quiet background glow + grain overlay
     IngredientArt.tsx     Parametric SVG bottles
     CocktailArt.tsx       Recipe illustrations, chosen by serving glass
-    CrystalBall.tsx       Interactive home-screen centerpiece (SVG)
+    CrystalBall.tsx       Layered animated crystal: liquid, glass, citrus, orbits
     LineIcon.tsx          Shared SVG interface icons on a 24-unit grid
   screens/                One per tab, plus AgeGate
   hooks/useShakeDetector.ts
@@ -360,7 +360,23 @@ Known open items, roughly by value:
 The interface uses deep oxblood red surfaces, ivory text, apricot primary actions,
 and mint stock indicators. Shared `SCREEN` spacing caps desktop content at
 1120px; Cabinet and Recipes use two, three, or four columns by viewport width.
-The home crystal's float and selection animation respect reduced motion.
+The home crystal uses layered SVG inside `Animated.View` wrappers: floating
+glass, two moving liquid layers, citrus, bubbles, reflections and orbiting
+sparks. Transforms and opacity use the native driver on phones; React does not
+render each frame. The tap, keyword finder and phone shake share the selection
+timeline. Idle loops stop when the hero scrolls out of view, the app backgrounds,
+or the user pauses motion. System reduced motion gives a still composition and
+an immediate selection with a short opacity fade. Stop selection callbacks on
+unmount so switching tabs during a swirl cannot deliver a stale result.
+
+Three.js (WebGL 2), Motion's browser SVG tools, and the Claude Motion design
+toolkit were reviewed for this effect. The existing Animated/SVG stack keeps
+one implementation across native and web, offline, with no new dependencies.
+References: [Three.js renderer](https://threejs.org/docs/pages/WebGLRenderer.html),
+[Motion SVG](https://motion.dev/docs/react-svg-animation),
+[Claude Motion](https://github.com/whaleyxbt/claude-motion), and
+[React Native 0.86 Animated](https://reactnative.dev/docs/0.86/animated).
+
 Keep favorite and rating buttons separate from the button that opens a recipe
 or toggles its details: nesting buttons produces invalid HTML on web.
 
