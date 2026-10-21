@@ -44,7 +44,10 @@ npm test                   # motion, recipe integrity and keyword discovery
 `vercel.json`, which runs `npx expo export --platform web && node
 scripts/postbuild.mjs` and serves `dist/`. No dashboard config needed.
 
-Current export: **~1.2 MB**, four Outfit font weights plus the subset icon font.
+Code and fonts export at about **1.2 MB**. The rendered hero GIF and its PNG
+poster are separate bundled assets; see `docs/MAGIC_ORB_VERIFICATION.json` for
+the animation's exact size and timing. Four Outfit font weights and the subset
+icon font remain in use.
 
 ---
 
@@ -56,7 +59,8 @@ Expo SDK 57 · React Native 0.86 · TypeScript · React 19.
 |---|---|
 | Local data | `expo-sqlite` on native, `localStorage` on web |
 | State | React context + in-memory mirror (`src/store.tsx`) |
-| Graphics | `react-native-svg` (ingredient art, ambient background) |
+| Graphics | `react-native-svg` for catalog art; a rendered Cycles GIF for the home crystal |
+| Animated images | `expo-image` with a matching PNG poster |
 | Animation | React Native's built-in `Animated` — **not** Reanimated |
 | Icons | `@expo/vector-icons` MaterialCommunityIcons, subset to 12 KB |
 | Sensors | `expo-sensors` accelerometer on native; `devicemotion` on mobile web |
@@ -107,7 +111,7 @@ src/
     Atmosphere.tsx        Quiet background glow + grain overlay
     IngredientArt.tsx     Parametric SVG bottles
     CocktailArt.tsx       Recipe illustrations, chosen by serving glass
-    CrystalBall.tsx       Layered animated crystal: liquid, glass, citrus, orbits
+    CrystalBall.tsx       Rendered GIF and reduced-motion/background poster
     LineIcon.tsx          Shared SVG interface icons on a 24-unit grid
   screens/                One per tab, plus AgeGate
   hooks/useShakeDetector.ts
@@ -115,10 +119,18 @@ src/
 scripts/
   postbuild.mjs           Injects PWA manifest/meta/SW into dist/index.html
   build-icon-font.py      Subsets the icon font (run after adding an icon)
+  install-orb-tools.ps1   Verified official Blender, FFmpeg and Gifski tools
+  render-orb.py           Cycles scene, periodic smoke, explicit optical boundaries
+  encode-orb.ps1          300 frames to a size-checked GIF and matching PNG
+  quantize-orb.py         Shared palette with periodic color history for a clean seam
+  verify-orb.py           Loop cadence, seam, palette and background checks
   assets/                 Image-generation pipeline (see §8)
 public/                   manifest, service worker, icons — copied to dist/
 docs/SPEC.html            Original architecture spec
 docs/DRINK_DISCOVERY.md    Research, keyword pipeline and content maintenance
+docs/MAGIC_ORB_PRODUCTION.md  Render and encode the home artwork
+assets/magic-orb.gif      Bundled offline animation; only the smoke moves
+assets/magic-orb-poster.png  Matching still for reduced motion and fallback
 ```
 
 ---
@@ -360,22 +372,25 @@ Known open items, roughly by value:
 The interface uses deep oxblood red surfaces, ivory text, apricot primary actions,
 and mint stock indicators. Shared `SCREEN` spacing caps desktop content at
 1120px; Cabinet and Recipes use two, three, or four columns by viewport width.
-The home crystal uses layered SVG inside `Animated.View` wrappers: floating
-glass, two moving liquid layers, citrus, bubbles, reflections and orbiting
-sparks. Transforms and opacity use the native driver on phones; React does not
-render each frame. The tap, keyword finder and phone shake share the selection
-timeline. Idle loops stop when the hero scrolls out of view, the app backgrounds,
-or the user pauses motion. System reduced motion gives a still composition and
-an immediate selection with a short opacity fade. Stop selection callbacks on
-unmount so switching tabs during a swirl cannot deliver a stale result.
+The home crystal is a bundled Cycles render played by `expo-image`. Sphere,
+coupe, amber liquid and ice stay fixed; a periodic purple/blue smoke field moves.
+There is no 3D engine or AI service in the running app. `CrystalBall` is purely
+decorative: its parent button, the keyword finder and phone shake share `onSpin`.
+Keep that handler outside the media component so decoding cannot block selection.
 
-Three.js (WebGL 2), Motion's browser SVG tools, and the Claude Motion design
-toolkit were reviewed for this effect. The existing Animated/SVG stack keeps
-one implementation across native and web, offline, with no new dependencies.
-References: [Three.js renderer](https://threejs.org/docs/pages/WebGLRenderer.html),
-[Motion SVG](https://motion.dev/docs/react-svg-animation),
-[Claude Motion](https://github.com/whaleyxbt/claude-motion), and
-[React Native 0.86 Animated](https://reactnative.dev/docs/0.86/animated).
+A GIF in an HTML `img` has no pause API. The component swaps to its matching PNG
+when motion is disabled, the hero is offscreen, or AppState is inactive. This
+also handles native playback without retaining an animation behind the poster.
+System reduced motion starts with a still and immediate selection; ordinary
+selection has a brief 600 ms feedback interval followed by the result reveal.
+Stop that interval on unmount so tab changes cannot deliver a stale result.
+Use the PNG as a placeholder and a decoding-error fallback. Keep both assets
+bundled with `require()` for offline use, rather than depending on a remote URL.
+
+See `docs/MAGIC_ORB_PRODUCTION.md` for source geometry, rendering, encoding and
+verification. Full rendered frames and the `.blend` project live outside the
+repository in the workspace's `orb-render` directory; commit only the delivery
+media, source scripts and verification receipt.
 
 Keep favorite and rating buttons separate from the button that opens a recipe
 or toggles its details: nesting buttons produces invalid HTML on web.

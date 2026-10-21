@@ -1,0 +1,112 @@
+{
+  "frames": 300,
+  "fps": 25,
+  "seconds": 12.0,
+  "width": 640,
+  "height": 640,
+  "bytes": 12185250,
+  "loop": "infinite",
+  "diagnostic_301_vs_1_mae": 2e-05,
+  "encoded_seam_mae": 0.43487,
+  "minimum_adjacent_step_mae": 0.393796,
+  "adjacent_step_mae_p95": 0.473965,
+  "smoke_palette_mae": 3.550919,
+  "poster_source_mae": 0.307118,
+  "gif_sha256": "02980306a5633f28732d8e78f9ca7552ad191a43345ffd045f4586efe172a0ba",
+  "poster_sha256": "a1d2cad7a6f237ac5dd678fa57402543cafc9762bf40c3b0111e19676605042c",
+  "render_script_sha256": "83dd90ff26cc20643d382f25b9281982eaf557664dd82c55d41d597cf462de99",
+  "quantizer_script_sha256": "cc39eb92435c2896714d2bf045a6883594447d7e79f5298d9b3c804a6987aa11",
+  "encoder_script_sha256": "a69d3c755931f947bd27f58eb0d9b6162f25dd8414d119f186845f956f38869c",
+  "render_config": {
+    "output": "..\\orb-render\\frames",
+    "resolution": 640,
+    "samples": 64,
+    "start": 1,
+    "end": 301,
+    "device": "ONEAPI",
+    "denoise": true,
+    "build_only": false,
+    "smoke_density": 35.0,
+    "blender": "4.5.14 LTS",
+    "fps": 25,
+    "period": 300,
+    "liquid_volume_ml": 120.056,
+    "open_liquid_edges": 0,
+    "volume_step_rate": 1.0,
+    "seed": 73,
+    "relative_ior": {
+      "glass_air": 1.52,
+      "liquid_glass": 0.8947368421052632,
+      "liquid_ice": 1.0381679389312977,
+      "ice_air": 1.31
+    }
+  },
+  "visual_review_required": [
+    "glass refraction",
+    "amber and ice visibility throughout loop",
+    "gradient stability",
+    "five continuous repeats"
+  ],
+  "encoding": {
+    "encoder": "FFmpeg shared palette + cyclic color quantization + Pillow GIF",
+    "width": 640,
+    "height": 640,
+    "frames": 300,
+    "fps": 25,
+    "seconds": 12,
+    "loop": "infinite",
+    "bytes": 12185250,
+    "palette_colors": 255,
+    "max_temporal_rgb_error": 8,
+    "threshold": 8,
+    "history_passes": 8,
+    "pixels_without_history": 50
+  },
+  "manual_visual_review": {
+    "status": "passed",
+    "completed_at_utc": "2026-10-21T17:54:25.384716+00:00",
+    "source_phases_inspected": [
+      1,
+      76,
+      151,
+      226
+    ],
+    "encoded_seam_phases_inspected": [
+      298,
+      299,
+      300,
+      1,
+      2,
+      3
+    ],
+    "observations": [
+      "Refractive shell, coupe, amber liquid and the single ice sphere stay legible.",
+      "Dense purple/blue smoke retains its gradients at the app display size.",
+      "No visible boundary jump in the closing-frame inspection; numerical seam is below neighboring-step p95.",
+      "GIF remained active in the visible browser document for 110 seconds, over nine loop periods."
+    ],
+    "app_checks": [
+      "1280x900 desktop and 390x844 phone layouts fit without horizontal overflow.",
+      "Tap while paused selected Dark n Stormy; tap while playing selected Autumn Highball.",
+      "Pause switches to the matching PNG; scrolling the hero offscreen switches to the PNG.",
+      "No browser errors or warnings."
+    ],
+    "automated_app_checks": {
+      "typecheck": "passed",
+      "unit_tests_passed": 22,
+      "exports": [
+        "web",
+        "iOS",
+        "Android"
+      ]
+    },
+    "device_limit": "Physical phone shake and native image playback were not available to test. The motion bridge and shake detector tests pass."
+  },
+  "source_still": {
+    "width": 4096,
+    "height": 4096,
+    "bytes": 42388392,
+    "sha256": "1d5ebd47916b7c854a5827f2126e3ff395b90e67ec812271c7b6649230040d7c",
+    "workspace_path": "orb-render/master4k/orb_0001.png"
+  }
+}

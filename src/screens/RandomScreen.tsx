@@ -72,7 +72,6 @@ export function RandomScreen({
   const scrollRef = useRef<ScrollView>(null);
   const resultOffset = useRef(0);
 
-  const spin = useRef(new Animated.Value(0)).current;
   const reveal = useRef(new Animated.Value(0)).current;
 
   const owned = useMemo(() => buildOwned(kit), [kit]);
@@ -115,13 +114,12 @@ export function RandomScreen({
   useEffect(() => {
     if (motionEnabled || !spinning.current) return;
     selectionAnimation.current?.stop();
-    spin.setValue(1);
     finishSelection.current?.();
-  }, [motionEnabled, spin]);
+  }, [motionEnabled]);
 
   const onSpin = () => {
     // A tap and a sensor callback can land before React renders the busy state.
-    if (spinning.current) return;
+    if (!mounted.current || spinning.current) return;
     spinning.current = true;
     setIsSpinning(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -164,13 +162,8 @@ export function RandomScreen({
       return;
     }
 
-    spin.setValue(0);
-    selectionAnimation.current = Animated.timing(spin, {
-      toValue: 1,
-      duration: 1100,
-      easing: Easing.inOut(Easing.cubic),
-      useNativeDriver: Platform.OS !== 'web',
-    });
+    // Selection feedback does not move the rendered glass; only its smoke moves.
+    selectionAnimation.current = Animated.delay(600);
     selectionAnimation.current.start(({ finished }) => { if (finished) show(); });
   };
 
@@ -228,8 +221,8 @@ export function RandomScreen({
           <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Find a drink with the crystal ball"
             accessibilityState={{ busy: isSpinning, disabled: isSpinning }}
             style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, styles.crystalButton]}>
-            <CrystalBall size={width >= 1000 ? 340 : wide ? 264 : Math.min(300, width - 98)}
-              motionEnabled={motionEnabled} visible={heroVisible} selection={spin} />
+            <CrystalBall size={width >= 1000 ? 340 : wide ? 264 : Math.min(300, width - 100)}
+              motionEnabled={motionEnabled} visible={heroVisible} />
           </Pressable>
           <View style={styles.crystalCaption}>
             <Icon name="shuffle-variant" size={13} color={C.accent} />
@@ -582,8 +575,8 @@ const styles = StyleSheet.create({
   heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
   crystalStage: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
-  crystalButton: { borderRadius: 160 },
-  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: -18 },
+  crystalButton: { borderRadius: 24, overflow: 'hidden', backgroundColor: '#000', borderWidth: 1, borderColor: '#FFFFFF14' },
+  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 0 },
   crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 9, letterSpacing: 1.2 },
   motionToggle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   moodHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 },
