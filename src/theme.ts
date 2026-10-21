@@ -2,16 +2,17 @@ import { Platform } from 'react-native';
 
 // Design tokens.
 //
-// A quiet cocktail lounge: warm paper, apricot, and mint on charcoal plum.
+// A quiet cocktail lounge: warm paper, apricot, and mint on deep burgundy.
 
 export const C = {
   // Ground gets three steps so panels can sit *on* something rather than float
   // on one flat colour.
-  ink: '#121116',
-  ink2: '#17151C',
-  ink3: '#1D1A23',
-  panel: '#211E28',
-  raise: '#2C2734',
+  ink: '#170F12',
+  ink2: '#1D1418',
+  ink3: '#24191E',
+  panel: '#2C1E23',
+  raise: '#3C2930',
+  ambient: '#A15250',
 
   line: 'rgba(245, 232, 216, 0.09)',
   line2: 'rgba(245, 232, 216, 0.18)',
@@ -21,8 +22,8 @@ export const C = {
   glass: 'rgba(245, 232, 216, 0.035)',
 
   text: '#F7F0E8',
-  dim: '#B8AFBF',
-  faint: '#A299AD',
+  dim: '#C0AFB2',
+  faint: '#AD989E',
   accent: '#F2B88D',
   accentSoft: '#F9D3B2',
 
@@ -38,9 +39,10 @@ export const C = {
 
 /** Translucent fills for glass surfaces, lightest at the top of the stack. */
 export const GLASS = {
-  card: ['#24202B', '#1D1B23'] as const,
-  raised: ['#302A38', '#24202C'] as const,
-  sheet: ['#292430', '#1D1A23'] as const,
+  card: ['#302127', '#251A1E'] as const,
+  raised: ['#3D2931', '#302127'] as const,
+  sheet: ['#35242B', '#24191E'] as const,
+  hero: ['#442A30', '#2F2025', '#24191E'] as const,
 };
 
 /**

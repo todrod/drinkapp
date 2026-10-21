@@ -11,8 +11,8 @@ export function Atmosphere() {
       <Svg width={width} height={height}>
         <Defs>
           <RadialGradient id="room-glow">
-            <Stop offset="0" stopColor="#765682" stopOpacity={0.15} />
-            <Stop offset="1" stopColor="#765682" stopOpacity={0} />
+            <Stop offset="0" stopColor={C.ambient} stopOpacity={0.15} />
+            <Stop offset="1" stopColor={C.ambient} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Ellipse cx={width * 0.8} cy={height * 0.1} rx={width * 0.8} ry={height * 0.7} fill="url(#room-glow)" />

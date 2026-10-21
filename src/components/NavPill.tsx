@@ -44,11 +44,11 @@ const styles = StyleSheet.create({
   shell: {
     width: '92%', maxWidth: 480, flexDirection: 'row', padding: 6,
     borderRadius: 26, borderWidth: 1, borderColor: C.line2,
-    backgroundColor: '#25212C', ...SHADOW.lift,
+    backgroundColor: C.panel, ...SHADOW.lift,
   },
   tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 3 },
   icon: { width: 54, height: 32, borderRadius: R.pill, alignItems: 'center', justifyContent: 'center' },
-  iconOn: { backgroundColor: '#40313A' },
+  iconOn: { backgroundColor: C.raise },
   label: { color: C.dim, fontFamily: F.medium, fontSize: 11 },
   labelOn: { color: C.accent },
 });

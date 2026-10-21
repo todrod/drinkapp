@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F, R, S, SCREEN } from '../theme';
+import { C, F, GLASS, R, S, SCREEN } from '../theme';
 import { accentForRecipe } from '../data/liquids';
 import {
   Body,
@@ -174,7 +174,7 @@ export function RandomScreen({
         </Pressable>
       </View>
 
-      <LinearGradient colors={['#302637', '#231F2D', '#1E1B25']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+      <LinearGradient colors={GLASS.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={[styles.hero, wide && styles.heroWide]}>
         <View style={[styles.heroCopy, wide && { flex: 1 }]}>
           <Text style={styles.eyebrow}>A LITTLE SPONTANEITY, PERFECTLY MIXED</Text>
@@ -291,7 +291,7 @@ export function RandomScreen({
             <Icon name="chevron-right" size={20} color={C.faint} />
           </Pressable>
           <Pressable onPress={() => goTo('recipes')} accessibilityRole="button" accessibilityLabel="Browse cocktail recipes" style={styles.quickCard}>
-            <View style={[styles.quickIcon, { backgroundColor: '#3B2B32' }]}><Icon name="book-open-variant" size={24} color={C.accent} /></View>
+            <View style={[styles.quickIcon, { backgroundColor: C.raise }]}><Icon name="book-open-variant" size={24} color={C.accent} /></View>
             <View style={{ flex: 1 }}><Text style={styles.quickTitle}>Something for every mood</Text><Dim>Explore {recipes.length} cocktail recipes</Dim></View>
             <Icon name="chevron-right" size={20} color={C.faint} />
           </Pressable>
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   scroll: { ...SCREEN, gap: 20 },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
   brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  brandIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#33262A', alignItems: 'center', justifyContent: 'center' },
+  brandIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: C.raise, alignItems: 'center', justifyContent: 'center' },
   brandName: { fontFamily: F.semibold, fontSize: 23, letterSpacing: -0.7, color: C.text },
   stockPill: { flexDirection: 'row', alignItems: 'center', gap: 7, padding: 10, minHeight: 44 },
   readyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.teal },

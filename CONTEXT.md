@@ -321,7 +321,7 @@ Known open items, roughly by value:
 
 ## 11. Conventions
 
-The interface uses charcoal-plum surfaces, ivory text, apricot primary actions,
+The interface uses deep burgundy surfaces, ivory text, apricot primary actions,
 and mint stock indicators. Shared `SCREEN` spacing caps desktop content at
 1120px; Cabinet and Recipes use two, three, or four columns by viewport width.
 The home crystal's float and selection animation respect reduced motion.
