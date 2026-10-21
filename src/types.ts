@@ -127,6 +127,14 @@ export interface RecipeIngredient {
   unit: Unit;
   role: Role;
   isOptional: boolean;
+  /** Required for free-text ingredients before they can be called alcohol-free. */
+  alcohol?: 'none' | 'contains' | 'unknown';
+}
+
+export interface PartyPlan {
+  title: string;
+  entries: { recipeId: string; servings: number }[];
+  unit: 'oz' | 'ml';
 }
 
 export interface DrinkRecipe {

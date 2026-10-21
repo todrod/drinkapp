@@ -1,3 +1,4 @@
+import { isAlcoholFree } from '../logic/recipes';
 import React, { useMemo, useState } from 'react';
 import {
   FlatList,
@@ -67,8 +68,8 @@ export function CabinetScreen({
   const cardWidth = (Math.min(width, 1120) - 48 - 12 * (columns - 1)) / columns;
 
   const makeable = useMemo(
-    () => countMakeable(recipes, kit, prefs.allowSubstitutes),
-    [recipes, kit, prefs.allowSubstitutes]
+    () => countMakeable(recipes, kit, prefs.allowSubstitutes, prefs.zeroProofMode),
+    [recipes, kit, prefs.allowSubstitutes, prefs.zeroProofMode]
   );
 
   const sections = useMemo(() => {
@@ -124,7 +125,7 @@ export function CabinetScreen({
                 key={key}
                 onPress={() => onViewChange(key)}
                 accessibilityRole="tab"
-                accessibilityState={{ selected: on }}
+                accessibilityState={{ selected: on }} aria-selected={on}
                 style={[styles.segmentTab, on ? styles.segmentTabOn : null]}
               >
                 <Text style={[styles.segmentText, on ? styles.segmentTextOn : null]}>{label}</Text>
@@ -155,7 +156,7 @@ export function CabinetScreen({
 
         {kit.length > 0 ? (
           <Dim style={{ marginBottom: S.md }}>
-            Pours {makeable} {pluralize(makeable, 'drink')} right now.
+            {makeable} {pluralize(makeable, 'recipe')} you can make{prefs.zeroProofMode ? ' · alcohol-free' : ''}.
           </Dim>
         ) : null}
 
@@ -163,12 +164,13 @@ export function CabinetScreen({
           <EmptyState
             icon="cupboard"
             title="The cabinet is empty"
-            body={`Load your bar — all ${MY_BAR.length} bottles, mixers and bitters, with the near-empties already marked low.`}
+            body="Add the bottles and mixers you own. You can also explore a sample bar to try the app."
             action={
               <>
-                <PrimaryButton label={`LOAD MY BAR · ${MY_BAR.length}`} onPress={loadMyBar} />
+                <PrimaryButton label="Add what you have" onPress={() => setAdding(true)} />
+                <GhostButton label={`Try the owner’s sample bar · ${MY_BAR.length}`} onPress={loadMyBar} style={{ marginTop: S.sm }} />
                 <GhostButton
-                  label="Just the 8-bottle starter kit"
+                  label="Try an 8-ingredient sample bar"
                   onPress={addStarterKit}
                   style={{ marginTop: S.sm }}
                 />
@@ -198,7 +200,7 @@ export function CabinetScreen({
                   <Pressable
                     onPress={() => toggleSection(cat)}
                     accessibilityRole="button"
-                    accessibilityState={{ expanded: open }}
+                    accessibilityState={{ expanded: open }} aria-expanded={open}
                     style={styles.sectionHead}
                   >
                     <Icon name={CATEGORY_GLYPH[cat]} size={15} color={CATEGORY_COLOR[cat]} />
@@ -268,7 +270,7 @@ export function CabinetScreen({
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
           addToShopping(id, name);
         }}
-        unlocksFor={(id) => countUnlockedBy(id, recipes, kit, prefs.allowSubstitutes)}
+        unlocksFor={(id) => countUnlockedBy(id, prefs.zeroProofMode ? recipes.filter((r) => isAlcoholFree(r)) : recipes, kit, prefs.allowSubstitutes)}
       />
 
       <Modal visible={settings} animationType="slide" transparent onRequestClose={() => setSettings(false)}>
@@ -284,7 +286,7 @@ export function CabinetScreen({
             <View style={{ gap: S.sm, marginTop: S.sm }}>
               <SettingRow
                 label="Zero-proof mode"
-                hint="Filter everything to non-alcoholic"
+                hint="Show confirmed alcohol-free recipes and Mix lab ingredients"
                 on={prefs.zeroProofMode}
                 onToggle={() => setPref('zeroProofMode', !prefs.zeroProofMode)}
               />
@@ -323,7 +325,7 @@ function SettingRow({
     <Pressable
       onPress={onToggle}
       accessibilityRole="switch"
-      accessibilityState={{ checked: on }}
+      accessibilityState={{ checked: on }} aria-checked={on}
       style={styles.settingRow}
     >
       <View style={{ flex: 1 }}>
@@ -373,7 +375,7 @@ function ItemCard({
         {item.name}
       </Text>
       <Text style={[styles.cardMeta, item.level === 'low' && { color: C.amber }]}>{({ full: 'Well stocked', half: 'Half remaining', low: 'Running low', out: 'Time to restock' })[item.level]}</Text>
-      <QuantityBar level={item.level} onChange={onLevel} />
+      <QuantityBar name={item.name} level={item.level} onChange={onLevel} />
     </LinearGradient>
   );
 }

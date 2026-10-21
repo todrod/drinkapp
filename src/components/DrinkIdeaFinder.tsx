@@ -51,7 +51,7 @@ export function DrinkIdeaFinder({ query, onChange, discovery, readyCount, matchC
 const styles = StyleSheet.create({
   panel: { gap: 12 },
   title: { fontFamily: F.medium, fontSize: 22, color: C.text, letterSpacing: -0.4 },
-  body: { fontFamily: F.regular, color: C.dim, fontSize: 12, lineHeight: 19 },
+  body: { fontFamily: F.regular, color: C.dim, fontSize: 14, lineHeight: 21 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: { flex: 1, minWidth: 0, minHeight: 50, paddingHorizontal: 14, paddingVertical: 12, borderRadius: R.sm,
     borderWidth: 1, borderColor: C.line2, backgroundColor: C.ink2, color: C.text, fontSize: 14, fontFamily: F.regular },

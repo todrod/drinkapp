@@ -1,3 +1,4 @@
+import { isAlcoholFree } from '../logic/recipes';
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -38,6 +39,7 @@ export function ShoppingList() {
   } = useData();
 
   const [custom, setCustom] = useState('');
+  const eligible = useMemo(() => prefs.zeroProofMode ? recipes.filter(isAlcoholFree) : recipes, [recipes, prefs.zeroProofMode]);
 
   const listedIds = useMemo(
     () => new Set(shopping.map((s) => s.catalogItemId).filter(Boolean) as string[]),
@@ -45,13 +47,13 @@ export function ShoppingList() {
   );
 
   const projection = useMemo(
-    () => projectList(recipes, kit, Array.from(listedIds), prefs.allowSubstitutes),
-    [recipes, kit, listedIds, prefs.allowSubstitutes]
+    () => projectList(eligible, kit, Array.from(listedIds), prefs.allowSubstitutes),
+    [eligible, kit, listedIds, prefs.allowSubstitutes]
   );
 
   const suggestions = useMemo(
-    () => rankPurchases(recipes, kit, prefs.allowSubstitutes, { exclude: listedIds, limit: 6 }),
-    [recipes, kit, prefs.allowSubstitutes, listedIds]
+    () => rankPurchases(eligible, kit, prefs.allowSubstitutes, { exclude: listedIds, limit: 6 }),
+    [eligible, kit, prefs.allowSubstitutes, listedIds]
   );
 
   const gain = projection.projected - projection.current;
@@ -65,7 +67,7 @@ export function ShoppingList() {
           <View style={styles.projRow}>
             <View>
               <Text style={styles.projNow}>{projection.current}</Text>
-              <Label>pourable now</Label>
+              <Label>recipes now</Label>
             </View>
             <Icon name="arrow-right" size={18} color={C.faint} />
             <View>
@@ -117,7 +119,7 @@ export function ShoppingList() {
               item={item}
               unlocks={
                 item.catalogItemId
-                  ? unlockedBy(item.catalogItemId, recipes, kit, prefs.allowSubstitutes)
+                  ? unlockedBy(item.catalogItemId, eligible, kit, prefs.allowSubstitutes)
                   : []
               }
               onToggle={() => {
@@ -245,7 +247,7 @@ function Row({
         onPress={onToggle}
         hitSlop={10}
         accessibilityRole="checkbox"
-        accessibilityState={{ checked: item.done }}
+        accessibilityState={{ checked: item.done }} aria-checked={item.done}
         accessibilityLabel={`${item.name}, ${item.done ? 'bought' : 'not bought'}`}
         style={[styles.check, item.done ? styles.checkOn : null]}
       >

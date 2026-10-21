@@ -131,7 +131,7 @@ export const type = {
   h2: { fontFamily: F.semibold, fontSize: 21, lineHeight: 26, letterSpacing: 0.2 },
   h3: { fontFamily: F.medium, fontSize: 17, lineHeight: 22 },
   body: { fontFamily: F.regular, fontSize: 15, lineHeight: 22 },
-  small: { fontFamily: F.regular, fontSize: 13, lineHeight: 18 },
+  small: { fontFamily: F.regular, fontSize: 14, lineHeight: 20 },
   label: { fontFamily: F.medium, fontSize: 11, letterSpacing: 1.3 },
   mono: { fontFamily: F.medium, fontSize: 11, letterSpacing: 0.6 },
 } as const;

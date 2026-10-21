@@ -1,12 +1,12 @@
 # Magic Orb Rendering and App Integration
 
-The home artwork is an original Blender Cycles render of a hollow crystal sphere containing a suspended coupe, amber cocktail and one large ice sphere. Only the dense purple and electric blue smoke animates. The running app plays a bundled GIF through `expo-image`; it needs no Blender installation, network service or AI model.
+The home artwork is an original Blender Cycles render of a hollow crystal sphere containing a suspended coupe, amber cocktail and one large ice sphere. Only the dense purple and electric blue smoke animates. The running app plays a 2.03 MB animated WebP through `expo-image`, with the original GIF retained as a delivery artifact; it needs no Blender installation, network service or AI model. See [hosting and media delivery](HOSTING.md#media-delivery) for the smaller asset’s settings and reproduction command.
 
 ## Delivery and source files
 
 The delivery profile is 640 × 640 at 25 fps for 12 seconds, with 300 distinct phases and infinite repetition. A matching PNG represents phase zero for reduced motion and paused playback. The GIF budget is 15,000,000 bytes. The exact encoded size, timing, source hashes and seam measurements belong in [the verification receipt](MAGIC_ORB_VERIFICATION.json).
 
-Keep rendered frames, the `.blend` project and the optional 4096 pixel still in the workspace's `orb-render` directory outside the repository. The app includes only `assets/magic-orb.gif` and `assets/magic-orb-poster.png`. Render source is [scripts/render-orb.py](../scripts/render-orb.py).
+Keep rendered frames, the `.blend` project and the optional 4096 pixel still in the workspace's `orb-render` directory outside the repository. The app bundles `assets/magic-orb.webp` and `assets/magic-orb-poster.png`; `assets/magic-orb.gif` remains in source as the original deliverable. Render source is [scripts/render-orb.py](../scripts/render-orb.py).
 
 The web loop uses 640 pixel Cycles renders with 64 fixed samples, Open Image Denoise, fixed seed 73, volume step rate 1.0 and persistent scene data. These are the practical delivery settings, replacing the initial planning baseline of an entire 4K sequence at 2048 samples. A 4K still preserves source detail without adding a 4K animation to the app. Higher-resolution sequences remain available through the renderer's CLI options.
 

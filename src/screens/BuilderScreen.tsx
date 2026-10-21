@@ -24,7 +24,7 @@ import { pluralize } from '../format';
 import { Icon } from '../icons';
 import { IngredientArt } from '../components/IngredientArt';
 import { artForCatalog } from '../data/art';
-import { blankRecipe } from './RecipesScreen';
+import { blankRecipe, isAlcoholFree, isServingReady, roleForCatalog } from '../logic/recipes';
 import { TabKey } from '../components/NavPill';
 
 interface Step {
@@ -46,13 +46,17 @@ const STEPS: Step[] = [
     max: 3,
   },
 ];
+const ZERO_BASE_CATEGORIES: Category[] = ['beverage', 'mixer'];
 
 export function BuilderScreen({
-  goTo,
+  goTo, onOpen, onEdit,
 }: {
+  onOpen: (r: DrinkRecipe) => void;
+  onEdit: (r: DrinkRecipe) => void;
   goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
-  const { kit, recipes, saveRecipe } = useData();
+  const { kit, recipes, prefs, setPref } = useData();
+  const allowedKit = useMemo(() => prefs.zeroProofMode ? kit.filter((k) => !!k.catalogItemId && CATALOG_BY_ID[k.catalogItemId]?.typicalAbv === 0) : kit, [kit, prefs.zeroProofMode]);
   const { width } = useWindowDimensions();
   const [stepIndex, setStepIndex] = useState(0);
   const [picked, setPicked] = useState<Record<string, string[]>>({ base: [], mixers: [], toppings: [] });
@@ -62,6 +66,7 @@ export function BuilderScreen({
   const fill = useRef(new Animated.Value(0)).current;
 
   const step = STEPS[stepIndex];
+  const stepCategories = step.key === 'base' && prefs.zeroProofMode ? ZERO_BASE_CATEGORIES : step.categories;
   const selected = picked[step.key] ?? [];
 
   const progress = done ? 1 : (stepIndex + selected.length / Math.max(step.max, 1)) / STEPS.length;
@@ -76,24 +81,25 @@ export function BuilderScreen({
 
   // Only things actually in the cabinet — the whole point is building from stock.
   const options = useMemo(() => {
-    const inStep = kit.filter((k) => step.categories.includes(k.category) && k.level !== 'out');
+    const heldElsewhere = new Set(Object.entries(picked).filter(([key]) => key !== step.key).flatMap(([, ids]) => ids));
+    const inStep = allowedKit.filter((k) => stepCategories.includes(k.category) && k.level !== 'out' && !heldElsewhere.has(k.id));
     if (!subFilter) return inStep;
     return inStep.filter((k) => {
       const cat = k.catalogItemId ? CATALOG_BY_ID[k.catalogItemId] : null;
       return cat?.spiritType === subFilter || cat?.kind === subFilter;
     });
-  }, [kit, step, subFilter]);
+  }, [allowedKit, step, stepCategories, subFilter, picked]);
 
   const subFilters = useMemo(() => {
     const set = new Set<string>();
-    for (const k of kit) {
-      if (!step.categories.includes(k.category)) continue;
+    for (const k of allowedKit) {
+      if (!stepCategories.includes(k.category) || k.level === 'out') continue;
       const cat = k.catalogItemId ? CATALOG_BY_ID[k.catalogItemId] : null;
       if (cat?.spiritType) set.add(cat.spiritType);
       else if (cat?.kind && step.key !== 'base') set.add(cat.kind);
     }
     return Array.from(set).sort();
-  }, [kit, step]);
+  }, [allowedKit, step, stepCategories]);
 
   const allPicked = useMemo(
     () => Object.values(picked).flat(),
@@ -133,6 +139,7 @@ export function BuilderScreen({
   const matches = useMemo(() => {
     if (pickedCatalogIds.length === 0) return [];
     return recipes
+      .filter((r) => isServingReady(r) && (!prefs.zeroProofMode || isAlcoholFree(r)))
       .map((r) => {
         const ids = new Set(r.ingredients.map((i) => i.catalogItemId).filter(Boolean) as string[]);
         const hits = pickedCatalogIds.filter((p) => ids.has(p)).length;
@@ -141,7 +148,7 @@ export function BuilderScreen({
       .filter((m) => m.hits > 0)
       .sort((a, b) => b.hits - a.hits || a.recipe.name.localeCompare(b.recipe.name))
       .slice(0, 6);
-  }, [recipes, pickedCatalogIds]);
+  }, [recipes, pickedCatalogIds, prefs.zeroProofMode]);
 
   const reset = () => {
     setPicked({ base: [], mixers: [], toppings: [] });
@@ -161,15 +168,14 @@ export function BuilderScreen({
           displayName: row.name,
           amount: null,
           unit: 'oz' as const,
-          role: (cat && cat.category === 'beverage' ? 'base' : 'mixer') as 'base' | 'mixer',
+          role: picked.base.includes(row.id) ? 'base' : roleForCatalog(row.catalogItemId),
+          alcohol: 'unknown',
           isOptional: false,
         };
       }),
-      steps: ['Built in the Drink Builder — adjust the measures to taste.'],
+      steps: [],
     };
-    saveRecipe(draft);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    goTo('recipes');
+    onEdit(draft);
   };
 
   if (kit.length === 0) {
@@ -192,7 +198,8 @@ export function BuilderScreen({
       <View style={{ gap: 6, marginBottom: 8 }}>
         <Text style={styles.eyebrow}>MAKE IT YOUR OWN</Text>
         <Wordmark>Mix lab</Wordmark>
-        <Dim>A good drink, one ingredient at a time.</Dim>
+        <Dim>{prefs.zeroProofMode ? 'Zero-proof mode · build with confirmed alcohol-free ingredients.' : 'A good drink, one ingredient at a time.'}</Dim>
+        <View style={{ alignSelf: 'flex-start', marginTop: 8 }}><Chip label="Alcohol-free build" active={prefs.zeroProofMode} onPress={() => { reset(); setPref('zeroProofMode', !prefs.zeroProofMode); }} /></View>
       </View>
 
       {/* ── Stepper ─────────────────────────────────────────────────────── */}
@@ -242,7 +249,7 @@ export function BuilderScreen({
               ))}
             </View>
             <View style={{ flexDirection: 'row', gap: S.sm }}>
-              <PrimaryButton label="SAVE AS RECIPE" onPress={saveAsRecipe} style={{ flex: 1 }} />
+              <PrimaryButton label="SET MEASURES & SAVE" onPress={saveAsRecipe} style={{ flex: 1 }} />
               <GhostButton label="Start over" onPress={reset} color={C.teal} style={{ flex: 1 }} />
             </View>
           </Panel>
@@ -258,15 +265,15 @@ export function BuilderScreen({
           ) : (
             <View style={{ gap: S.sm, marginTop: S.sm }}>
               {matches.map((m) => (
-                <View key={m.recipe.id} style={styles.matchRow}>
+                <Pressable key={m.recipe.id} accessibilityRole="button" accessibilityLabel={`Open ${m.recipe.name}`} onPress={() => onOpen(m.recipe)} style={styles.matchRow}>
                   <View style={[styles.matchDot, { backgroundColor: accentForRecipe(m.recipe) }]} />
                   <View style={{ flex: 1 }}>
                     <Body>{m.recipe.name}</Body>
                     <Dim>
-                      uses {m.hits} of your {m.total} {pluralize(m.total, 'pick')}
+                      uses {m.hits} of your {m.total} {pluralize(m.total, 'pick')} · View recipe
                     </Dim>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </View>
           )}
@@ -315,7 +322,7 @@ export function BuilderScreen({
                     onPress={() => toggle(item)}
                     disabled={full}
                     accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
+                    accessibilityState={{ selected: on, disabled: full }} aria-pressed={on} aria-disabled={full}
                     style={({ pressed }) => [
                       styles.tile,
                       { width: width < 700 ? '47%' : '31.2%' },
@@ -338,7 +345,7 @@ export function BuilderScreen({
               })}
               {options.length === 0 ? (
                 <Dim style={{ paddingVertical: S.lg }}>
-                  Nothing in the cabinet fits this step yet.
+                  {prefs.zeroProofMode && step.key === 'base' ? 'Choose a juice, tea or other alcohol-free mixer as your base. Add one to your bar if none is on hand.' : 'Nothing in the cabinet fits this step yet.'}
                 </Dim>
               ) : null}
             </ScrollView>

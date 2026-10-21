@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Animated,
+  Modal,
   Platform,
   Pressable,
   StyleProp,
@@ -97,6 +98,10 @@ export function Press({
       onPressOut={() => to(1)}
       hitSlop={hitSlop}
       style={style}
+      aria-disabled={disabled || a11y.accessibilityState?.disabled}
+      aria-busy={a11y.accessibilityState?.busy}
+      aria-expanded={a11y.accessibilityState?.expanded}
+      aria-pressed={a11y.accessibilityRole === 'button' ? a11y.accessibilityState?.selected : undefined}
       {...a11y}
     >
       <Animated.View style={[styles.pressInner, { transform: [{ scale }] }]}>
@@ -228,17 +233,19 @@ export function PrimaryButton({
 
 export function GhostButton({
   label,
+  accessibilityLabel,
   onPress,
   color = C.text,
   style,
 }: {
   label: string;
+  accessibilityLabel?: string;
   onPress: () => void;
   color?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   return (
-    <Press onPress={onPress} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={label} style={[styles.pillRadius, style]}>
+    <Press onPress={onPress} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} style={[styles.pillRadius, style]}>
       <View style={styles.ghost}>
         <View style={styles.edge} pointerEvents="none" />
         <Text style={[styles.ghostText, { color }]}>{label}</Text>
@@ -319,6 +326,7 @@ export function Stars({
             accessibilityRole="button"
             accessibilityLabel={`Rate ${n} of 5${value === n ? ', current rating' : ''}`}
             accessibilityState={{ selected: value === n }}
+            aria-pressed={value === n}
             style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
           >
             {star}
@@ -347,15 +355,22 @@ export function HaveCount({ have, total }: { have: number; total: number }) {
 export function QuantityBar({
   level,
   onChange,
+  name = 'ingredient',
 }: {
   level: Level;
   onChange: (next: Level) => void;
+  name?: string;
 }) {
+  const [open, setOpen] = useState(false);
   const fill = LEVEL_FILL[level] ?? 0;
   const color = LEVEL_COLOR[level];
   return (
     <View>
-      <View style={styles.track}>
+      <Pressable onPress={() => setOpen(true)} accessibilityRole="button"
+        accessibilityLabel={`${name}: ${level}. Change remaining stock`} aria-expanded={open}
+        style={{ minHeight: 44, justifyContent: 'center', gap: 7 }}>
+      <Text style={{ color, fontSize: 12, fontFamily: type.label.fontFamily }}>{level.toUpperCase()} · CHANGE</Text>
+      <View style={styles.track} pointerEvents="none">
         <LinearGradient
           colors={[color + '99', color]}
           start={{ x: 0, y: 0 }}
@@ -370,17 +385,21 @@ export function QuantityBar({
           ]}
         />
       </View>
-      <View style={styles.trackZones}>
-        {LEVELS.map((l) => (
-          <Pressable
-            key={l}
-            onPress={() => onChange(l)}
-            style={styles.zone}
-            accessibilityRole="adjustable"
-            accessibilityLabel={`Set remaining to ${l}`}
-          />
-        ))}
-      </View>
+      </Pressable>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: '#000B', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: C.panel, padding: 24, borderRadius: R.lg, width: '100%', maxWidth: 360, gap: 8 }}>
+            <Heading>Remaining stock</Heading><Dim>{name}</Dim>
+            {([...LEVELS].reverse()).map((l) => <Pressable key={l} accessibilityRole="button"
+              accessibilityLabel={`Set ${name} remaining to ${l}`} aria-pressed={level === l} accessibilityState={{ selected: level === l }}
+              onPress={() => { onChange(l); setOpen(false); }}
+              style={{ minHeight: 48, padding: 12, borderRadius: R.sm, backgroundColor: l === level ? C.raise : C.ink2, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Body>{l.charAt(0).toUpperCase() + l.slice(1)}</Body>{l === level ? <Body style={{ color: C.teal }}>✓</Body> : null}
+            </Pressable>)}
+            <GhostButton label="Cancel" onPress={() => setOpen(false)} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -470,7 +489,7 @@ const styles = StyleSheet.create({
 
   haveRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   haveDot: { width: 5, height: 5, borderRadius: 3 },
-  have: { ...type.label, fontSize: 9.5, letterSpacing: 1.1 },
+  have: { ...type.label, fontSize: 11, letterSpacing: 0.5 },
 
   track: {
     height: 4,
@@ -488,16 +507,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginLeft: -6,
   },
-  trackZones: {
-    position: 'absolute',
-    top: -20,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    height: 44,
-  },
-  zone: { flex: 1 },
-
   ruleRow: { flexDirection: 'row', alignItems: 'center', gap: S.md },
   ruleLine: { flex: 1, height: 1, backgroundColor: C.line },
 });

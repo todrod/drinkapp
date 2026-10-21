@@ -8,7 +8,9 @@ import React, {
 } from 'react';
 import { CATALOG_BY_ID } from './data/catalog';
 import * as store from './db/store';
-import { CatalogItem, DrinkRecipe, InventoryItem, Level, Prefs, ShoppingItem } from './types';
+import { CatalogItem, DrinkRecipe, InventoryItem, Level, PartyPlan, Prefs, ShoppingItem } from './types';
+import { DEFAULT_PARTY, MAX_MENU, normalizeParty } from './logic/hosting';
+import { isAlcoholFree, isServingReady } from './logic/recipes';
 import { MY_BAR } from './data/bar';
 
 /**
@@ -34,6 +36,10 @@ interface Ctx {
   saveRecipe: (recipe: DrinkRecipe) => void;
   removeRecipe: (id: string) => void;
   markMade: (id: string) => void;
+  undoMade: (id: string, previousLastMadeAt: number | null) => void;
+  party: PartyPlan;
+  setParty: (party: PartyPlan) => void;
+  addToParty: (id: string) => void;
   toggleFavorite: (id: string) => void;
   rateRecipe: (id: string, rating: number) => void;
 
@@ -59,6 +65,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [kit, setKit] = useState<InventoryItem[]>([]);
   const [recipes, setRecipes] = useState<DrinkRecipe[]>([]);
   const [shopping, setShopping] = useState<ShoppingItem[]>([]);
+  const [party, updateParty] = useState<PartyPlan>(DEFAULT_PARTY);
   const [prefs, setPrefs] = useState<Prefs>({
     ageGateAcceptedAt: null,
     zeroProofMode: false,
@@ -71,6 +78,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setRecipes(store.loadRecipes());
     setShopping(store.loadShopping());
     setPrefs(store.loadPrefs());
+    updateParty(store.loadParty());
     setReady(true);
   }, []);
 
@@ -177,6 +185,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveRecipe = useCallback((recipe: DrinkRecipe) => {
+    recipe = { ...recipe, isZeroProof: isAlcoholFree(recipe) };
     store.saveRecipe(recipe);
     setRecipes((prev) => {
       const i = prev.findIndex((r) => r.id === recipe.id);
@@ -185,6 +194,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       next[i] = recipe;
       return next;
     });
+  }, []);
+
+  const setParty = useCallback((next: PartyPlan) => {
+    const normalized = normalizeParty(next);
+    store.saveParty(normalized);
+    updateParty(normalized);
+  }, []);
+
+  const addToParty = useCallback((id: string) => {
+    const recipe = recipes.find((r) => r.id === id);
+    if (!recipe || !isServingReady(recipe) || (prefs.zeroProofMode && !isAlcoholFree(recipe))) return;
+    updateParty((prev) => {
+      if (prev.entries.some((e) => e.recipeId === id) || prev.entries.length >= MAX_MENU) return prev;
+      const next = { ...prev, entries: [...prev.entries, { recipeId: id, servings: 8 }] };
+      store.saveParty(next);
+      return next;
+    });
+  }, [recipes, prefs.zeroProofMode]);
+
+  const undoMade = useCallback((id: string, previousLastMadeAt: number | null) => {
+    setRecipes((prev) => prev.map((r) => {
+      if (r.id !== id) return r;
+      const next = { ...r, timesMade: Math.max(0, r.timesMade - 1), lastMadeAt: previousLastMadeAt };
+      store.saveRecipe(next);
+      return next;
+    }));
   }, []);
 
   const removeRecipe = useCallback((id: string) => {
@@ -310,6 +345,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       saveRecipe,
       removeRecipe,
       markMade,
+      undoMade, party, setParty, addToParty,
       toggleFavorite,
       rateRecipe,
       shopping,
@@ -321,7 +357,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setPref,
     }),
     [
-      ready, kit, recipes, prefs, shopping,
+      ready, kit, recipes, prefs, shopping, undoMade, party, setParty, addToParty,
       addFromCatalog, addCustom, setLevel, removeFromKit, restoreKitItem,
       addStarterKit, loadMyBar, saveRecipe, removeRecipe, markMade, toggleFavorite,
       rateRecipe, shopping, addToShopping, toggleShoppingDone, removeFromShopping,

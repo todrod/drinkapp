@@ -1,5 +1,6 @@
 import { CATALOG_BY_ID } from '../data/catalog';
 import { discoverDrinks, ideaAllowsSubstitution } from './discovery';
+import { isAlcoholFree, isServingReady } from './recipes';
 import {
   DrinkRecipe,
   GeneratorResult,
@@ -96,11 +97,13 @@ export function matchRecipe(
   const substitutions: Substitution[] = [];
   const missing: string[] = [];
   const softMissing: string[] = [];
+  const protectAlcoholFree = isAlcoholFree(recipe);
 
   for (const ing of recipe.ingredients) {
     if (ing.isOptional) continue;
     const hard = HARD_ROLES.has(ing.role);
-    const res = resolveIngredient(ing, owned, allowSubstitutes, excludedIds, allowSubstitution);
+    const res = resolveIngredient(ing, owned, allowSubstitutes, excludedIds, (wanted, used) =>
+      (!protectAlcoholFree || CATALOG_BY_ID[used]?.typicalAbv === 0) && (!allowSubstitution || allowSubstitution(wanted, used)));
 
     if (res.resolved) {
       if (res.substitution) substitutions.push(res.substitution);
@@ -119,7 +122,7 @@ export function matchRecipe(
   );
 
   return {
-    ok: pourable && missing.length === 0,
+    ok: pourable && isServingReady(recipe) && missing.length === 0,
     substitutions,
     missing,
     softMissing,
@@ -144,7 +147,7 @@ export interface GenerateOptions {
 }
 
 function passesFilters(r: DrinkRecipe, o: GenerateOptions): boolean {
-  if (o.zeroProofMode && !r.isZeroProof) return false;
+  if (o.zeroProofMode && !isAlcoholFree(r)) return false;
   if (o.vibes.length && !o.vibes.some((v) => r.vibeTags.includes(v))) return false;
   if (o.themes?.length && (!r.theme || !o.themes.includes(r.theme))) return false;
   if (o.lockedIngredientId) {
@@ -207,7 +210,7 @@ export function generate(o: GenerateOptions): GeneratorResult {
   // ── Nothing matched. Work out the cheapest way to fix that. ──────────────
 
   const unfilteredMakeable = o.recipes.filter(
-    (r) => matchRecipe(r, owned, o.allowSubstitutes).ok
+    (r) => (!o.zeroProofMode || isAlcoholFree(r)) && matchRecipe(r, owned, o.allowSubstitutes).ok
   ).length;
 
   const filtersAreTheProblem =
@@ -230,8 +233,9 @@ export function generate(o: GenerateOptions): GeneratorResult {
   const unlocks = new Map<string, number>();
   const idByName = new Map<string, string | null>();
   // Never broaden a typed request silently (especially "no gin" or "mocktail").
-  const pool = idea ? filtered : filtered.length ? filtered : o.recipes;
+  const pool = filtered;
   for (const r of pool) {
+    if (!isServingReady(r)) continue;
     const m = matchRecipe(r, owned, o.allowSubstitutes, excludedIds, allowIdeaSubstitution);
     if (m.missing.length === 1) {
       const key = m.missing[0];
@@ -265,10 +269,11 @@ export function generate(o: GenerateOptions): GeneratorResult {
 export function countMakeable(
   recipes: DrinkRecipe[],
   kit: InventoryItem[],
-  allowSubstitutes: boolean
+  allowSubstitutes: boolean,
+  zeroProofMode = false
 ): number {
   const owned = buildOwned(kit);
-  return recipes.filter((r) => matchRecipe(r, owned, allowSubstitutes).ok).length;
+  return recipes.filter((r) => (!zeroProofMode || isAlcoholFree(r)) && matchRecipe(r, owned, allowSubstitutes).ok).length;
 }
 
 /**

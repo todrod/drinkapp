@@ -21,7 +21,7 @@ export function formatAmount(amount: number | null): string {
 export function formatIngredient(ing: RecipeIngredient): string {
   const amount = formatAmount(ing.amount);
   const unitless = ing.unit === 'piece' || ing.unit === 'top';
-  const unit = unitless ? '' : ing.unit;
+  const unit = unitless || ing.amount === null ? '' : ing.unit;
   const measure = [amount, unit].filter(Boolean).join(' ');
   return measure ? `${measure} ${ing.displayName}` : ing.displayName;
 }

@@ -16,7 +16,7 @@ export function ShakeControl({ status, onToggle }: { status: ShakeStatus; onTogg
     status === 'denied' ? 'Allow motion in your device or browser settings, then try again.' :
     status === 'unavailable' ? 'No motion data arrived. You can still tap the crystal ball.' :
     status === 'insecure' ? 'Open the HTTPS version of the app to enable phone motion.' :
-    'Allow motion, then shake your phone to bring the crystal ball to life.';
+    'Allow motion, then shake your phone to choose a drink.';
 
   return (
     <View style={styles.wrap}>

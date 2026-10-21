@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -20,26 +20,66 @@ import { RandomScreen } from './src/screens/RandomScreen';
 import { CabinetScreen, CabinetView } from './src/screens/CabinetScreen';
 import { RecipesScreen } from './src/screens/RecipesScreen';
 import { BuilderScreen } from './src/screens/BuilderScreen';
+import { RecipeDetail } from './src/components/RecipeDetail';
+import { RecipeEditor } from './src/components/RecipeEditor';
+import { ServingView } from './src/components/ServingView';
+import { PartyScreen, type PartyMode } from './src/screens/PartyScreen';
+import { OverlayLayer } from './src/components/Sheet';
+import { GuestMenuScreen } from './src/screens/GuestMenuScreen';
+import { blankRecipe, isAlcoholFree, isServingReady } from './src/logic/recipes';
+import { decodeGuestMenu } from './src/logic/guestMenu';
+import { initialGuestToken, leaveGuestMenu, subscribeGuestToken } from './src/guestLink';
+import type { DrinkRecipe } from './src/types';
 
 function Shell() {
-  const { ready, prefs, setPref } = useData();
+  const { ready, recipes, prefs, setPref, saveRecipe } = useData();
   const [tab, setTab] = useState<TabKey>('random');
   // Which Cabinet segment to land on. Adding something to the shopping list
   // from elsewhere should show you the list, not the stock you already had.
   const [cabinetView, setCabinetView] = useState<CabinetView>('stock');
+  const [partyOpen, setPartyOpen] = useState(false);
+  const [partyMode, setPartyMode] = useState<PartyMode>('menu');
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<DrinkRecipe | null>(null);
+  const [serving, setServing] = useState<{ recipe: DrinkRecipe; servings: number; unit: 'ml' | 'oz' } | null>(null);
+  const [guestToken, setGuestToken] = useState<string | null>(null);
+  const [linkReady, setLinkReady] = useState(false);
+  const guestMenu = useMemo(() => guestToken === null ? null : decodeGuestMenu(guestToken), [guestToken]);
+  const detail = detailId ? recipes.find((r) => r.id === detailId) : null;
+  const overlay = partyOpen || !!detail || !!editing || !!serving;
+
+  useEffect(() => {
+    let active = true;
+    initialGuestToken().then((token) => { if (active) { setGuestToken(token); setLinkReady(true); } }).catch(() => { if (active) setLinkReady(true); });
+    const unsubscribe = subscribeGuestToken(setGuestToken);
+    return () => { active = false; unsubscribe(); };
+  }, []);
+
+  const editRecipe = (recipe: DrinkRecipe) => {
+    // Bundled recipes become a personal copy; existing edits already saved in
+    // previous releases keep their IDs and data until the user makes a copy.
+    setDetailId(null);
+    setEditing(recipe.origin === 'user' ? recipe : { ...recipe, ...blankRecipe(), name: recipe.name + ' · my version', ingredients: recipe.ingredients.map((i) => ({ ...i })), method: recipe.method, steps: [...recipe.steps], garnish: recipe.garnish, glass: recipe.glass, vibeTags: [...recipe.vibeTags], sourceUrl: recipe.sourceUrl, sourceNote: recipe.sourceNote, theme: recipe.theme, accent: recipe.accent });
+  };
+  const startServing = (recipe: DrinkRecipe, servings = 1, unit: 'ml' | 'oz' = 'ml') => {
+    if (!isServingReady(recipe) || (prefs.zeroProofMode && !isAlcoholFree(recipe))) return;
+    setDetailId(null); setServing({ recipe, servings, unit });
+  };
 
   const goTo = (next: TabKey, view?: CabinetView) => {
     if (view) setCabinetView(view);
     setTab(next);
   };
 
-  if (!ready) {
+  if (!ready || !linkReady) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={C.teal} />
       </View>
     );
   }
+
+  if (guestToken !== null) return <SafeAreaView style={{ flex: 1 }}><GuestMenuScreen key={guestToken} menu={guestMenu} onLeave={() => { leaveGuestMenu(); setGuestToken(null); }} /></SafeAreaView>;
 
   if (!prefs.ageGateAcceptedAt) {
     return <AgeGate onAccept={() => setPref('ageGateAcceptedAt', Date.now())} />;
@@ -48,12 +88,19 @@ function Shell() {
   return (
     <View style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        {tab === 'random' && <RandomScreen goTo={goTo} />}
+        {tab === 'random' && <RandomScreen goTo={goTo} onParty={() => setPartyOpen(true)} onServe={startServing} active={!overlay} />}
         {tab === 'cabinet' && <CabinetScreen view={cabinetView} onViewChange={setCabinetView} />}
-        {tab === 'recipes' && <RecipesScreen />}
-        {tab === 'builder' && <BuilderScreen goTo={goTo} />}
+        {tab === 'recipes' && <RecipesScreen onOpen={(r) => setDetailId(r.id)} onNew={() => setEditing(blankRecipe())} />}
+        {tab === 'builder' && <BuilderScreen goTo={goTo} onOpen={(r) => setDetailId(r.id)} onEdit={setEditing} />}
       </SafeAreaView>
       <NavPill active={tab} onChange={setTab} />
+      <OverlayLayer visible={overlay} onClose={() => {
+        if (serving) setServing(null); else if (editing) setEditing(null); else if (detail) setDetailId(null); else setPartyOpen(false);
+      }}>
+      {serving ? <ServingView key={serving.recipe.id} {...serving} onClose={() => setServing(null)} /> : editing ? <RecipeEditor key={editing.id} recipe={editing} onClose={() => setEditing(null)} onSave={(r) => { saveRecipe(r); setEditing(null); setDetailId(r.id); }} /> : detail ?
+        <RecipeDetail recipe={detail} onClose={() => setDetailId(null)} onEdit={editRecipe} onServe={startServing} onShopping={() => { setDetailId(null); setPartyOpen(false); goTo('cabinet', 'shopping'); }} onParty={() => { setDetailId(null); setPartyMode('menu'); setPartyOpen(true); }} /> : partyOpen ?
+        <PartyScreen mode={partyMode} setMode={setPartyMode} onClose={() => setPartyOpen(false)} onRecipe={(r) => setDetailId(r.id)} onServe={startServing} onShopping={() => { setPartyOpen(false); goTo('cabinet', 'shopping'); }} /> : null}
+      </OverlayLayer>
     </View>
   );
 }

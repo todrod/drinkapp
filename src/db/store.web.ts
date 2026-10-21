@@ -1,4 +1,5 @@
-import { DrinkRecipe, InventoryItem, Prefs, ShoppingItem } from '../types';
+import { DrinkRecipe, InventoryItem, PartyPlan, Prefs, ShoppingItem } from '../types';
+import { normalizeParty } from '../logic/hosting';
 import { SEED_RECIPES } from '../data/recipes';
 
 /**
@@ -108,3 +109,6 @@ export function loadPrefs(): Prefs {
 export function savePrefs(prefs: Prefs) {
   lsSet('prefs', prefs);
 }
+
+export function loadParty(): PartyPlan { return normalizeParty(lsGet('party', null)); }
+export function saveParty(party: PartyPlan) { lsSet('party', normalizeParty(party)); }

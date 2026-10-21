@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
-import { DrinkRecipe, InventoryItem, Prefs, ShoppingItem } from '../types';
+import { DrinkRecipe, InventoryItem, PartyPlan, Prefs, ShoppingItem } from '../types';
+import { normalizeParty } from '../logic/hosting';
 import { SEED_RECIPES } from '../data/recipes';
 
 /**
@@ -10,7 +11,7 @@ import { SEED_RECIPES } from '../data/recipes';
  * export the same functions, so nothing above this layer knows the difference.
  */
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -109,6 +110,7 @@ function migrate(handle: SQLite.SQLiteDatabase) {
     `);
   }
 
+  if (from < 5) handle.execSync('CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)');
   handle.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
@@ -254,4 +256,12 @@ export function savePrefs(prefs: Prefs) {
       [key, JSON.stringify(value)]
     );
   }
+}
+
+export function loadParty(): PartyPlan {
+  const row = sqlite().getFirstSync<{ value: string }>('SELECT value FROM app_state WHERE key = ?', ['party']);
+  try { return normalizeParty(row ? JSON.parse(row.value) : null); } catch { return normalizeParty(null); }
+}
+export function saveParty(party: PartyPlan) {
+  sqlite().runSync('INSERT INTO app_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', ['party', JSON.stringify(normalizeParty(party))]);
 }

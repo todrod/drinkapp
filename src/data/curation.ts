@@ -1,5 +1,6 @@
 import type { DrinkRecipe } from '../types';
 import { normalizeText } from '../logic/text';
+import { isAlcoholFree } from '../logic/recipes';
 
 export const CURATION_DATE = '21 Oct 2026';
 export const TREND_SOURCE = 'https://www.bacardilimited.com/media/news-archive/connections-local-flavors-and-luxurious-experiences-top-the-2026-bacardi-cocktail-trends-report/';
@@ -34,7 +35,7 @@ export function inCollection(recipe: DrinkRecipe, collection: Collection): boole
     case 'classic': return !recipe.theme && (recipe.id.startsWith('book-') ||
       recipe.vibeTags.some((t) => t === 'classic' || t === 'modern-classic') || (bundled && ALL_TIME.has(name)));
     case 'specialty': return recipe.vibeTags.some((t) => ['specialty', 'dessert', 'complex', 'tiki'].includes(t));
-    case 'zero-proof': return recipe.isZeroProof;
+    case 'zero-proof': return isAlcoholFree(recipe);
     case 'themed': return !!recipe.theme;
   }
 }

@@ -3,6 +3,7 @@ import { inCollection, type Collection } from '../data/curation';
 import { THEMES } from '../data/seed';
 import type { DrinkRecipe } from '../types';
 import { containsPhrase, normalizeText } from './text';
+import { isAlcoholFree } from './recipes';
 
 interface Concept {
   key: string; label: string; aliases: string[];
@@ -172,7 +173,7 @@ export function parseDrinkIdea(query: string, recipes: DrinkRecipe[]): DrinkInte
 
 function matchesConcept(r: DrinkRecipe, c: Concept): boolean {
   if (c.favorite) return r.isFavorite;
-  if (c.zeroProof) return r.isZeroProof;
+  if (c.zeroProof) return isAlcoholFree(r);
   if (c.collection) return inCollection(r, c.collection);
   if (c.easy) return r.ingredients.filter((i) => !i.isOptional && ['base', 'modifier', 'mixer', 'sweetener'].includes(i.role)).length <= 3;
   if (c.names?.includes(normalizeText(r.name))) return true;
@@ -194,7 +195,7 @@ export function discoverDrinks(recipes: DrinkRecipe[], query: string): Discovery
   for (const recipe of recipes) {
     if (intent.exclude.some((group) => group.concepts.some((c) => matchesConcept(recipe, c)))) continue;
     // Even the explicitly labelled alternatives must honor an alcohol-free request.
-    if (intent.include.some((g) => g.concepts.every((c) => c.zeroProof)) && !recipe.isZeroProof) continue;
+    if (intent.include.some((g) => g.concepts.every((c) => c.zeroProof)) && !isAlcoholFree(recipe)) continue;
     const matched: string[] = []; const missing: string[] = [];
     let score = 0;
     for (const group of intent.include) {

@@ -22,7 +22,7 @@ export function NavPill({ active, onChange }: { active: TabKey; onChange: (key: 
           const selected = tab.key === active;
           return (
             <Pressable key={tab.key} accessibilityRole="tab" accessibilityLabel={tab.label}
-              accessibilityState={{ selected }} style={styles.tab}
+              accessibilityState={{ selected }} aria-selected={selected} style={styles.tab}
               onPress={() => {
                 if (!selected) Haptics.selectionAsync().catch(() => {});
                 onChange(tab.key);

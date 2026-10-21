@@ -1,5 +1,35 @@
 # The Drink Shaker — project context
 
+## Hosting update · 21 October 2026
+
+The Discover hosting card now opens a saved party menu, batch calculator,
+shopping totals and a read-only guest QR/link view. **Start mixing** in the
+recipe book and generator opens the shared step-based serving view, with
+keep-awake, confirmation and undo. See [docs/HOSTING.md](docs/HOSTING.md) for
+behavior, arithmetic, sharing bounds, verification and device-test limits.
+
+New shared logic: `logic/recipes.ts` owns alcohol classification and draft
+readiness; `logic/hosting.ts` owns counts, conversion and prep separation;
+`logic/guestMenu.ts` and `menuCompression.ts` own validated, bounded guest
+snapshots. Never trust a legacy `isZeroProof` boolean over ingredient metadata.
+Free text is unknown until declared, and alcohol-free recipes cannot use
+alcoholic substitutions. Drafts are not pourable recipes.
+
+The native database is schema **v5**; its new `app_state` table stores the party
+plan. Web uses a separate `shaker:party` localStorage key. Existing bottles,
+recipe edits, ratings and favorites are preserved. Keep the native/web split.
+
+The app bundles a **2,034,634-byte animated WebP** at 480 px / 25 fps / 12 seconds
+instead of the 12.2 MB GIF. The original GIF remains in source. The rendering
+and tap/shake paths are independent. See `scripts/encode-orb-web.ps1`.
+
+Host overlay content shares one native modal, and the four main tabs remain.
+`npm test` now runs 34 tests, including hosting arithmetic, guest validation,
+web persistence and a real SQLite v4-to-v5 migration. Explicit ARIA props are
+needed for web selected/checked states. Keep `keyboardDismissMode="none"` on
+web search scroll views: RN Web treats programmatic scrolling as a drag and
+would dismiss input focus when results shrink.
+
 Handover document for another engineer or coding agent. Written 25 Sep 2026
 against commit `0db0e87`.
 
@@ -22,7 +52,7 @@ drinks you can actually pour. Four tabs:
 | **Live** | https://drinkapp-rust.vercel.app |
 | **Repo** | https://github.com/todrod/drinkapp (branch `main`) |
 | **Spec** | `docs/SPEC.html` in this repo — the original architecture document |
-| **Local path** | `C:\Users\todro\Desktop\projects\drinking app\shaker` |
+| **Local path** | `C:\Users\todro\Documents\ChatGPT\drink shaker app\drinkapp` |
 
 The repo root **is** the Expo project. There is no nesting.
 

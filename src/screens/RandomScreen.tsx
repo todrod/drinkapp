@@ -42,13 +42,17 @@ import { ShakeControl } from '../components/ShakeControl';
 import { DrinkIdeaFinder } from '../components/DrinkIdeaFinder';
 import { RecipeSources } from '../components/RecipeSources';
 import { discoverDrinks, ideaAllowsSubstitution } from '../logic/discovery';
+import { isAlcoholFree } from '../logic/recipes';
 
 export function RandomScreen({
-  goTo,
+  goTo, onParty, onServe, active = true,
 }: {
+  onParty: () => void;
+  onServe: (r: DrinkRecipe) => void;
+  active?: boolean;
   goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
-  const { recipes, kit, prefs, setPref, markMade, rateRecipe, addToShopping } = useData();
+  const { recipes, kit, prefs, setPref, rateRecipe, addToShopping } = useData();
   const [vibes, setVibes] = useState<string[]>([]);
   const [themes, setThemes] = useState<string[]>([]);
   const [ideaQuery, setIdeaQuery] = useState('');
@@ -57,15 +61,16 @@ export function RandomScreen({
   const [showFilters, setShowFilters] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
   const [animationPaused, setAnimationPaused] = useState(false);
-  const [heroVisible, setHeroVisible] = useState(true);
+  const [heroVisible, setHeroVisible] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const spinning = useRef(false);
   const mounted = useRef(true);
   const selectionAnimation = useRef<Animated.CompositeAnimation | null>(null);
   const finishSelection = useRef<(() => void) | null>(null);
   const heroBounds = useRef({ top: 0, bottom: Infinity });
-  const { width } = useWindowDimensions();
-  const wide = width >= 640;
+  const { width, height } = useWindowDimensions();
+  const scrollY = useRef(0);
+  const wide = width >= 840;
   const motionEnabled = !reduceMotion && !animationPaused;
   const animateScroll = useRef(motionEnabled);
   animateScroll.current = motionEnabled;
@@ -75,13 +80,14 @@ export function RandomScreen({
   const reveal = useRef(new Animated.Value(0)).current;
 
   const owned = useMemo(() => buildOwned(kit), [kit]);
-  const readyCount = useMemo(() => countMakeable(recipes, kit, prefs.allowSubstitutes), [recipes, kit, prefs.allowSubstitutes]);
+  const eligible = useMemo(() => prefs.zeroProofMode ? recipes.filter(isAlcoholFree) : recipes, [recipes, prefs.zeroProofMode]);
+  const readyCount = useMemo(() => countMakeable(eligible, kit, prefs.allowSubstitutes), [eligible, kit, prefs.allowSubstitutes]);
   const selectedRecipe = result?.ok ? recipes.find((recipe) => recipe.id === result.recipe.id) ?? result.recipe : null;
-  const discovery = useMemo(() => discoverDrinks(recipes, ideaQuery), [recipes, ideaQuery]);
+  const discovery = useMemo(() => discoverDrinks(eligible, ideaQuery), [eligible, ideaQuery]);
   const inventoryIdeas = useMemo(() => discovery.matches.map(({ recipe: r }) => {
     const match = matchRecipe(r, owned, prefs.allowSubstitutes, discovery.intent.excludedIngredientIds,
       (wanted, used) => ideaAllowsSubstitution(discovery.intent, wanted, used));
-    const ready = (!prefs.zeroProofMode || r.isZeroProof) && (!vibes.length || vibes.some((v) => r.vibeTags.includes(v))) &&
+    const ready = (!prefs.zeroProofMode || isAlcoholFree(r)) && (!vibes.length || vibes.some((v) => r.vibeTags.includes(v))) &&
       (!themes.length || (!!r.theme && themes.includes(r.theme))) && match.ok;
     return { name: r.name, ready, missing: match.missing };
   }).sort((a, b) => Number(b.ready) - Number(a.ready)), [discovery, owned, prefs.zeroProofMode, prefs.allowSubstitutes, vibes, themes]);
@@ -117,9 +123,25 @@ export function RandomScreen({
     finishSelection.current?.();
   }, [motionEnabled]);
 
+  useEffect(() => {
+    selectionAnimation.current?.stop();
+    finishSelection.current = null;
+    spinning.current = false;
+    setIsSpinning(false);
+    setResult(null);
+  }, [prefs.zeroProofMode, prefs.allowSubstitutes]);
+
+  useEffect(() => {
+    if (active) return;
+    selectionAnimation.current?.stop();
+    finishSelection.current = null;
+    spinning.current = false;
+    setIsSpinning(false);
+  }, [active]);
+
   const onSpin = () => {
     // A tap and a sensor callback can land before React renders the busy state.
-    if (!mounted.current || spinning.current) return;
+    if (!active || !mounted.current || spinning.current) return;
     spinning.current = true;
     setIsSpinning(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -167,7 +189,7 @@ export function RandomScreen({
     selectionAnimation.current.start(({ finished }) => { if (finished) show(); });
   };
 
-  const shakeSensor = useShakeDetector({ enabled: prefs.shakeToShake, onShake: onSpin });
+  const shakeSensor = useShakeDetector({ enabled: active && prefs.shakeToShake, onShake: onSpin });
 
   const toggleShakeSensor = async () => {
     if (shakeSensor.status === 'ready' || shakeSensor.status === 'waiting') {
@@ -190,9 +212,10 @@ export function RandomScreen({
   };
 
   return (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
       scrollEventThrottle={100} onScroll={({ nativeEvent }) => {
         const top = nativeEvent.contentOffset.y;
+        scrollY.current = top;
         const visible = top < heroBounds.current.bottom && top + nativeEvent.layoutMeasurement.height > heroBounds.current.top;
         setHeroVisible((previous) => previous === visible ? previous : visible);
       }}>
@@ -203,30 +226,42 @@ export function RandomScreen({
         </View>
         <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Open my bar" style={styles.stockPill}>
           <View style={styles.readyDot} />
-          <Text style={styles.stockText}>{readyCount} drinks ready</Text>
+          <Text style={styles.stockText}>{readyCount} recipes you can make</Text>
         </Pressable>
       </View>
 
+      <Pressable onPress={onParty} accessibilityRole="button" accessibilityLabel="Plan a party menu" style={styles.hostEntry}>
+        <View style={{ flex: 1, gap: 3 }}><Text style={styles.quickTitle}>Good company. Great drinks.</Text><Dim>Plan a party menu · batch · serve</Dim></View>
+        <Icon name="chevron-right" size={22} color={C.accent} />
+      </Pressable>
+      {kit.length === 0 ? <Panel style={{ gap: 10 }}><Heading>Start with what’s on your shelf</Heading><Dim>Add your own ingredients to see recipes you can make.</Dim><PrimaryButton label="Add what you have" onPress={() => goTo('cabinet')} /></Panel> : null}
+      <DrinkIdeaFinder query={ideaQuery} onChange={(value) => { setIdeaQuery(value); setResult(null); }}
+        discovery={discovery} matchCount={discovery.matches.length} readyCount={ideaReadyCount} inventoryIdeas={inventoryIdeas}
+        busy={isSpinning} onFind={onSpin} />
+
       <LinearGradient colors={GLASS.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        onLayout={({ nativeEvent: { layout } }) => { heroBounds.current = { top: layout.y, bottom: layout.y + layout.height }; }}
-        style={[styles.hero, wide && styles.heroWide]}>
-        <View style={[styles.heroCopy, wide && { flex: 1 }]}>
-          <Text style={styles.eyebrow}>A LITTLE SPONTANEITY, PERFECTLY MIXED</Text>
-          <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }]}>A little magic.{'\n'}A great drink.</Text>
-          <Text style={styles.heroBody}>Find your next favorite cocktail, made with what's already on your shelf.</Text>
-          <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} />
-          <ShakeControl status={shakeSensor.status} onToggle={toggleShakeSensor} />
+        onLayout={({ nativeEvent: { layout } }) => {
+          heroBounds.current = { top: layout.y, bottom: layout.y + layout.height };
+          setHeroVisible(scrollY.current < layout.y + layout.height && scrollY.current + height - 100 > layout.y);
+        }}
+        style={[styles.hero, wide && styles.heroWide, width < 560 && { padding: 16, gap: 12 }]}>
+        <View style={[styles.heroCopy, wide && { flex: 1 }, width < 560 && { flexGrow: 1, flexBasis: width - 48 - 34 - 12 - (width < 360 ? 106 : 134) }]}>
+          <Text style={styles.eyebrow}>LET THE SPIRITS DECIDE</Text>
+          <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }, width < 560 && { fontSize: 24, lineHeight: 28, letterSpacing: -0.7 }]}>A little magic.{'\n'}A great drink.</Text>
+          {width >= 360 ? <Text style={styles.heroBody}>{prefs.zeroProofMode ? 'An alcohol-free surprise.' : width < 560 ? 'A surprise from your shelf.' : 'A surprise made from what’s already on your shelf.'}</Text> : null}
+          {width >= 560 ? <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} /> : null}
+
         </View>
-        <View style={[styles.crystalStage, wide && { flex: 1 }]}>
+        <View style={[styles.crystalStage, wide && { flex: 1 }, width < 560 && { flexGrow: 0, flexShrink: 0, width: width < 360 ? 106 : 134 }]}>
           <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Find a drink with the crystal ball"
-            accessibilityState={{ busy: isSpinning, disabled: isSpinning }}
+            accessibilityState={{ busy: isSpinning, disabled: isSpinning }} aria-busy={isSpinning} aria-disabled={isSpinning}
             style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, styles.crystalButton]}>
-            <CrystalBall size={width >= 1000 ? 340 : wide ? 264 : Math.min(300, width - 100)}
-              motionEnabled={motionEnabled} visible={heroVisible} />
+            <CrystalBall size={wide ? 260 : width >= 560 ? 208 : width < 360 ? 104 : 132}
+              motionEnabled={motionEnabled} visible={heroVisible && active} />
           </Pressable>
           <View style={styles.crystalCaption}>
-            <Icon name="shuffle-variant" size={13} color={C.accent} />
-            <Text style={styles.crystalCaptionText}>{isSpinning ? 'A LITTLE MAGIC IN THE MIX…' : 'TAP TO FIND YOUR POUR'}</Text>
+            {width >= 560 ? <Icon name="shuffle-variant" size={13} color={C.accent} /> : null}
+            <Text style={styles.crystalCaptionText}>{width < 560 ? 'TAP TO PICK' : isSpinning ? 'A LITTLE MAGIC IN THE MIX…' : 'TAP TO FIND YOUR POUR'}</Text>
             {!reduceMotion ? <Pressable onPress={() => setAnimationPaused((paused) => !paused)} disabled={isSpinning}
               accessibilityRole="button" accessibilityLabel={animationPaused ? 'Play crystal animation' : 'Pause crystal animation'}
               style={({ pressed }) => [styles.motionToggle, { opacity: pressed || isSpinning ? 0.5 : 1 }]}>
@@ -234,22 +269,22 @@ export function RandomScreen({
             </Pressable> : null}
           </View>
         </View>
+        {width < 560 ? <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={{ width: '100%' }} /> : null}
       </LinearGradient>
+      <ShakeControl status={shakeSensor.status} onToggle={toggleShakeSensor} />
 
-      <DrinkIdeaFinder query={ideaQuery} onChange={(value) => { setIdeaQuery(value); setResult(null); }}
-        discovery={discovery} matchCount={discovery.matches.length} readyCount={ideaReadyCount} inventoryIdeas={inventoryIdeas}
-        busy={isSpinning} onFind={onSpin} />
+
 
       <View style={styles.moodHead}>
         <Text style={styles.sectionTitle}>Quick filters</Text>
         <Pressable onPress={() => setShowFilters(v => !v)} accessibilityRole="button" accessibilityLabel="Customize drink filters"
-          accessibilityState={{ expanded: showFilters }} style={styles.filterToggle}>
+          accessibilityState={{ expanded: showFilters }} aria-expanded={showFilters} style={styles.filterToggle}>
           <Icon name="tune-variant" size={17} color={C.dim} />
           <Text style={styles.filterToggleText}>{showFilters ? 'Less' : 'More filters'}{filterCount ? ' · ' + filterCount : ''}</Text>
         </Pressable>
       </View>
       <View style={styles.moodRow}>
-        <Chip label="Surprise me" active={vibes.length === 0 && !prefs.zeroProofMode} onPress={() => { setVibes([]); setPref('zeroProofMode', false); }} />
+        <Chip label="Surprise me" active={vibes.length === 0} onPress={() => { setVibes([]); setThemes([]); }} />
         {[['refreshing', 'Refreshing'], ['spirit-forward', 'Spirit-forward'], ['tropical', 'Tropical']].map(([key, label]) => (
           <Chip key={key} label={label} active={vibes.includes(key)} onPress={() => setVibes(v => v.includes(key) ? v.filter(t => t !== key) : [...v, key])} />
         ))}
@@ -279,7 +314,6 @@ export function RandomScreen({
                   onPress={() => {
                     setVibes([]);
                     setThemes([]);
-                    setPref('zeroProofMode', false);
                   }}
                 />
               ) : null}
@@ -325,12 +359,12 @@ export function RandomScreen({
         <View style={styles.quickLinks}>
           <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Explore my bar" style={styles.quickCard}>
             <View style={styles.quickIcon}><Icon name="cupboard" size={24} color={C.teal} /></View>
-            <View style={{ flex: 1 }}><Text style={styles.quickTitle}>{kit.length ? 'Your bar, full of possibilities' : 'Great drinks start here'}</Text><Dim>{kit.length ? readyCount + ' drinks from ' + kit.length + ' ingredients' : 'Add the bottles and mixers you have.'}</Dim></View>
+            <View style={{ flex: 1 }}><Text style={styles.quickTitle}>{kit.length ? 'Your bar, full of possibilities' : 'Great drinks start here'}</Text><Dim>{kit.length ? readyCount + ' recipes from ' + kit.length + ' ingredients' : 'Add the bottles and mixers you have.'}</Dim></View>
             <Icon name="chevron-right" size={20} color={C.faint} />
           </Pressable>
           <Pressable onPress={() => goTo('recipes')} accessibilityRole="button" accessibilityLabel="Browse cocktail recipes" style={styles.quickCard}>
             <View style={[styles.quickIcon, { backgroundColor: C.raise }]}><Icon name="book-open-variant" size={24} color={C.accent} /></View>
-            <View style={{ flex: 1 }}><Text style={styles.quickTitle}>Something for every mood</Text><Dim>Explore {recipes.length} cocktail recipes</Dim></View>
+            <View style={{ flex: 1 }}><Text style={styles.quickTitle}>Something for every mood</Text><Dim>Explore {eligible.length} cocktail recipes</Dim></View>
             <Icon name="chevron-right" size={20} color={C.faint} />
           </Pressable>
         </View>
@@ -343,10 +377,7 @@ export function RandomScreen({
               recipe={selectedRecipe ?? result.recipe}
               have={countHave(result.recipe, owned, prefs.allowSubstitutes)}
               substitutions={result.substitutions}
-              onMade={() => {
-                markMade(result.recipe.id);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-              }}
+              onMade={() => onServe(selectedRecipe ?? result.recipe)}
               onRate={(n) => rateRecipe(result.recipe.id, n)}
               onAgain={onSpin}
             />
@@ -362,7 +393,6 @@ export function RandomScreen({
                 setVibes([]);
                 setThemes([]);
                 setIdeaQuery('');
-                setPref('zeroProofMode', false);
                 setResult(null);
               }}
               goTo={goTo}
@@ -404,7 +434,7 @@ function ResultCard({
 
   return (
     <Panel padded={false} accent={accentForRecipe(recipe)} style={{ overflow: 'hidden' }}>
-      <Pressable onPress={() => setExpanded((v) => !v)} accessibilityRole="button" accessibilityLabel={recipe.name + ", toggle recipe details"} accessibilityState={{ expanded }}>
+      <Pressable onPress={() => setExpanded((v) => !v)} accessibilityRole="button" accessibilityLabel={recipe.name + ", toggle recipe details"} accessibilityState={{ expanded }} aria-expanded={expanded}>
         <View style={styles.resultTop}>
           <LinearGradient
             colors={[accentForRecipe(recipe) + '22', accentForRecipe(recipe) + '08']}
@@ -466,7 +496,7 @@ function ResultCard({
       ) : null}
 
       <View style={styles.resultActions}>
-        <PrimaryButton label="MAKE IT" onPress={onMade} style={{ flex: 1 }} />
+        <PrimaryButton label="Start mixing" onPress={onMade} style={{ flex: 1 }} />
         <GhostButton label="Spin again" onPress={onAgain} color={C.teal} style={{ flex: 1 }} />
       </View>
     </Panel>
@@ -551,7 +581,7 @@ function FallbackPanel({
       <Icon name="bottle-tonic-outline" size={34} color={C.amber} style={styles.fallbackIcon} />
       <Heading style={{ textAlign: 'center' }}>Nothing makes a full drink yet</Heading>
       <Dim style={styles.fallbackBody}>
-        You need at least a base spirit and something to mix it with.
+        Add ingredients from a recipe you like, then try the crystal ball again.
       </Dim>
       <PrimaryButton label="OPEN MY CABINET" onPress={() => goTo('cabinet')} style={styles.fallbackBtn} />
     </Panel>
@@ -559,25 +589,26 @@ function FallbackPanel({
 }
 
 const styles = StyleSheet.create({
-  scroll: { ...SCREEN, gap: 20 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
+  scroll: { ...SCREEN, gap: 18 },
+  brandRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
   brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   brandIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: C.raise, alignItems: 'center', justifyContent: 'center' },
   brandName: { fontFamily: F.semibold, fontSize: 23, letterSpacing: -0.7, color: C.text },
   stockPill: { flexDirection: 'row', alignItems: 'center', gap: 7, padding: 10, minHeight: 44 },
   readyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.teal },
   stockText: { fontFamily: F.regular, fontSize: 12, color: C.dim },
-  hero: { borderRadius: R.xl, borderWidth: 1, borderColor: C.line2, padding: 24, overflow: 'hidden' },
-  heroWide: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 40, paddingVertical: 20, minHeight: 360 },
-  heroCopy: { gap: 16, zIndex: 1 },
+  hostEntry: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 16, borderRadius: R.md, borderWidth: 1, borderColor: C.accent + '55', backgroundColor: C.panel },
+  hero: { gap: 22, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', borderRadius: R.xl, borderWidth: 1, borderColor: C.line2, padding: 24, overflow: 'hidden' },
+  heroWide: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 28, paddingVertical: 24, minHeight: 300 },
+  heroCopy: { gap: 12, zIndex: 1, flexGrow: 1, flexBasis: 260, minWidth: 0 },
   eyebrow: { fontFamily: F.medium, color: C.accent, fontSize: 10, letterSpacing: 1.8, lineHeight: 15 },
-  heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 36, lineHeight: 40, letterSpacing: -1.4 },
+  heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 30, lineHeight: 35, letterSpacing: -1.4 },
   heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
-  crystalStage: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
-  crystalButton: { borderRadius: 24, overflow: 'hidden', backgroundColor: '#000', borderWidth: 1, borderColor: '#FFFFFF14' },
-  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 0 },
-  crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 9, letterSpacing: 1.2 },
+  crystalStage: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
+  crystalButton: { borderRadius: 999, overflow: 'hidden', backgroundColor: '#000', borderWidth: 1, borderColor: '#FFFFFF14' },
+  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 0 },
+  crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 10, letterSpacing: 0.6 },
   motionToggle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   moodHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 },
   sectionTitle: { fontFamily: F.medium, fontSize: 20, letterSpacing: -0.3, color: C.text },
