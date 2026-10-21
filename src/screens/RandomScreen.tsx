@@ -35,8 +35,12 @@ import { formatIngredient, pluralize } from '../format';
 import { TabKey } from '../components/NavPill';
 import { glyphForRecipe, Icon } from '../icons';
 
-export function RandomScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
-  const { recipes, kit, prefs, setPref, markMade, rateRecipe } = useData();
+export function RandomScreen({
+  goTo,
+}: {
+  goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
+}) {
+  const { recipes, kit, prefs, setPref, markMade, rateRecipe, addToShopping } = useData();
   const [vibes, setVibes] = useState<string[]>([]);
   const [themes, setThemes] = useState<string[]>([]);
   const [result, setResult] = useState<GeneratorResult | null>(null);
@@ -302,6 +306,11 @@ export function RandomScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
           ) : (
             <FallbackPanel
               result={result}
+              onWant={(id, name) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                addToShopping(id, name);
+                goTo('cabinet', 'shopping');
+              }}
               onClear={() => {
                 setVibes([]);
                 setThemes([]);
@@ -424,11 +433,13 @@ function ResultCard({
 function FallbackPanel({
   result,
   onClear,
+  onWant,
   goTo,
 }: {
   result: Extract<GeneratorResult, { ok: false }>;
   onClear: () => void;
-  goTo: (t: TabKey) => void;
+  onWant: (catalogItemId: string | null, name: string) => void;
+  goTo: (t: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
   if (result.reason === 'filters') {
     return (
@@ -460,11 +471,25 @@ function FallbackPanel({
         {result.suggestions.length > 1 ? (
           <View style={styles.suggestRow}>
             {result.suggestions.slice(1).map((s) => (
-              <Chip key={s.name} label={`${s.name} · +${s.unlocks}`} small />
+              <Chip
+                key={s.name}
+                label={`+ ${s.name} · ${s.unlocks}`}
+                small
+                onPress={() => onWant(s.catalogItemId, s.name)}
+              />
             ))}
           </View>
         ) : null}
-        <PrimaryButton label="OPEN MY CABINET" onPress={() => goTo('cabinet')} style={styles.fallbackBtn} />
+        <PrimaryButton
+          label={`ADD ${top.name.toUpperCase()} TO LIST`}
+          onPress={() => onWant(top.catalogItemId, top.name)}
+          style={styles.fallbackBtn}
+        />
+        <GhostButton
+          label="Open my cabinet"
+          onPress={() => goTo('cabinet')}
+          style={{ marginTop: S.sm, alignSelf: 'stretch' }}
+        />
       </Panel>
     );
   }

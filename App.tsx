@@ -17,13 +17,21 @@ import { NavPill, TabKey } from './src/components/NavPill';
 import { Atmosphere } from './src/components/Atmosphere';
 import { AgeGate } from './src/screens/AgeGate';
 import { RandomScreen } from './src/screens/RandomScreen';
-import { CabinetScreen } from './src/screens/CabinetScreen';
+import { CabinetScreen, CabinetView } from './src/screens/CabinetScreen';
 import { RecipesScreen } from './src/screens/RecipesScreen';
 import { BuilderScreen } from './src/screens/BuilderScreen';
 
 function Shell() {
   const { ready, prefs, setPref } = useData();
   const [tab, setTab] = useState<TabKey>('random');
+  // Which Cabinet segment to land on. Adding something to the shopping list
+  // from elsewhere should show you the list, not the stock you already had.
+  const [cabinetView, setCabinetView] = useState<CabinetView>('stock');
+
+  const goTo = (next: TabKey, view?: CabinetView) => {
+    if (view) setCabinetView(view);
+    setTab(next);
+  };
 
   if (!ready) {
     return (
@@ -40,10 +48,10 @@ function Shell() {
   return (
     <View style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        {tab === 'random' && <RandomScreen goTo={setTab} />}
-        {tab === 'cabinet' && <CabinetScreen />}
+        {tab === 'random' && <RandomScreen goTo={goTo} />}
+        {tab === 'cabinet' && <CabinetScreen view={cabinetView} onViewChange={setCabinetView} />}
         {tab === 'recipes' && <RecipesScreen />}
-        {tab === 'builder' && <BuilderScreen goTo={setTab} />}
+        {tab === 'builder' && <BuilderScreen goTo={goTo} />}
       </SafeAreaView>
       <NavPill active={tab} onChange={setTab} />
     </View>

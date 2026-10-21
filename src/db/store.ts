@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { DrinkRecipe, InventoryItem, Prefs } from '../types';
+import { DrinkRecipe, InventoryItem, Prefs, ShoppingItem } from '../types';
 import { SEED_RECIPES } from '../data/recipes';
 
 /**
@@ -10,7 +10,7 @@ import { SEED_RECIPES } from '../data/recipes';
  * export the same functions, so nothing above this layer knows the difference.
  */
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -95,6 +95,18 @@ function migrate(handle: SQLite.SQLiteDatabase) {
     } catch {
       /* column already present */
     }
+  }
+
+  if (from < 4) {
+    handle.execSync(`
+      CREATE TABLE IF NOT EXISTS shopping (
+        id TEXT PRIMARY KEY NOT NULL,
+        catalogItemId TEXT,
+        name TEXT NOT NULL,
+        done INTEGER NOT NULL DEFAULT 0,
+        addedAt INTEGER NOT NULL
+      );
+    `);
   }
 
   handle.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
@@ -189,6 +201,27 @@ export function saveRecipe(recipe: DrinkRecipe) {
 
 export function deleteRecipe(id: string) {
   sqlite().runSync('DELETE FROM recipes WHERE id = ?', [id]);
+}
+
+// ── Shopping list ──────────────────────────────────────────────────────────
+
+export function loadShopping(): ShoppingItem[] {
+  const rows = sqlite().getAllSync('SELECT * FROM shopping ORDER BY addedAt ASC') as any[];
+  return rows.map((r) => ({ ...r, done: !!r.done }));
+}
+
+export function saveShoppingItem(item: ShoppingItem) {
+  sqlite().runSync(
+    `INSERT INTO shopping (id, catalogItemId, name, done, addedAt)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       catalogItemId=excluded.catalogItemId, name=excluded.name, done=excluded.done`,
+    [item.id, item.catalogItemId, item.name, item.done ? 1 : 0, item.addedAt]
+  );
+}
+
+export function deleteShoppingItem(id: string) {
+  sqlite().runSync('DELETE FROM shopping WHERE id = ?', [id]);
 }
 
 // ── Prefs ──────────────────────────────────────────────────────────────────

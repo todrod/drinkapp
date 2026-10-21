@@ -13,7 +13,7 @@ drinks you can actually pour. Four tabs:
 | Tab | Does |
 |---|---|
 | **Random** | Spin (or physically shake the phone) for a drink you can make right now |
-| **Cabinet** | Your inventory — add, remove, track how much is left |
+| **Cabinet** | Your inventory — add, remove, track how much is left. Second segment holds the shopping list |
 | **Recipes** | 96-recipe searchable library with filters, ratings, favourites |
 | **Builder** | Pick a base, mixers and toppings from stock; see what it matches |
 
@@ -76,6 +76,7 @@ src/
   format.ts               Measure formatting (0.75 -> ¾)
   store.tsx               Context provider: kit, recipes, prefs, mutators
   logic/generator.ts      *** The matching algorithm. Start here. ***
+  logic/shopping.ts       Purchase ranking and list projection
   db/
     store.ts              Native persistence (SQLite, schema v3)
     store.web.ts          Web persistence (localStorage)
@@ -90,6 +91,7 @@ src/
   components/
     ui.tsx                Panel, Chip, buttons, Press, Stars, QuantityBar
     NavPill.tsx           Floating glass tab bar
+    ShoppingList.tsx      The shopping list, rendered inside Cabinet
     Atmosphere.tsx        Drifting background fields + grain overlay
     IngredientArt.tsx     Parametric SVG bottles
   screens/                One per tab, plus AgeGate
@@ -158,6 +160,29 @@ down; exact matches outrank substituted; favourites get a lift. The pick is
 
 **These fallbacks are the feature, not an edge case.** Do not let a refactor
 turn them back into an empty state.
+
+---
+
+## 6b. The shopping list — `src/logic/shopping.ts`
+
+The counterpart to the generator: it already knew a kit was one bottle short of
+six drinks, and this turns that into something actionable.
+
+- `rankPurchases()` sweeps **every** catalog item, not just ones that complete
+  a recipe that is one short — a bottle finishing two different two-short
+  recipes deserves surfacing. ~150 items by ~96 recipes is trivial.
+- `projectList()` evaluates the whole list **together**, because two bottles
+  often unlock the same drink and summing the individual figures would lie.
+  This is the headline number on the screen.
+- `unlockedBy()` names the actual drinks a purchase would open up.
+
+A `ShoppingItem` is deliberately **not** an `InventoryItem` with an "owned"
+flag: it has no level, and the generator must never see it as stock.
+
+Entry points: the Random screen's "one bottle away" fallback (primary action
+adds the top suggestion and jumps to the list), a cart button on every row of
+the Cabinet's add sheet, and the ranked suggestions on the list itself.
+"Got it" moves an item into the cabinet in one tap.
 
 ---
 
@@ -276,17 +301,14 @@ Known open items, roughly by value:
 1. **The cabinet is a wall of identical bottles.** Six gins render the same;
    only the name differs. The asset pipeline will not fix this — it dedupes the
    same way. Needs a per-bottle differentiator.
-2. **No shopping list.** The generator already computes "add lime juice →
-   unlocks 6 drinks" but nothing turns that into a list. Cheapest real feature
-   win available.
-3. **The editor can create a drink that can never be poured** (no ingredients).
+2. **The editor can create a drink that can never be poured** (no ingredients).
    It is correctly excluded from the generator but should say so.
-4. **Guests land with an empty cabinet** — storage is per-browser, so the
+3. **Guests land with an empty cabinet** — storage is per-browser, so the
    116-bottle bar is in the code but not the URL.
-5. **The site is publicly indexable** behind a client-side-only age gate.
-6. **`@expo-google-fonts/nunito` is an unused dependency** — the app moved to
+4. **The site is publicly indexable** behind a client-side-only age gate.
+5. **`@expo-google-fonts/nunito` is an unused dependency** — the app moved to
    Outfit. Safe to remove.
-7. Trending, per §9.
+6. Trending, per §9.
 
 ---
 

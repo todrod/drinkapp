@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import { CATALOG_BY_ID } from './data/catalog';
 import * as store from './db/store';
-import { CatalogItem, DrinkRecipe, InventoryItem, Level, Prefs } from './types';
+import { CatalogItem, DrinkRecipe, InventoryItem, Level, Prefs, ShoppingItem } from './types';
 import { MY_BAR } from './data/bar';
 
 /**
@@ -37,6 +37,14 @@ interface Ctx {
   toggleFavorite: (id: string) => void;
   rateRecipe: (id: string, rating: number) => void;
 
+  shopping: ShoppingItem[];
+  addToShopping: (catalogId: string | null, name: string) => void;
+  toggleShoppingDone: (id: string) => void;
+  removeFromShopping: (id: string) => void;
+  /** Tick off, move into the cabinet, drop from the list — one action. */
+  buyShoppingItem: (id: string) => void;
+  clearBoughtShopping: () => void;
+
   setPref: <K extends keyof Prefs>(key: K, value: Prefs[K]) => void;
 }
 
@@ -50,6 +58,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [kit, setKit] = useState<InventoryItem[]>([]);
   const [recipes, setRecipes] = useState<DrinkRecipe[]>([]);
+  const [shopping, setShopping] = useState<ShoppingItem[]>([]);
   const [prefs, setPrefs] = useState<Prefs>({
     ageGateAcceptedAt: null,
     zeroProofMode: false,
@@ -60,6 +69,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setKit(store.loadKit());
     setRecipes(store.loadRecipes());
+    setShopping(store.loadShopping());
     setPrefs(store.loadPrefs());
     setReady(true);
   }, []);
@@ -216,6 +226,66 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  // ── Shopping list ──────────────────────────────────────────────────────
+
+  const addToShopping = useCallback((catalogId: string | null, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setShopping((prev) => {
+      // Catalog items dedupe by id; free text dedupes by name.
+      const already = prev.some((s) =>
+        catalogId ? s.catalogItemId === catalogId : s.name.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (already) return prev;
+      const item: ShoppingItem = {
+        id: uid(),
+        catalogItemId: catalogId,
+        name: trimmed,
+        done: false,
+        addedAt: Date.now(),
+      };
+      store.saveShoppingItem(item);
+      return [...prev, item];
+    });
+  }, []);
+
+  const toggleShoppingDone = useCallback((id: string) => {
+    setShopping((prev) =>
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        const updated = { ...s, done: !s.done };
+        store.saveShoppingItem(updated);
+        return updated;
+      })
+    );
+  }, []);
+
+  const removeFromShopping = useCallback((id: string) => {
+    store.deleteShoppingItem(id);
+    setShopping((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  const buyShoppingItem = useCallback(
+    (id: string) => {
+      setShopping((prev) => {
+        const item = prev.find((s) => s.id === id);
+        if (!item) return prev;
+        if (item.catalogItemId) addFromCatalog(item.catalogItemId);
+        else addCustom(item.name, 'beverage');
+        store.deleteShoppingItem(id);
+        return prev.filter((s) => s.id !== id);
+      });
+    },
+    [addFromCatalog, addCustom]
+  );
+
+  const clearBoughtShopping = useCallback(() => {
+    setShopping((prev) => {
+      prev.filter((s) => s.done).forEach((s) => store.deleteShoppingItem(s.id));
+      return prev.filter((s) => !s.done);
+    });
+  }, []);
+
   const setPref = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
     setPrefs((prev) => {
       const next = { ...prev, [key]: value };
@@ -242,13 +312,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       markMade,
       toggleFavorite,
       rateRecipe,
+      shopping,
+      addToShopping,
+      toggleShoppingDone,
+      removeFromShopping,
+      buyShoppingItem,
+      clearBoughtShopping,
       setPref,
     }),
     [
-      ready, kit, recipes, prefs,
+      ready, kit, recipes, prefs, shopping,
       addFromCatalog, addCustom, setLevel, removeFromKit, restoreKitItem,
       addStarterKit, loadMyBar, saveRecipe, removeRecipe, markMade, toggleFavorite,
-      rateRecipe, setPref,
+      rateRecipe, shopping, addToShopping, toggleShoppingDone, removeFromShopping,
+      buyShoppingItem, clearBoughtShopping, setPref,
     ]
   );
 

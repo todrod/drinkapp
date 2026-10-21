@@ -214,17 +214,26 @@ export function generate(o: GenerateOptions): GeneratorResult {
 
   // Which single ingredient unlocks the most drinks?
   const unlocks = new Map<string, number>();
+  const idByName = new Map<string, string | null>();
   const pool = filtered.length ? filtered : o.recipes;
   for (const r of pool) {
     const m = matchRecipe(r, owned, o.allowSubstitutes);
     if (m.missing.length === 1) {
       const key = m.missing[0];
       unlocks.set(key, (unlocks.get(key) ?? 0) + 1);
+      if (!idByName.has(key)) {
+        const ing = r.ingredients.find((i) => i.displayName === key);
+        idByName.set(key, ing?.catalogItemId ?? null);
+      }
     }
   }
 
   const suggestions = Array.from(unlocks.entries())
-    .map(([name, count]) => ({ name, unlocks: count }))
+    .map(([name, count]) => ({
+      name,
+      catalogItemId: idByName.get(name) ?? null,
+      unlocks: count,
+    }))
     .sort((a, b) => b.unlocks - a.unlocks)
     .slice(0, 3);
 

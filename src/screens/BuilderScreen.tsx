@@ -47,7 +47,11 @@ const STEPS: Step[] = [
   },
 ];
 
-export function BuilderScreen({ goTo }: { goTo: (tab: TabKey) => void }) {
+export function BuilderScreen({
+  goTo,
+}: {
+  goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
+}) {
   const { kit, recipes, saveRecipe } = useData();
   const [stepIndex, setStepIndex] = useState(0);
   const [picked, setPicked] = useState<Record<string, string[]>>({ base: [], mixers: [], toppings: [] });

@@ -37,14 +37,23 @@ import {
 } from '../types';
 import { countMakeable, countUnlockedBy } from '../logic/generator';
 import { CATEGORY_GLYPH, Icon } from '../icons';
+import { ShoppingList } from '../components/ShoppingList';
 import { IngredientArt } from '../components/IngredientArt';
 import { artForCatalog } from '../data/art';
 import { pluralize } from '../format';
 
-export function CabinetScreen() {
+export type CabinetView = 'stock' | 'shopping';
+
+export function CabinetScreen({
+  view,
+  onViewChange,
+}: {
+  view: CabinetView;
+  onViewChange: (v: CabinetView) => void;
+}) {
   const {
     kit, recipes, prefs, setPref, addFromCatalog, addCustom, setLevel,
-    removeFromKit, restoreKitItem, addStarterKit, loadMyBar,
+    removeFromKit, restoreKitItem, addStarterKit, loadMyBar, shopping, addToShopping,
   } = useData();
 
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -95,6 +104,30 @@ export function CabinetScreen() {
           </Pressable>
         </View>
 
+        <View style={styles.segment}>
+          {([
+            ['stock', `IN STOCK · ${kit.length}`],
+            ['shopping', `SHOPPING · ${shopping.length}`],
+          ] as const).map(([key, label]) => {
+            const on = view === key;
+            return (
+              <Pressable
+                key={key}
+                onPress={() => onViewChange(key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                style={[styles.segmentTab, on ? styles.segmentTabOn : null]}
+              >
+                <Text style={[styles.segmentText, on ? styles.segmentTextOn : null]}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {view === 'shopping' ? <ShoppingList /> : null}
+
+        {view === 'stock' ? (
+          <>
         <View style={styles.countRow}>
           <View style={styles.countChip}>
             <Text style={styles.countChipText}>
@@ -190,6 +223,8 @@ export function CabinetScreen() {
             ) : null}
           </>
         )}
+        </>
+        ) : null}
       </ScrollView>
 
       {undo ? (
@@ -218,6 +253,10 @@ export function CabinetScreen() {
           addFromCatalog(id);
         }}
         onAddCustom={addCustom}
+        onWant={(id, name) => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          addToShopping(id, name);
+        }}
         unlocksFor={(id) => countUnlockedBy(id, recipes, kit, prefs.allowSubstitutes)}
       />
 
@@ -332,6 +371,7 @@ function AddSheet({
   ownedIds,
   onAdd,
   onAddCustom,
+  onWant,
   unlocksFor,
 }: {
   visible: boolean;
@@ -339,6 +379,7 @@ function AddSheet({
   ownedIds: Set<string>;
   onAdd: (catalogId: string) => void;
   onAddCustom: (name: string, category: Category) => void;
+  onWant: (catalogId: string, name: string) => void;
   unlocksFor: (catalogId: string) => number;
 }) {
   const [q, setQ] = useState('');
@@ -419,6 +460,17 @@ function AddSheet({
                           : CATEGORY_LABEL[item.category]}
                     </Dim>
                   </View>
+                  {!owned ? (
+                    <Pressable
+                      onPress={() => onWant(item.id, item.name)}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Add ${item.name} to the shopping list`}
+                      style={styles.want}
+                    >
+                      <Icon name="cart-outline" size={15} color={C.dim} />
+                    </Pressable>
+                  ) : null}
                   <Text style={[styles.add, owned && { color: C.faint }]}>
                     {owned ? 'ADDED' : '+ ADD'}
                   </Text>
@@ -481,6 +533,21 @@ const styles = StyleSheet.create({
   },
   addBtnText: { color: C.ink, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
 
+  segment: {
+    flexDirection: 'row',
+    gap: 4,
+    padding: 4,
+    borderRadius: R.pill,
+    borderWidth: 1,
+    borderColor: C.line,
+    backgroundColor: C.glass,
+    marginBottom: S.lg,
+  },
+  segmentTab: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: R.pill },
+  segmentTabOn: { backgroundColor: C.teal },
+  segmentText: { color: C.dim, fontSize: 10.5, letterSpacing: 1.2, fontWeight: '700' },
+  segmentTextOn: { color: C.ink },
+  want: { padding: 4, marginRight: 2 },
   search: {
     backgroundColor: C.ink2,
     borderWidth: 1,

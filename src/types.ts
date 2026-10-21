@@ -154,6 +154,21 @@ export interface DrinkRecipe {
   createdAt: number;
 }
 
+/**
+ * Something the user intends to buy.
+ *
+ * Kept separate from InventoryItem rather than given it an "owned" flag: a
+ * shopping entry has no level, and the generator must never see it as stock.
+ */
+export interface ShoppingItem {
+  id: string;
+  catalogItemId: string | null;
+  name: string;
+  /** Ticked off in the shop, before it has been moved into the cabinet. */
+  done: boolean;
+  addedAt: number;
+}
+
 export interface Prefs {
   ageGateAcceptedAt: number | null;
   zeroProofMode: boolean;
@@ -182,8 +197,12 @@ export type MissReason = 'filters' | 'nearly' | 'empty';
 export interface GeneratorMiss {
   ok: false;
   reason: MissReason;
-  /** Ingredients that would unlock the most drinks, best first. */
-  suggestions: { name: string; unlocks: number }[];
+  /**
+   * Ingredients that would unlock the most drinks, best first. Carries the
+   * catalog id so a caller can add it to the shopping list without having to
+   * resolve the name back to an item.
+   */
+  suggestions: { name: string; catalogItemId: string | null; unlocks: number }[];
   /** How many drinks match if the active filters are cleared. */
   matchesWithoutFilters: number;
 }

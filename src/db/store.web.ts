@@ -1,4 +1,4 @@
-import { DrinkRecipe, InventoryItem, Prefs } from '../types';
+import { DrinkRecipe, InventoryItem, Prefs, ShoppingItem } from '../types';
 import { SEED_RECIPES } from '../data/recipes';
 
 /**
@@ -72,6 +72,24 @@ export function saveRecipe(recipe: DrinkRecipe) {
 
 export function deleteRecipe(id: string) {
   lsSet('recipes', lsGet<DrinkRecipe[]>('recipes', []).filter((r) => r.id !== id));
+}
+
+// ── Shopping list ──────────────────────────────────────────────────────────
+
+export function loadShopping(): ShoppingItem[] {
+  return lsGet<ShoppingItem[]>('shopping', []);
+}
+
+export function saveShoppingItem(item: ShoppingItem) {
+  const all = lsGet<ShoppingItem[]>('shopping', []);
+  const i = all.findIndex((s) => s.id === item.id);
+  if (i >= 0) all[i] = item;
+  else all.push(item);
+  lsSet('shopping', all);
+}
+
+export function deleteShoppingItem(id: string) {
+  lsSet('shopping', lsGet<ShoppingItem[]>('shopping', []).filter((s) => s.id !== id));
 }
 
 // ── Prefs ──────────────────────────────────────────────────────────────────
