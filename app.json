@@ -32,7 +32,8 @@
           "motionPermission": "Allow The Drink Shaker to use motion so shaking your phone can choose a drink."
         }
       ],
-      "expo-image"
+      "expo-image",
+      "expo-sharing"
     ]
   }
 }

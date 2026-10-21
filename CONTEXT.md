@@ -1,5 +1,18 @@
 # The Drink Shaker — project context
 
+## Local storage update · 21 October 2026
+
+**My bar → My local bars · switch · backup & restore** now manages named,
+device-local bars with independent inventory, recipes, history, shopping,
+preferences and party plans. Native uses one private SQLite file per bar;
+web uses namespaced localStorage. Existing data remains the default **My bar**.
+No account or storage server is involved. JSON export/import uses device files
+and always restores into a new bar. Read failures preserve saved data; write
+failures surface a warning with backup/retry. See
+[docs/LOCAL_STORAGE.md](docs/LOCAL_STORAGE.md) for paths, compatibility, limits
+and verification. Keep the native/web split for backup file APIs as well.
+`npm test` now runs **46 tests**, including 12 for local bars and backup recovery.
+
 ## Hosting update · 21 October 2026
 
 The Discover hosting card now opens a saved party menu, batch calculator,
@@ -16,7 +29,8 @@ Free text is unknown until declared, and alcohol-free recipes cannot use
 alcoholic substitutions. Drafts are not pourable recipes.
 
 The native database is schema **v5**; its new `app_state` table stores the party
-plan. Web uses a separate `shaker:party` localStorage key. Existing bottles,
+plan. The legacy web bar uses `shaker:party`; new bars include it in their
+namespaced full-state record. Existing bottles,
 recipe edits, ratings and favorites are preserved. Keep the native/web split.
 
 The app bundles a **2,034,634-byte animated WebP** at 480 px / 25 fps / 12 seconds
@@ -24,7 +38,7 @@ instead of the 12.2 MB GIF. The original GIF remains in source. The rendering
 and tap/shake paths are independent. See `scripts/encode-orb-web.ps1`.
 
 Host overlay content shares one native modal, and the four main tabs remain.
-`npm test` now runs 34 tests, including hosting arithmetic, guest validation,
+The hosting update added tests for hosting arithmetic, guest validation,
 web persistence and a real SQLite v4-to-v5 migration. Explicit ARIA props are
 needed for web selected/checked states. Keep `keyboardDismissMode="none"` on
 web search scroll views: RN Web treats programmatic scrolling as a drag and

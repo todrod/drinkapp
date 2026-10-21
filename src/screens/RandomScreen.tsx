@@ -52,7 +52,7 @@ export function RandomScreen({
   active?: boolean;
   goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
-  const { recipes, kit, prefs, setPref, rateRecipe, addToShopping } = useData();
+  const { profile, recipes, kit, prefs, setPref, rateRecipe, addToShopping } = useData();
   const [vibes, setVibes] = useState<string[]>([]);
   const [themes, setThemes] = useState<string[]>([]);
   const [ideaQuery, setIdeaQuery] = useState('');
@@ -226,7 +226,7 @@ export function RandomScreen({
         </View>
         <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Open my bar" style={styles.stockPill}>
           <View style={styles.readyDot} />
-          <Text style={styles.stockText}>{readyCount} recipes you can make</Text>
+          <View style={{ gap: 3, maxWidth: width < 560 ? 160 : 260 }}><Text numberOfLines={1} style={[styles.stockText, { color: C.teal }]}>{profile.name}</Text><Text style={styles.stockText}>{readyCount} recipes you can make</Text></View>
         </Pressable>
       </View>
 

@@ -13,8 +13,8 @@ export function OverlayLayer({ visible, onClose, children }: { visible: boolean;
   </Modal>;
 }
 
-export function Sheet({ title, eyebrow, onClose, closeLabel = 'Close', children }: {
-  title: string; eyebrow?: string; onClose: () => void; closeLabel?: string; children: React.ReactNode;
+export function Sheet({ title, eyebrow, onClose, closeLabel = 'Close', children, status }: {
+  title: string; eyebrow?: string; onClose: () => void; closeLabel?: string; children: React.ReactNode; status?: React.ReactNode;
 }) {
   const embedded = useContext(EmbeddedSheet);
   const body = <SafeAreaView style={styles.backdrop}>
@@ -25,6 +25,7 @@ export function Sheet({ title, eyebrow, onClose, closeLabel = 'Close', children 
           </View>
           <GhostButton label={closeLabel} onPress={onClose} />
         </View>
+        {status ? <View style={{ paddingHorizontal: S.lg, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.line2 }}>{status}</View> : null}
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}>
           {children}
         </ScrollView>

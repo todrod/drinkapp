@@ -49,12 +49,14 @@ export type CabinetView = 'stock' | 'shopping';
 export function CabinetScreen({
   view,
   onViewChange,
+  onLocalBars,
 }: {
   view: CabinetView;
   onViewChange: (v: CabinetView) => void;
+  onLocalBars: () => void;
 }) {
   const {
-    kit, recipes, prefs, setPref, addFromCatalog, addCustom, setLevel,
+    profile, kit, recipes, prefs, setPref, addFromCatalog, addCustom, setLevel,
     removeFromKit, restoreKitItem, addStarterKit, loadMyBar, shopping, addToShopping,
   } = useData();
 
@@ -100,7 +102,7 @@ export function CabinetScreen({
         <View style={styles.topBar}>
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={styles.eyebrow}>THE GOOD STUFF</Text>
-            <Wordmark>My bar</Wordmark>
+            <Wordmark>{profile.name}</Wordmark>
             <Dim>Your bottles. Endless possibilities.</Dim>
           </View>
           <Pressable
@@ -113,6 +115,10 @@ export function CabinetScreen({
             <Icon name="cog-outline" size={20} color={C.dim} />
           </Pressable>
         </View>
+
+        <Pressable accessibilityRole="button" accessibilityLabel="My local bars and backups" onPress={onLocalBars} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 16, borderWidth: 1, borderColor: C.teal + '66', borderRadius: R.md, backgroundColor: C.panel, marginTop: 16 }}>
+          <View style={{ flex: 1, gap: 4 }}><Body style={{ color: C.teal }}>Saved on this device</Body><Dim>My local bars · switch · backup & restore</Dim></View><Body style={{ color: C.teal }}>→</Body>
+        </Pressable>
 
         <View style={styles.segment}>
           {([

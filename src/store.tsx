@@ -4,11 +4,16 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { CATALOG_BY_ID } from './data/catalog';
-import * as store from './db/store';
-import { CatalogItem, DrinkRecipe, InventoryItem, Level, PartyPlan, Prefs, ShoppingItem } from './types';
+import * as persistence from './db/store';
+import { CatalogItem, DrinkRecipe, InventoryItem, Level, LocalProfile, PartyPlan, Prefs, ProfileIndex, ShoppingItem } from './types';
+import { DEFAULT_PROFILE_INDEX, emptyProfileData } from './logic/localProfiles';
+import { makeBackup, parseBackup } from './logic/backup';
+import { clearPersistenceError, getPersistenceError, getPersistenceReadError, reportPersistenceError, subscribePersistenceError } from './persistenceStatus';
 import { DEFAULT_PARTY, MAX_MENU, normalizeParty } from './logic/hosting';
 import { isAlcoholFree, isServingReady } from './logic/recipes';
 import { MY_BAR } from './data/bar';
@@ -21,6 +26,16 @@ import { MY_BAR } from './data/bar';
 
 interface Ctx {
   ready: boolean;
+  profile: LocalProfile;
+  profiles: LocalProfile[];
+  storageError: string | null;
+  storageReadFailed: boolean;
+  createLocalBar: (name: string) => void;
+  switchLocalBar: (id: string) => void;
+  renameLocalBar: (name: string) => void;
+  backupLocalBar: () => string;
+  restoreLocalBar: (text: string) => void;
+  retryDeviceSave: () => void;
   kit: InventoryItem[];
   recipes: DrinkRecipe[];
   prefs: Prefs;
@@ -58,9 +73,25 @@ const DataContext = createContext<Ctx | null>(null);
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
-const LEVEL_CYCLE: Level[] = ['full', 'half', 'low', 'out'];
-
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  const [index, setIndex] = useState<ProfileIndex>(() => {
+    try { return persistence.loadProfileIndex(); } catch { return DEFAULT_PROFILE_INDEX; }
+  });
+  const [revision, setRevision] = useState(0);
+  const reload = useCallback(() => {
+    clearPersistenceError();
+    try { setIndex(persistence.loadProfileIndex()); setRevision((v) => v + 1); }
+    catch (error) { reportPersistenceError('read'); throw error; }
+  }, []);
+  return <ProfileDataProvider key={`${index.activeId}-${revision}`} index={index} onIndexChange={setIndex} reload={reload}>{children}</ProfileDataProvider>;
+}
+
+function ProfileDataProvider({ children, index, onIndexChange, reload }: { children: React.ReactNode; index: ProfileIndex; onIndexChange: (index: ProfileIndex) => void; reload: () => void }) {
+  const profile = index.profiles.find((p) => p.id === index.activeId)!;
+  const store = useMemo(() => persistence.scopedToProfile(profile.id), [profile.id]);
+  const storageError = useSyncExternalStore(subscribePersistenceError, getPersistenceError, () => null);
+  const [storageReadFailed, setStorageReadFailed] = useState(false);
+  const initialReadFailed = useRef(false);
   const [ready, setReady] = useState(false);
   const [kit, setKit] = useState<InventoryItem[]>([]);
   const [recipes, setRecipes] = useState<DrinkRecipe[]>([]);
@@ -74,13 +105,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    setKit(store.loadKit());
-    setRecipes(store.loadRecipes());
-    setShopping(store.loadShopping());
-    setPrefs(store.loadPrefs());
-    updateParty(store.loadParty());
+    try {
+      const loaded = { kit: store.loadKit(), recipes: store.loadRecipes(), shopping: store.loadShopping(), prefs: store.loadPrefs(), party: store.loadParty() };
+      setKit(loaded.kit); setRecipes(loaded.recipes); setShopping(loaded.shopping); setPrefs(loaded.prefs); updateParty(loaded.party);
+    } catch { reportPersistenceError('read'); }
+    initialReadFailed.current = getPersistenceReadError();
+    setStorageReadFailed(initialReadFailed.current);
     setReady(true);
+  }, [store]);
+
+  const ensureSaved = useCallback(() => {
+    if (getPersistenceError()) throw new Error('Resolve the device storage warning before switching bars. Export a backup of this session first.');
   }, []);
+  const createLocalBar = useCallback((name: string) => {
+    ensureSaved(); onIndexChange(persistence.createProfile(name, emptyProfileData(prefs.ageGateAcceptedAt)));
+  }, [ensureSaved, onIndexChange, prefs.ageGateAcceptedAt]);
+  const switchLocalBar = useCallback((id: string) => {
+    ensureSaved(); onIndexChange(persistence.setActiveProfile(id));
+  }, [ensureSaved, onIndexChange]);
+  const renameLocalBar = useCallback((name: string) => {
+    ensureSaved(); onIndexChange(persistence.renameProfile(profile.id, name));
+  }, [ensureSaved, onIndexChange, profile.id]);
+  const backupLocalBar = useCallback(() => makeBackup(profile.name, { kit, recipes, shopping, prefs, party }), [profile.name, kit, recipes, shopping, prefs, party]);
+  const restoreLocalBar = useCallback((text: string) => {
+    const backup = parseBackup(text);
+    ensureSaved();
+    backup.data.prefs.ageGateAcceptedAt = prefs.ageGateAcceptedAt;
+    onIndexChange(persistence.createProfile(backup.name, backup.data));
+  }, [ensureSaved, onIndexChange, prefs.ageGateAcceptedAt]);
+  const retryDeviceSave = useCallback(() => {
+    if (initialReadFailed.current) { reload(); return; }
+    store.replaceProfileData({ kit, recipes, shopping, prefs, party });
+    clearPersistenceError();
+  }, [store, kit, recipes, shopping, prefs, party, reload]);
 
   const addFromCatalog = useCallback((catalogId: string) => {
     const cat: CatalogItem | undefined = CATALOG_BY_ID[catalogId];
@@ -332,6 +389,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       ready,
+      profile, profiles: index.profiles, storageError, storageReadFailed,
+      createLocalBar, switchLocalBar, renameLocalBar, backupLocalBar, restoreLocalBar, retryDeviceSave,
       kit,
       recipes,
       prefs,
@@ -357,7 +416,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setPref,
     }),
     [
-      ready, kit, recipes, prefs, shopping, undoMade, party, setParty, addToParty,
+      ready, profile, index.profiles, storageError, storageReadFailed,
+      createLocalBar, switchLocalBar, renameLocalBar, backupLocalBar, restoreLocalBar, retryDeviceSave,
+      kit, recipes, prefs, shopping, undoMade, party, setParty, addToParty,
       addFromCatalog, addCustom, setLevel, removeFromKit, restoreKitItem,
       addStarterKit, loadMyBar, saveRecipe, removeRecipe, markMade, toggleFavorite,
       rateRecipe, shopping, addToShopping, toggleShoppingDone, removeFromShopping,

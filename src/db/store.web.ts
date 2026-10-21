@@ -1,114 +1,92 @@
-import { DrinkRecipe, InventoryItem, PartyPlan, Prefs, ShoppingItem } from '../types';
+import type { DrinkRecipe, InventoryItem, PartyPlan, Prefs, ProfileData, ProfileIndex, ShoppingItem } from '../types';
 import { normalizeParty } from '../logic/hosting';
+import { newLocalProfile, profileIdIsValid, readProfileIndex, renameLocalProfile } from '../logic/localProfiles';
+import { reportPersistenceError } from '../persistenceStatus';
 import { SEED_RECIPES } from '../data/recipes';
+import { bindProfileStore } from './profileStore';
 
-/**
- * Persistence — web.
- *
- * Metro picks this file over `store.ts` for the web bundle, which keeps
- * expo-sqlite's native module out of the static export entirely. Same exported
- * functions, backed by localStorage: at a few hundred rows the wasm SQLite
- * pipeline buys nothing.
- *
- * Every read and write is guarded — private windows and blocked site data make
- * the accessor itself throw, and the app should still run, just forgetfully.
- */
-
-function lsGet<T>(key: string, fallback: T): T {
+// Metro selects this adapter on web; no native SQLite enters the web bundle.
+// Original keys remain readable. New bars use one atomic JSON record each.
+function keyFor(key: string, id: string) {
+  if (!profileIdIsValid(id)) throw new Error('Invalid local bar identifier.');
+  return id === 'default' ? 'shaker:' + key : `shaker:profile:${id}:${key}`;
+}
+function read<T>(key: keyof ProfileData, fallback: T, id = 'default'): T {
   try {
-    const raw = globalThis.localStorage?.getItem('shaker:' + key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+    const state = globalThis.localStorage.getItem(keyFor('state', id));
+    if (state !== null) return (JSON.parse(state) as Record<string, T>)[key] ?? fallback;
+    const raw = globalThis.localStorage.getItem(keyFor(key, id));
+    return raw === null ? fallback : JSON.parse(raw) as T;
+  } catch { reportPersistenceError('read'); throw new Error('This device could not read its saved bar. Existing data has been kept.'); }
 }
-
-function lsSet(key: string, value: unknown) {
+function write(key: keyof ProfileData, value: unknown, id = 'default') {
   try {
-    globalThis.localStorage?.setItem('shaker:' + key, JSON.stringify(value));
-  } catch {
-    /* private mode, quota — the app still works, it just forgets */
-  }
+    const state = globalThis.localStorage.getItem(keyFor('state', id));
+    if (state !== null) globalThis.localStorage.setItem(keyFor('state', id), JSON.stringify({ ...JSON.parse(state), [key]: value }));
+    else globalThis.localStorage.setItem(keyFor(key, id), JSON.stringify(value));
+  } catch { reportPersistenceError(); }
 }
 
-// ── Inventory ──────────────────────────────────────────────────────────────
-
-export function loadKit(): InventoryItem[] {
-  return lsGet<InventoryItem[]>('kit', []);
+export function loadKit(id = 'default'): InventoryItem[] { return read('kit', [], id); }
+export function saveKitItem(item: InventoryItem, id = 'default') {
+  const kit = loadKit(id); const at = kit.findIndex((k) => k.id === item.id);
+  if (at >= 0) kit[at] = item; else kit.unshift(item);
+  write('kit', kit, id);
 }
+export function deleteKitItem(itemId: string, id = 'default') { write('kit', loadKit(id).filter((k) => k.id !== itemId), id); }
 
-export function saveKitItem(item: InventoryItem) {
-  const kit = lsGet<InventoryItem[]>('kit', []);
-  const i = kit.findIndex((k) => k.id === item.id);
-  if (i >= 0) kit[i] = item;
-  else kit.unshift(item);
-  lsSet('kit', kit);
-}
-
-export function deleteKitItem(id: string) {
-  lsSet('kit', lsGet<InventoryItem[]>('kit', []).filter((k) => k.id !== id));
-}
-
-// ── Recipes ────────────────────────────────────────────────────────────────
-
-/** Merges in seed recipes not seen before; never overwrites an edited one. */
-export function loadRecipes(): DrinkRecipe[] {
-  const stored = lsGet<DrinkRecipe[]>('recipes', []);
+/** New seeds merge per bar without changing its edits, ratings or history. */
+export function loadRecipes(id = 'default'): DrinkRecipe[] {
+  const stored = read<DrinkRecipe[]>('recipes', [], id);
   const known = new Set(stored.map((r) => r.id));
   const missing = SEED_RECIPES.filter((r) => !known.has(r.id));
-  if (missing.length === 0) return stored;
-
-  const merged = [...missing, ...stored];
-  lsSet('recipes', merged);
-  return merged;
+  if (!missing.length) return stored;
+  const merged = [...missing, ...stored]; write('recipes', merged, id); return merged;
 }
-
-export function saveRecipe(recipe: DrinkRecipe) {
-  const all = lsGet<DrinkRecipe[]>('recipes', []);
-  const i = all.findIndex((r) => r.id === recipe.id);
-  if (i >= 0) all[i] = recipe;
-  else all.unshift(recipe);
-  lsSet('recipes', all);
+export function saveRecipe(recipe: DrinkRecipe, id = 'default') {
+  const all = read<DrinkRecipe[]>('recipes', [], id); const at = all.findIndex((r) => r.id === recipe.id);
+  if (at >= 0) all[at] = recipe; else all.unshift(recipe);
+  write('recipes', all, id);
 }
-
-export function deleteRecipe(id: string) {
-  lsSet('recipes', lsGet<DrinkRecipe[]>('recipes', []).filter((r) => r.id !== id));
+export function deleteRecipe(recipeId: string, id = 'default') { write('recipes', read<DrinkRecipe[]>('recipes', [], id).filter((r) => r.id !== recipeId), id); }
+export function loadShopping(id = 'default'): ShoppingItem[] { return read('shopping', [], id); }
+export function saveShoppingItem(item: ShoppingItem, id = 'default') {
+  const all = loadShopping(id); const at = all.findIndex((s) => s.id === item.id);
+  if (at >= 0) all[at] = item; else all.push(item);
+  write('shopping', all, id);
 }
+export function deleteShoppingItem(itemId: string, id = 'default') { write('shopping', loadShopping(id).filter((s) => s.id !== itemId), id); }
+export const DEFAULT_PREFS: Prefs = { ageGateAcceptedAt: null, zeroProofMode: false, allowSubstitutes: true, shakeToShake: true };
+export function loadPrefs(id = 'default'): Prefs { return { ...DEFAULT_PREFS, ...read<Partial<Prefs>>('prefs', {}, id) }; }
+export function savePrefs(prefs: Prefs, id = 'default') { write('prefs', prefs, id); }
+export function loadParty(id = 'default'): PartyPlan { return normalizeParty(read('party', null, id)); }
+export function saveParty(party: PartyPlan, id = 'default') { write('party', normalizeParty(party), id); }
 
-// ── Shopping list ──────────────────────────────────────────────────────────
-
-export function loadShopping(): ShoppingItem[] {
-  return lsGet<ShoppingItem[]>('shopping', []);
+export function loadProfileIndex(): ProfileIndex {
+  try { const raw = globalThis.localStorage.getItem('shaker:local-profiles:v1'); return readProfileIndex(raw === null ? null : JSON.parse(raw)); }
+  catch { reportPersistenceError('read'); throw new Error('The local bar list could not be read. Your existing bar files have been kept.'); }
 }
-
-export function saveShoppingItem(item: ShoppingItem) {
-  const all = lsGet<ShoppingItem[]>('shopping', []);
-  const i = all.findIndex((s) => s.id === item.id);
-  if (i >= 0) all[i] = item;
-  else all.push(item);
-  lsSet('shopping', all);
+function saveIndex(index: ProfileIndex) {
+  try { globalThis.localStorage.setItem('shaker:local-profiles:v1', JSON.stringify(readProfileIndex(index))); }
+  catch { reportPersistenceError(); throw new Error('Device storage is unavailable. Your current local bar has been kept.'); }
 }
-
-export function deleteShoppingItem(id: string) {
-  lsSet('shopping', lsGet<ShoppingItem[]>('shopping', []).filter((s) => s.id !== id));
+export function setActiveProfile(id: string): ProfileIndex {
+  const index = loadProfileIndex();
+  if (!index.profiles.some((p) => p.id === id)) throw new Error('That local bar could not be found.');
+  const next = { ...index, activeId: id }; saveIndex(next); return next;
 }
-
-// ── Prefs ──────────────────────────────────────────────────────────────────
-
-export const DEFAULT_PREFS: Prefs = {
-  ageGateAcceptedAt: null,
-  zeroProofMode: false,
-  allowSubstitutes: true,
-  shakeToShake: true,
-};
-
-export function loadPrefs(): Prefs {
-  return { ...DEFAULT_PREFS, ...lsGet<Partial<Prefs>>('prefs', {}) };
+export function renameProfile(id: string, name: string): ProfileIndex {
+  const next = renameLocalProfile(loadProfileIndex(), id, name); saveIndex(next); return next;
 }
-
-export function savePrefs(prefs: Prefs) {
-  lsSet('prefs', prefs);
+export function replaceProfileData(data: ProfileData, id = 'default') {
+  try { globalThis.localStorage.setItem(keyFor('state', id), JSON.stringify(data)); }
+  catch { reportPersistenceError(); throw new Error('Device storage is full or unavailable. No local bar was restored or overwritten.'); }
 }
-
-export function loadParty(): PartyPlan { return normalizeParty(lsGet('party', null)); }
-export function saveParty(party: PartyPlan) { lsSet('party', normalizeParty(party)); }
+export function createProfile(name: string, data: ProfileData): ProfileIndex {
+  const index = loadProfileIndex(); const profile = newLocalProfile(name, index);
+  replaceProfileData(data, profile.id);
+  // Publish last. An interrupted or failed import cannot displace a saved bar.
+  const next: ProfileIndex = { ...index, activeId: profile.id, profiles: [...index.profiles, profile] };
+  saveIndex(next); return next;
+}
+export const scopedToProfile = (id: string) => bindProfileStore({ loadKit, saveKitItem, deleteKitItem, loadRecipes, saveRecipe, deleteRecipe, loadShopping, saveShoppingItem, deleteShoppingItem, loadPrefs, savePrefs, loadParty, saveParty, replaceProfileData }, id);

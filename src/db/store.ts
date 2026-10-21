@@ -1,5 +1,8 @@
 import * as SQLite from 'expo-sqlite';
-import { DrinkRecipe, InventoryItem, PartyPlan, Prefs, ShoppingItem } from '../types';
+import { DrinkRecipe, InventoryItem, PartyPlan, Prefs, ProfileData, ProfileIndex, ShoppingItem } from '../types';
+import { newLocalProfile, profileIdIsValid, readProfileIndex, renameLocalProfile } from '../logic/localProfiles';
+import { bindProfileStore } from './profileStore';
+import { reportPersistenceError } from '../persistenceStatus';
 import { normalizeParty } from '../logic/hosting';
 import { SEED_RECIPES } from '../data/recipes';
 
@@ -13,14 +16,21 @@ import { SEED_RECIPES } from '../data/recipes';
 
 const SCHEMA_VERSION = 5;
 
-let db: SQLite.SQLiteDatabase | null = null;
+const databases = new Map<string, SQLite.SQLiteDatabase>();
 
-function sqlite(): SQLite.SQLiteDatabase {
-  if (!db) {
-    db = SQLite.openDatabaseSync('shaker.db');
-    migrate(db);
-  }
-  return db;
+function sqlite(profileId = 'default'): SQLite.SQLiteDatabase {
+  if (!profileIdIsValid(profileId)) throw new Error('Invalid local bar identifier.');
+  const existing = databases.get(profileId);
+  if (existing) return existing;
+  // SQLite is a private file on this phone. The original bar keeps shaker.db;
+  // every additional bar gets its own file in the app's documents directory.
+  const name = profileId === 'default' ? 'shaker.db' : `shaker-${profileId}.db`;
+  try {
+    const handle = SQLite.openDatabaseSync(name);
+    migrate(handle);
+    databases.set(profileId, handle);
+    return handle;
+  } catch (error) { reportPersistenceError('read'); throw error; }
 }
 
 /**
@@ -130,13 +140,13 @@ function rowToRecipe(r: any): DrinkRecipe {
 
 // ── Inventory ──────────────────────────────────────────────────────────────
 
-export function loadKit(): InventoryItem[] {
-  const rows = sqlite().getAllSync('SELECT * FROM inventory ORDER BY addedAt DESC') as any[];
+export function loadKit(profileId = 'default'): InventoryItem[] {
+  const rows = sqlite(profileId).getAllSync('SELECT * FROM inventory ORDER BY addedAt DESC') as any[];
   return rows.map((r) => ({ ...r, isStaple: !!r.isStaple }));
 }
 
-export function saveKitItem(item: InventoryItem) {
-  sqlite().runSync(
+export function saveKitItem(item: InventoryItem, profileId = 'default') {
+  sqlite(profileId).runSync(
     `INSERT INTO inventory
        (id, catalogItemId, name, category, brand, level, isStaple, icon, addedAt, updatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -151,14 +161,14 @@ export function saveKitItem(item: InventoryItem) {
   );
 }
 
-export function deleteKitItem(id: string) {
-  sqlite().runSync('DELETE FROM inventory WHERE id = ?', [id]);
+export function deleteKitItem(id: string, profileId = 'default') {
+  sqlite(profileId).runSync('DELETE FROM inventory WHERE id = ?', [id]);
 }
 
 // ── Recipes ────────────────────────────────────────────────────────────────
 
-function insertRecipe(r: DrinkRecipe) {
-  sqlite().runSync(
+function insertRecipe(r: DrinkRecipe, profileId = 'default') {
+  sqlite(profileId).runSync(
     `INSERT INTO recipes
        (id, name, origin, method, glass, ingredients, steps, garnish, vibeTags,
         accent, isZeroProof, timesMade, lastMadeAt, isFavorite, rating, sourceUrl,
@@ -186,34 +196,34 @@ function insertRecipe(r: DrinkRecipe) {
  * a library added in a later release reaches people who already opened the
  * app, while edits to an existing recipe are never overwritten.
  */
-export function loadRecipes(): DrinkRecipe[] {
-  const handle = sqlite();
+export function loadRecipes(profileId = 'default'): DrinkRecipe[] {
+  const handle = sqlite(profileId);
   const existing = handle.getAllSync('SELECT id FROM recipes') as { id: string }[];
   const known = new Set(existing.map((r) => r.id));
   for (const r of SEED_RECIPES) {
-    if (!known.has(r.id)) insertRecipe(r);
+    if (!known.has(r.id)) insertRecipe(r, profileId);
   }
   const rows = handle.getAllSync('SELECT * FROM recipes ORDER BY createdAt DESC') as any[];
   return rows.map(rowToRecipe);
 }
 
-export function saveRecipe(recipe: DrinkRecipe) {
-  insertRecipe(recipe);
+export function saveRecipe(recipe: DrinkRecipe, profileId = 'default') {
+  insertRecipe(recipe, profileId);
 }
 
-export function deleteRecipe(id: string) {
-  sqlite().runSync('DELETE FROM recipes WHERE id = ?', [id]);
+export function deleteRecipe(id: string, profileId = 'default') {
+  sqlite(profileId).runSync('DELETE FROM recipes WHERE id = ?', [id]);
 }
 
 // ── Shopping list ──────────────────────────────────────────────────────────
 
-export function loadShopping(): ShoppingItem[] {
-  const rows = sqlite().getAllSync('SELECT * FROM shopping ORDER BY addedAt ASC') as any[];
+export function loadShopping(profileId = 'default'): ShoppingItem[] {
+  const rows = sqlite(profileId).getAllSync('SELECT * FROM shopping ORDER BY addedAt ASC') as any[];
   return rows.map((r) => ({ ...r, done: !!r.done }));
 }
 
-export function saveShoppingItem(item: ShoppingItem) {
-  sqlite().runSync(
+export function saveShoppingItem(item: ShoppingItem, profileId = 'default') {
+  sqlite(profileId).runSync(
     `INSERT INTO shopping (id, catalogItemId, name, done, addedAt)
      VALUES (?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
@@ -222,8 +232,8 @@ export function saveShoppingItem(item: ShoppingItem) {
   );
 }
 
-export function deleteShoppingItem(id: string) {
-  sqlite().runSync('DELETE FROM shopping WHERE id = ?', [id]);
+export function deleteShoppingItem(id: string, profileId = 'default') {
+  sqlite(profileId).runSync('DELETE FROM shopping WHERE id = ?', [id]);
 }
 
 // ── Prefs ──────────────────────────────────────────────────────────────────
@@ -235,8 +245,8 @@ export const DEFAULT_PREFS: Prefs = {
   shakeToShake: true,
 };
 
-export function loadPrefs(): Prefs {
-  const rows = sqlite().getAllSync('SELECT * FROM prefs') as { key: string; value: string }[];
+export function loadPrefs(profileId = 'default'): Prefs {
+  const rows = sqlite(profileId).getAllSync('SELECT * FROM prefs') as { key: string; value: string }[];
   const out: any = { ...DEFAULT_PREFS };
   for (const row of rows) {
     try {
@@ -248,8 +258,8 @@ export function loadPrefs(): Prefs {
   return out as Prefs;
 }
 
-export function savePrefs(prefs: Prefs) {
-  const handle = sqlite();
+export function savePrefs(prefs: Prefs, profileId = 'default') {
+  const handle = sqlite(profileId);
   for (const [key, value] of Object.entries(prefs)) {
     handle.runSync(
       'INSERT INTO prefs (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
@@ -258,10 +268,47 @@ export function savePrefs(prefs: Prefs) {
   }
 }
 
-export function loadParty(): PartyPlan {
-  const row = sqlite().getFirstSync<{ value: string }>('SELECT value FROM app_state WHERE key = ?', ['party']);
+export function loadParty(profileId = 'default'): PartyPlan {
+  const row = sqlite(profileId).getFirstSync<{ value: string }>('SELECT value FROM app_state WHERE key = ?', ['party']);
   try { return normalizeParty(row ? JSON.parse(row.value) : null); } catch { return normalizeParty(null); }
 }
-export function saveParty(party: PartyPlan) {
-  sqlite().runSync('INSERT INTO app_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', ['party', JSON.stringify(normalizeParty(party))]);
+export function saveParty(party: PartyPlan, profileId = 'default') {
+  sqlite(profileId).runSync('INSERT INTO app_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', ['party', JSON.stringify(normalizeParty(party))]);
 }
+
+export function loadProfileIndex(): ProfileIndex {
+  try {
+    const row = sqlite('default').getFirstSync<{ value: string }>('SELECT value FROM app_state WHERE key = ?', ['local-profiles:v1']);
+    return readProfileIndex(row ? JSON.parse(row.value) : null);
+  }
+  catch { reportPersistenceError('read'); throw new Error('The local bar list could not be read. Your existing bar files have been kept.'); }
+}
+function saveIndex(index: ProfileIndex) {
+  sqlite('default').runSync('INSERT INTO app_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', ['local-profiles:v1', JSON.stringify(readProfileIndex(index))]);
+}
+export function setActiveProfile(id: string): ProfileIndex {
+  const index = loadProfileIndex();
+  if (!index.profiles.some((p) => p.id === id)) throw new Error('That local bar could not be found.');
+  const next = { ...index, activeId: id }; saveIndex(next); return next;
+}
+export function renameProfile(id: string, name: string): ProfileIndex {
+  const next = renameLocalProfile(loadProfileIndex(), id, name); saveIndex(next); return next;
+}
+export function replaceProfileData(data: ProfileData, profileId = 'default') {
+  const handle = sqlite(profileId);
+  handle.withTransactionSync(() => {
+    handle.execSync("DELETE FROM inventory; DELETE FROM recipes; DELETE FROM shopping; DELETE FROM prefs; DELETE FROM app_state WHERE key = 'party';");
+    data.kit.forEach((item) => saveKitItem(item, profileId));
+    data.recipes.forEach((recipe) => saveRecipe(recipe, profileId));
+    data.shopping.forEach((item) => saveShoppingItem(item, profileId));
+    savePrefs(data.prefs, profileId); saveParty(data.party, profileId);
+  });
+}
+export function createProfile(name: string, data: ProfileData): ProfileIndex {
+  const index = loadProfileIndex(); const profile = newLocalProfile(name, index);
+  replaceProfileData(data, profile.id);
+  // Only a complete, committed database is added to the local bar list.
+  const next: ProfileIndex = { ...index, activeId: profile.id, profiles: [...index.profiles, profile] };
+  saveIndex(next); return next;
+}
+export const scopedToProfile = (id: string) => bindProfileStore({ loadKit, saveKitItem, deleteKitItem, loadRecipes, saveRecipe, deleteRecipe, loadShopping, saveShoppingItem, deleteShoppingItem, loadPrefs, savePrefs, loadParty, saveParty, replaceProfileData }, id);

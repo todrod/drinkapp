@@ -185,6 +185,27 @@ export interface Prefs {
   shakeToShake: boolean;
 }
 
+/** A local workspace, not an account or an authentication boundary. */
+export interface LocalProfile {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
+export interface ProfileIndex {
+  version: 1;
+  activeId: string;
+  profiles: LocalProfile[];
+}
+
+export interface ProfileData {
+  kit: InventoryItem[];
+  recipes: DrinkRecipe[];
+  shopping: ShoppingItem[];
+  prefs: Prefs;
+  party: PartyPlan;
+}
+
 // ── Generator result shapes ───────────────────────────────────────────────
 // The generator never returns a drink it cannot fully pour. When nothing
 // matches it returns a typed miss so the UI can name the fix.

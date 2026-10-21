@@ -30,9 +30,13 @@ import { blankRecipe, isAlcoholFree, isServingReady } from './src/logic/recipes'
 import { decodeGuestMenu } from './src/logic/guestMenu';
 import { initialGuestToken, leaveGuestMenu, subscribeGuestToken } from './src/guestLink';
 import type { DrinkRecipe } from './src/types';
+import { LocalBarsScreen } from './src/screens/LocalBarsScreen';
+import { Body, Dim, GhostButton, Heading, Panel, PrimaryButton } from './src/components/ui';
 
 function Shell() {
-  const { ready, recipes, prefs, setPref, saveRecipe } = useData();
+  const { ready, recipes, prefs, setPref, saveRecipe, storageError, storageReadFailed, retryDeviceSave } = useData();
+  const [localBarsOpen, setLocalBarsOpen] = useState(false);
+  const [retryError, setRetryError] = useState('');
   const [tab, setTab] = useState<TabKey>('random');
   // Which Cabinet segment to land on. Adding something to the shopping list
   // from elsewhere should show you the list, not the stock you already had.
@@ -46,7 +50,7 @@ function Shell() {
   const [linkReady, setLinkReady] = useState(false);
   const guestMenu = useMemo(() => guestToken === null ? null : decodeGuestMenu(guestToken), [guestToken]);
   const detail = detailId ? recipes.find((r) => r.id === detailId) : null;
-  const overlay = partyOpen || !!detail || !!editing || !!serving;
+  const overlay = localBarsOpen || partyOpen || !!detail || !!editing || !!serving;
 
   useEffect(() => {
     let active = true;
@@ -81,23 +85,26 @@ function Shell() {
 
   if (guestToken !== null) return <SafeAreaView style={{ flex: 1 }}><GuestMenuScreen key={guestToken} menu={guestMenu} onLeave={() => { leaveGuestMenu(); setGuestToken(null); }} /></SafeAreaView>;
 
+  if (storageReadFailed) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 24 }}><Panel style={{ gap: 18 }}><Heading>We couldn’t open your saved bar</Heading><Body>Your saved files have been kept. Check that device or browser storage is available, then try again.</Body><PrimaryButton label="Try device storage again" onPress={() => { try { retryDeviceSave(); } catch (error) { setRetryError(error instanceof Error ? error.message : 'Device storage is still unavailable.'); } }} />{retryError ? <Dim accessibilityLiveRegion="polite">{retryError}</Dim> : null}</Panel></SafeAreaView>;
+
   if (!prefs.ageGateAcceptedAt) {
     return <AgeGate onAccept={() => setPref('ageGateAcceptedAt', Date.now())} />;
   }
 
   return (
     <View style={{ flex: 1 }}>
+      {storageError && !overlay ? <View style={{ paddingHorizontal: 20, paddingTop: 12, gap: 6 }}><Body style={{ color: C.amber }} accessibilityLiveRegion="polite">{storageError}</Body><GhostButton label="Open device storage & backups" onPress={() => setLocalBarsOpen(true)} /></View> : null}
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         {tab === 'random' && <RandomScreen goTo={goTo} onParty={() => setPartyOpen(true)} onServe={startServing} active={!overlay} />}
-        {tab === 'cabinet' && <CabinetScreen view={cabinetView} onViewChange={setCabinetView} />}
+        {tab === 'cabinet' && <CabinetScreen view={cabinetView} onViewChange={setCabinetView} onLocalBars={() => setLocalBarsOpen(true)} />}
         {tab === 'recipes' && <RecipesScreen onOpen={(r) => setDetailId(r.id)} onNew={() => setEditing(blankRecipe())} />}
         {tab === 'builder' && <BuilderScreen goTo={goTo} onOpen={(r) => setDetailId(r.id)} onEdit={setEditing} />}
       </SafeAreaView>
       <NavPill active={tab} onChange={setTab} />
       <OverlayLayer visible={overlay} onClose={() => {
-        if (serving) setServing(null); else if (editing) setEditing(null); else if (detail) setDetailId(null); else setPartyOpen(false);
+        if (localBarsOpen) setLocalBarsOpen(false); else if (serving) setServing(null); else if (editing) setEditing(null); else if (detail) setDetailId(null); else setPartyOpen(false);
       }}>
-      {serving ? <ServingView key={serving.recipe.id} {...serving} onClose={() => setServing(null)} /> : editing ? <RecipeEditor key={editing.id} recipe={editing} onClose={() => setEditing(null)} onSave={(r) => { saveRecipe(r); setEditing(null); setDetailId(r.id); }} /> : detail ?
+      {localBarsOpen ? <LocalBarsScreen onClose={() => setLocalBarsOpen(false)} /> : serving ? <ServingView key={serving.recipe.id} {...serving} onClose={() => setServing(null)} /> : editing ? <RecipeEditor key={editing.id} recipe={editing} onClose={() => setEditing(null)} onSave={(r) => { saveRecipe(r); setEditing(null); setDetailId(r.id); }} /> : detail ?
         <RecipeDetail recipe={detail} onClose={() => setDetailId(null)} onEdit={editRecipe} onServe={startServing} onShopping={() => { setDetailId(null); setPartyOpen(false); goTo('cabinet', 'shopping'); }} onParty={() => { setDetailId(null); setPartyMode('menu'); setPartyOpen(true); }} /> : partyOpen ?
         <PartyScreen mode={partyMode} setMode={setPartyMode} onClose={() => setPartyOpen(false)} onRecipe={(r) => setDetailId(r.id)} onServe={startServing} onShopping={() => { setPartyOpen(false); goTo('cabinet', 'shopping'); }} /> : null}
       </OverlayLayer>

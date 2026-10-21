@@ -235,17 +235,19 @@ export function GhostButton({
   label,
   accessibilityLabel,
   onPress,
+  disabled,
   color = C.text,
   style,
 }: {
   label: string;
   accessibilityLabel?: string;
   onPress: () => void;
+  disabled?: boolean;
   color?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   return (
-    <Press onPress={onPress} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} style={[styles.pillRadius, style]}>
+    <Press onPress={onPress} disabled={disabled} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} style={[styles.pillRadius, disabled ? { opacity: 0.4 } : null, style]}>
       <View style={styles.ghost}>
         <View style={styles.edge} pointerEvents="none" />
         <Text style={[styles.ghostText, { color }]}>{label}</Text>
