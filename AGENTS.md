@@ -1,5 +1,7 @@
 # Start here
 
+**If you were handed a task, it is in [`HANDOFF.md`](HANDOFF.md).**
+
 **Read [`CONTEXT.md`](CONTEXT.md) before changing anything.** It covers the
 architecture, the data model, the matching algorithm, and — most importantly —
 a list of non-obvious traps that have each already caused a real bug here.
