@@ -7,12 +7,12 @@ import { Platform } from 'react-native';
 export const C = {
   // Ground gets three steps so panels can sit *on* something rather than float
   // on one flat colour.
-  ink: '#170F12',
-  ink2: '#1D1418',
-  ink3: '#24191E',
-  panel: '#2C1E23',
-  raise: '#3C2930',
-  ambient: '#A15250',
+  ink: '#19090D',
+  ink2: '#210D14',
+  ink3: '#2A111A',
+  panel: '#32151D',
+  raise: '#481E29',
+  ambient: '#B3283D',
 
   line: 'rgba(245, 232, 216, 0.09)',
   line2: 'rgba(245, 232, 216, 0.18)',
@@ -39,10 +39,10 @@ export const C = {
 
 /** Translucent fills for glass surfaces, lightest at the top of the stack. */
 export const GLASS = {
-  card: ['#302127', '#251A1E'] as const,
-  raised: ['#3D2931', '#302127'] as const,
-  sheet: ['#35242B', '#24191E'] as const,
-  hero: ['#442A30', '#2F2025', '#24191E'] as const,
+  card: ['#3A1822', '#291219'] as const,
+  raised: ['#481E29', '#35151F'] as const,
+  sheet: ['#3D1823', '#2A111A'] as const,
+  hero: ['#591F2B', '#39151F', '#241016'] as const,
 };
 
 /**

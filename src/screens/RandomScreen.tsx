@@ -38,6 +38,7 @@ import { TabKey } from '../components/NavPill';
 import { Icon } from '../icons';
 import { CrystalBall } from '../components/CrystalBall';
 import { CocktailArt } from '../components/CocktailArt';
+import { ShakeControl } from '../components/ShakeControl';
 
 export function RandomScreen({
   goTo,
@@ -52,6 +53,7 @@ export function RandomScreen({
   const [showFilters, setShowFilters] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
+  const spinning = useRef(false);
   const { width } = useWindowDimensions();
   const wide = width >= 640;
   const scrollRef = useRef<ScrollView>(null);
@@ -92,7 +94,9 @@ export function RandomScreen({
   }, [pulse, reduceMotion]);
 
   const onSpin = () => {
-    if (isSpinning) return;
+    // A tap and a sensor callback can land before React renders the busy state.
+    if (spinning.current) return;
+    spinning.current = true;
     setIsSpinning(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
@@ -107,6 +111,7 @@ export function RandomScreen({
     });
 
     const show = () => {
+      spinning.current = false;
       setIsSpinning(false);
       setResult(next);
       if (next.ok) {
@@ -141,11 +146,12 @@ export function RandomScreen({
   const shakeSensor = useShakeDetector({ enabled: prefs.shakeToShake, onShake: onSpin });
 
   const toggleShakeSensor = async () => {
-    if (!prefs.shakeToShake && shakeSensor.needsPermission) {
-      const ok = await shakeSensor.requestPermission();
-      if (!ok) return;
+    if (shakeSensor.status === 'ready' || shakeSensor.status === 'waiting') {
+      setPref('shakeToShake', false);
+      return;
     }
-    setPref('shakeToShake', !prefs.shakeToShake);
+    const ok = await shakeSensor.requestPermission();
+    if (ok) setPref('shakeToShake', true);
   };
 
   const filterCount =
@@ -181,7 +187,7 @@ export function RandomScreen({
           <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }]}>A little magic.{'\n'}A great drink.</Text>
           <Text style={styles.heroBody}>Find your next favorite cocktail, made with what's already on your shelf.</Text>
           <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} />
-          <Text style={styles.heroHint}>{prefs.shakeToShake && shakeSensor.available ? 'Tap the crystal ball, or give your phone a shake.' : 'Let the spirits decide. Tap the crystal ball to begin.'}</Text>
+          <ShakeControl status={shakeSensor.status} onToggle={toggleShakeSensor} />
         </View>
         <View style={[styles.crystalStage, wide && { flex: 1 }]}>
           <Animated.View style={{ transform: [{ translateY: reduceMotion ? 0 : float }, { rotate }] }}>
@@ -226,14 +232,6 @@ export function RandomScreen({
                 color={C.amber}
                 onPress={() => setPref('allowSubstitutes', !prefs.allowSubstitutes)}
               />
-              {shakeSensor.available ? (
-                <Chip
-                  label={prefs.shakeToShake ? 'Shake on' : 'Shake off'}
-                  active={prefs.shakeToShake}
-                  color={C.violet}
-                  onPress={toggleShakeSensor}
-                />
-              ) : null}
               {filterCount ? (
                 <Chip
                   label="Clear"
@@ -534,7 +532,6 @@ const styles = StyleSheet.create({
   heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 36, lineHeight: 40, letterSpacing: -1.4 },
   heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
-  heroHint: { color: C.faint, fontFamily: F.regular, fontSize: 11, lineHeight: 17, maxWidth: 290 },
   crystalStage: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
   crystalButton: { borderRadius: 160 },
   crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: -12, paddingBottom: 6 },

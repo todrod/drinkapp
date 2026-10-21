@@ -36,6 +36,7 @@ npm start                  # Expo dev server; scan QR with Expo Go
 npm run web                # browser instead
 npm run typecheck          # tsc --noEmit
 npm run build:web          # static export + PWA injection -> dist/
+npm run test:shake         # motion bridge + gesture tests (Node 22.18+)
 ```
 
 **Deployment is automatic.** Vercel builds on every push to `main` using
@@ -57,7 +58,7 @@ Expo SDK 57 · React Native 0.86 · TypeScript · React 19.
 | Graphics | `react-native-svg` (ingredient art, ambient background) |
 | Animation | React Native's built-in `Animated` — **not** Reanimated |
 | Icons | `@expo/vector-icons` MaterialCommunityIcons, subset to 12 KB |
-| Sensors | `expo-sensors` accelerometer for shake-to-spin |
+| Sensors | `expo-sensors` accelerometer on native; `devicemotion` on mobile web |
 
 **No Reanimated, no Skia, no navigation library.** Tab switching is a
 `useState` in `App.tsx`. Skia was evaluated and rejected: on web it loads 2.9 MB
@@ -77,6 +78,11 @@ src/
   store.tsx               Context provider: kit, recipes, prefs, mutators
   logic/generator.ts      *** The matching algorithm. Start here. ***
   logic/shopping.ts       Purchase ranking and list projection
+  logic/shake.ts          Shared gesture thresholds, distinct jolts, cooldown
+  sensors/
+    motion.ts             Native accelerometer and motion permissions
+    motion.web.ts         Browser motion permissions and acceleration in g
+    motion.types.ts       Shared sensor support and permission states
   db/
     store.ts              Native persistence (SQLite, schema v3)
     store.web.ts          Web persistence (localStorage)
@@ -239,6 +245,18 @@ A plain `fetch()` still consults the HTTP cache. `public/sw.js` uses
 `cache: 'no-store'` on navigations for exactly this reason. Bump `CACHE` when
 changing the worker.
 
+### Phone motion needs a tap for permission on iOS web
+
+Discover's **Enable shake** button requests motion directly from the tap.
+Do not await availability before requesting: iOS cannot deliver any samples
+until permission is granted, so checking for samples first hides the control.
+Mobile web requires HTTPS (localhost is allowed for desktop development).
+The installed Expo web Accelerometer uses orientation angles, so the web
+adapter reads `devicemotion.accelerationIncludingGravity` and converts m/s²
+to g. Native Accelerometer readings are already in g. Keep that distinction.
+The hook detaches when backgrounded or off; three distinct jolts trigger the
+same crystal-ball selection as a tap, with a cooldown against repeated picks.
+
 ### Empty recipes used to be "pourable"
 A recipe with no ingredients satisfies "every required ingredient resolves"
 vacuously. Matching now requires at least one non-optional hard-role ingredient.
@@ -321,7 +339,7 @@ Known open items, roughly by value:
 
 ## 11. Conventions
 
-The interface uses deep burgundy surfaces, ivory text, apricot primary actions,
+The interface uses deep oxblood red surfaces, ivory text, apricot primary actions,
 and mint stock indicators. Shared `SCREEN` spacing caps desktop content at
 1120px; Cabinet and Recipes use two, three, or four columns by viewport width.
 The home crystal's float and selection animation respect reduced motion.

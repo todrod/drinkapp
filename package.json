@@ -32,7 +32,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "expo export --platform web && node scripts/postbuild.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:shake": "node --experimental-strip-types --test tests/shake.test.cjs tests/motion-web.test.cjs"
   },
   "private": true
 }

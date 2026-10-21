@@ -9,16 +9,16 @@ export function CrystalBall({ size = 300 }: { size?: number }) {
     <Svg width={size} height={size} viewBox="0 0 320 320" aria-hidden={true}>
       <Defs>
         <RadialGradient id={`${id}-halo`}>
-          <Stop offset="0" stopColor="#DC969B" stopOpacity={0.48} />
-          <Stop offset="0.65" stopColor="#AA4E60" stopOpacity={0.14} />
-          <Stop offset="1" stopColor="#AA4E60" stopOpacity={0} />
+          <Stop offset="0" stopColor="#D87C8A" stopOpacity={0.48} />
+          <Stop offset="0.65" stopColor="#AE304C" stopOpacity={0.14} />
+          <Stop offset="1" stopColor="#AE304C" stopOpacity={0} />
         </RadialGradient>
         <RadialGradient id={`${id}-glass`} cx="32%" cy="25%" r="85%">
-          <Stop offset="0" stopColor="#F5D4CD" stopOpacity={0.95} />
-          <Stop offset="0.28" stopColor="#C8848D" stopOpacity={0.8} />
-          <Stop offset="0.65" stopColor="#814451" stopOpacity={0.95} />
-          <Stop offset="0.88" stopColor="#40232C" />
-          <Stop offset="1" stopColor="#DB9DA1" />
+          <Stop offset="0" stopColor="#F1C2BC" stopOpacity={0.95} />
+          <Stop offset="0.28" stopColor="#B75B6B" stopOpacity={0.8} />
+          <Stop offset="0.65" stopColor="#732636" stopOpacity={0.95} />
+          <Stop offset="0.88" stopColor="#3B101D" />
+          <Stop offset="1" stopColor="#C97583" />
         </RadialGradient>
         <LinearGradient id={`${id}-mist`} x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor="#F6CACA" stopOpacity={0} />

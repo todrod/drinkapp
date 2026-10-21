@@ -1,91 +1,82 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
-import { Accelerometer } from 'expo-sensors';
+import { AppState } from 'react-native';
+import { createShakeDetector } from '../logic/shake';
+import { getMotionState, requestMotionPermission, subscribeMotion } from '../sensors/motion';
+import type { MotionState } from '../sensors/motion.types';
 
-/**
- * Physical shake detection.
- *
- * A single threshold crossing fires on anything — setting the phone down, a
- * pocket bump. Requiring several spikes inside a short window means it only
- * triggers on a sustained shake, which is what the gesture actually is.
- *
- * Web notes: DeviceMotion needs HTTPS and, on iOS Safari, an explicit
- * permission grant that must originate from a user tap — hence
- * `requestPermission` being exposed for a button to call rather than fired
- * automatically on mount.
- */
-
-const SPIKE_G = 1.7; // magnitude above resting 1g that counts as a jolt
-const SPIKES_NEEDED = 3;
-const WINDOW_MS = 600;
-const COOLDOWN_MS = 1500;
-const SAMPLE_MS = 80;
-
-interface Options {
-  enabled: boolean;
-  onShake: () => void;
-}
+interface Options { enabled: boolean; onShake: () => void }
+export type ShakeStatus = 'checking' | 'unsupported' | 'insecure' | 'requesting' | 'denied' | 'off' | 'permission' | 'ready' | 'unavailable' | 'waiting';
 
 export function useShakeDetector({ enabled, onShake }: Options) {
-  const [available, setAvailable] = useState(false);
-  const [granted, setGranted] = useState(Platform.OS !== 'web');
-
-  const spikes = useRef<number[]>([]);
-  const lastFired = useRef(0);
-  // Kept in a ref so re-registering the listener is not needed when the
-  // callback identity changes between renders.
+  const [motion, setMotion] = useState<MotionState | null>(null);
+  const [requesting, setRequesting] = useState(false);
+  const [receiving, setReceiving] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [foreground, setForeground] = useState(AppState.currentState !== 'background' && AppState.currentState !== 'inactive');
+  const detector = useRef(createShakeDetector()).current;
   const handler = useRef(onShake);
+  const mounted = useRef(true);
   handler.current = onShake;
 
   useEffect(() => {
-    let cancelled = false;
-    Accelerometer.isAvailableAsync()
-      .then((ok) => !cancelled && setAvailable(ok))
-      .catch(() => !cancelled && setAvailable(false));
-    return () => {
-      cancelled = true;
-    };
+    mounted.current = true;
+    getMotionState().then((state) => {
+      if (mounted.current) setMotion(state);
+    }).catch(() => {
+      if (mounted.current) setMotion({ support: 'unsupported', permission: 'denied' });
+    });
+    const subscription = AppState.addEventListener('change', (state) => setForeground(state === 'active'));
+    return () => { mounted.current = false; subscription.remove(); };
   }, []);
 
   const requestPermission = useCallback(async () => {
+    setRequesting(true);
     try {
-      const res = await Accelerometer.requestPermissionsAsync();
-      const ok = res.status === 'granted';
-      setGranted(ok);
-      return ok;
+      const permission = await requestMotionPermission();
+      if (mounted.current) {
+        setMotion((state) => state ? { ...state, permission } : state);
+        if (permission === 'granted') setAttempt((value) => value + 1);
+      }
+      return permission === 'granted';
     } catch {
-      setGranted(false);
+      if (mounted.current) setMotion((state) => state ? { ...state, permission: 'denied' } : state);
       return false;
+    } finally {
+      if (mounted.current) setRequesting(false);
     }
   }, []);
 
+  const listening = enabled && foreground && motion?.support === 'supported' && motion.permission === 'granted';
   useEffect(() => {
-    if (!enabled || !available || !granted) return;
+    detector.reset();
+    setReceiving(false);
+    setTimedOut(false);
+    if (!listening) return;
+    let seenSample = false;
+    const timeout = setTimeout(() => setTimedOut(true), 3000);
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = subscribeMotion((sample) => {
+        if (![sample.x, sample.y, sample.z].every(Number.isFinite)) return;
+        if (!seenSample) {
+          seenSample = true;
+          clearTimeout(timeout);
+          setReceiving(true);
+        }
+        if (detector.sample(sample)) handler.current();
+      });
+    } catch {
+      clearTimeout(timeout);
+      setTimedOut(true);
+    }
+    return () => { clearTimeout(timeout); unsubscribe(); detector.reset(); };
+  }, [listening, detector, attempt]);
 
-    Accelerometer.setUpdateInterval(SAMPLE_MS);
-    const sub = Accelerometer.addListener(({ x, y, z }) => {
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      if (magnitude < SPIKE_G) return;
+  const status: ShakeStatus = !motion ? 'checking' : motion.support !== 'supported' ? motion.support :
+    requesting ? 'requesting' : motion.permission === 'denied' ? 'denied' :
+    !enabled ? 'off' : motion.permission !== 'granted' ? 'permission' :
+    receiving ? 'ready' : timedOut ? 'unavailable' : 'waiting';
 
-      const now = Date.now();
-      if (now - lastFired.current < COOLDOWN_MS) return;
-
-      spikes.current = [...spikes.current, now].filter((t) => now - t <= WINDOW_MS);
-      if (spikes.current.length >= SPIKES_NEEDED) {
-        spikes.current = [];
-        lastFired.current = now;
-        handler.current();
-      }
-    });
-
-    return () => sub.remove();
-  }, [enabled, available, granted]);
-
-  return {
-    /** Device reports a usable accelerometer. */
-    available,
-    /** Motion access still needs a tap to grant (iOS Safari). */
-    needsPermission: available && !granted,
-    requestPermission,
-  };
+  return { status, requestPermission };
 }
