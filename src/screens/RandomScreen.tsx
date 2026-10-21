@@ -29,7 +29,7 @@ import {
 } from '../components/ui';
 import { useData } from '../store';
 import { buildOwned, countMakeable, generate, matchRecipe } from '../logic/generator';
-import { DrinkRecipe, GeneratorResult } from '../types';
+import { DrinkRecipe, GeneratorResult, Substitution } from '../types';
 import { VIBE_TAGS } from '../data/recipes';
 import { THEMES } from '../data/seed';
 import { useShakeDetector } from '../hooks/useShakeDetector';
@@ -39,6 +39,9 @@ import { Icon } from '../icons';
 import { CrystalBall } from '../components/CrystalBall';
 import { CocktailArt } from '../components/CocktailArt';
 import { ShakeControl } from '../components/ShakeControl';
+import { DrinkIdeaFinder } from '../components/DrinkIdeaFinder';
+import { RecipeSources } from '../components/RecipeSources';
+import { discoverDrinks, ideaAllowsSubstitution } from '../logic/discovery';
 
 export function RandomScreen({
   goTo,
@@ -48,6 +51,7 @@ export function RandomScreen({
   const { recipes, kit, prefs, setPref, markMade, rateRecipe, addToShopping } = useData();
   const [vibes, setVibes] = useState<string[]>([]);
   const [themes, setThemes] = useState<string[]>([]);
+  const [ideaQuery, setIdeaQuery] = useState('');
   const [result, setResult] = useState<GeneratorResult | null>(null);
   const [recent, setRecent] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -66,6 +70,15 @@ export function RandomScreen({
   const owned = useMemo(() => buildOwned(kit), [kit]);
   const readyCount = useMemo(() => countMakeable(recipes, kit, prefs.allowSubstitutes), [recipes, kit, prefs.allowSubstitutes]);
   const selectedRecipe = result?.ok ? recipes.find((recipe) => recipe.id === result.recipe.id) ?? result.recipe : null;
+  const discovery = useMemo(() => discoverDrinks(recipes, ideaQuery), [recipes, ideaQuery]);
+  const inventoryIdeas = useMemo(() => discovery.matches.map(({ recipe: r }) => {
+    const match = matchRecipe(r, owned, prefs.allowSubstitutes, discovery.intent.excludedIngredientIds,
+      (wanted, used) => ideaAllowsSubstitution(discovery.intent, wanted, used));
+    const ready = (!prefs.zeroProofMode || r.isZeroProof) && (!vibes.length || vibes.some((v) => r.vibeTags.includes(v))) &&
+      (!themes.length || (!!r.theme && themes.includes(r.theme))) && match.ok;
+    return { name: r.name, ready, missing: match.missing };
+  }).sort((a, b) => Number(b.ready) - Number(a.ready)), [discovery, owned, prefs.zeroProofMode, prefs.allowSubstitutes, vibes, themes]);
+  const ideaReadyCount = inventoryIdeas.filter((idea) => idea.ready).length;
 
   useEffect(() => {
     if (!result) return;
@@ -108,6 +121,7 @@ export function RandomScreen({
       vibes,
       themes,
       recentIds: recent,
+      ideaQuery,
     });
 
     const show = () => {
@@ -168,7 +182,7 @@ export function RandomScreen({
   };
 
   return (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <View style={styles.brandRow}>
         <View style={styles.brandLockup}>
           <View style={styles.brandIcon}><Icon name="shaker" size={22} color={C.accent} /></View>
@@ -200,8 +214,12 @@ export function RandomScreen({
         </View>
       </LinearGradient>
 
+      <DrinkIdeaFinder query={ideaQuery} onChange={(value) => { setIdeaQuery(value); setResult(null); }}
+        discovery={discovery} matchCount={discovery.matches.length} readyCount={ideaReadyCount} inventoryIdeas={inventoryIdeas}
+        busy={isSpinning} onFind={onSpin} />
+
       <View style={styles.moodHead}>
-        <Text style={styles.sectionTitle}>What's the mood?</Text>
+        <Text style={styles.sectionTitle}>Quick filters</Text>
         <Pressable onPress={() => setShowFilters(v => !v)} accessibilityRole="button" accessibilityLabel="Customize drink filters"
           accessibilityState={{ expanded: showFilters }} style={styles.filterToggle}>
           <Icon name="tune-variant" size={17} color={C.dim} />
@@ -297,11 +315,12 @@ export function RandomScreen({
       ) : (
         <Animated.View accessibilityLiveRegion="polite" style={revealStyle}>
           <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Your next pour</Text>
+          {ideaQuery.trim() && result.ok ? <Dim style={{ marginBottom: 12 }}>Matched your idea: {ideaQuery.trim()}</Dim> : null}
           {result.ok ? (
             <ResultCard
               recipe={selectedRecipe ?? result.recipe}
               have={countHave(result.recipe, owned, prefs.allowSubstitutes)}
-              substitutions={result.substitutions.length}
+              substitutions={result.substitutions}
               onMade={() => {
                 markMade(result.recipe.id);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -320,6 +339,7 @@ export function RandomScreen({
               onClear={() => {
                 setVibes([]);
                 setThemes([]);
+                setIdeaQuery('');
                 setPref('zeroProofMode', false);
                 setResult(null);
               }}
@@ -353,7 +373,7 @@ function ResultCard({
 }: {
   recipe: DrinkRecipe;
   have: { have: number; total: number };
-  substitutions: number;
+  substitutions: Substitution[];
   onMade: () => void;
   onRate: (n: number) => void;
   onAgain: () => void;
@@ -418,17 +438,8 @@ function ResultCard({
             </>
           ) : null}
 
-          {recipe.sourceNote ? (
-            <View style={styles.sourceRow}>
-              <Icon name="book-open-variant" size={13} color={C.faint} />
-              <Dim>{recipe.sourceNote}</Dim>
-            </View>
-          ) : null}
-          {substitutions ? (
-            <Dim style={{ marginTop: S.sm, color: C.amber }}>
-              {substitutions} {pluralize(substitutions, 'substitution')} — close, not exact.
-            </Dim>
-          ) : null}
+          <RecipeSources recipe={recipe} />
+          {substitutions.map((sub, index) => <Dim key={index} style={{ marginTop: S.sm, color: C.amber }}>Use {sub.used} for {sub.wanted}.</Dim>)}
         </View>
       ) : null}
 
@@ -451,6 +462,15 @@ function FallbackPanel({
   onWant: (catalogItemId: string | null, name: string) => void;
   goTo: (t: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
+  if (result.reason === 'idea') {
+    return <Panel accent={C.amber} style={styles.fallback}>
+      <Icon name="book-open-variant" size={34} color={C.amber} style={styles.fallbackIcon} />
+      <Heading style={{ textAlign: 'center' }}>{result.ideaMatches ? 'No matching drink is ready yet' : 'No drinks match that idea yet'}</Heading>
+      <Dim style={styles.fallbackBody}>{result.ideaMatches ? `${result.ideaMatches} recipes match your words. Check your bar and mood filters, or browse the recipe book for their ingredients.` : 'Try fewer words, a different flavor or another theme. Your exclusions stay in place until you change them.'}</Dim>
+      <PrimaryButton label="BROWSE RECIPES" onPress={() => goTo('recipes')} style={styles.fallbackBtn} />
+      <GhostButton label="Clear idea and filters" onPress={onClear} style={{ marginTop: S.sm }} />
+    </Panel>;
+  }
   if (result.reason === 'filters') {
     return (
       <Panel accent={C.amber} style={styles.fallback}>

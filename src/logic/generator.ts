@@ -1,4 +1,5 @@
 import { CATALOG_BY_ID } from '../data/catalog';
+import { discoverDrinks, ideaAllowsSubstitution } from './discovery';
 import {
   DrinkRecipe,
   GeneratorResult,
@@ -47,8 +48,11 @@ interface Resolution {
 function resolveIngredient(
   ing: RecipeIngredient,
   owned: Owned,
-  allowSubstitutes: boolean
+  allowSubstitutes: boolean,
+  excludedIds?: Set<string>,
+  allowSubstitution?: (wantedId: string, usedId: string) => boolean
 ): Resolution {
+  if (ing.catalogItemId && excludedIds?.has(ing.catalogItemId)) return { resolved: false };
   if (ing.catalogItemId && owned.ids.has(ing.catalogItemId)) return { resolved: true };
   if (owned.names.has(ing.displayName.trim().toLowerCase())) return { resolved: true };
 
@@ -56,6 +60,8 @@ function resolveIngredient(
     const cat = CATALOG_BY_ID[ing.catalogItemId];
     if (cat) {
       for (const subId of cat.substituteIds) {
+        if (excludedIds?.has(subId)) continue;
+        if (allowSubstitution && !allowSubstitution(cat.id, subId)) continue;
         if (owned.ids.has(subId)) {
           return {
             resolved: true,
@@ -83,7 +89,9 @@ export interface MatchResult {
 export function matchRecipe(
   recipe: DrinkRecipe,
   owned: Owned,
-  allowSubstitutes: boolean
+  allowSubstitutes: boolean,
+  excludedIds?: Set<string>,
+  allowSubstitution?: (wantedId: string, usedId: string) => boolean
 ): MatchResult {
   const substitutions: Substitution[] = [];
   const missing: string[] = [];
@@ -92,7 +100,7 @@ export function matchRecipe(
   for (const ing of recipe.ingredients) {
     if (ing.isOptional) continue;
     const hard = HARD_ROLES.has(ing.role);
-    const res = resolveIngredient(ing, owned, allowSubstitutes);
+    const res = resolveIngredient(ing, owned, allowSubstitutes, excludedIds, allowSubstitution);
 
     if (res.resolved) {
       if (res.substitution) substitutions.push(res.substitution);
@@ -131,6 +139,8 @@ export interface GenerateOptions {
   lockedIngredientId?: string | null;
   /** Recipe ids from the last few runs, pushed down the ranking. */
   recentIds?: string[];
+  /** Local keyword/topic request. All recognized terms intersect; exclusions also apply to substitutions. */
+  ideaQuery?: string;
 }
 
 function passesFilters(r: DrinkRecipe, o: GenerateOptions): boolean {
@@ -170,12 +180,16 @@ export function generate(o: GenerateOptions): GeneratorResult {
   const owned = buildOwned(o.kit);
   const recentIds = o.recentIds ?? [];
 
-  const filtered = o.recipes.filter((r) => passesFilters(r, o));
+  const idea = o.ideaQuery?.trim() ? discoverDrinks(o.recipes, o.ideaQuery) : null;
+  const relevance = new Map(idea?.matches.map((m) => [m.recipe.id, m.score]) ?? []);
+  const excludedIds = idea?.intent.excludedIngredientIds;
+  const allowIdeaSubstitution = idea ? (wanted: string, used: string) => ideaAllowsSubstitution(idea.intent, wanted, used) : undefined;
+  const filtered = o.recipes.filter((r) => passesFilters(r, o) && (!idea || relevance.has(r.id)));
   const hits: { item: { recipe: DrinkRecipe; match: MatchResult }; weight: number }[] = [];
 
   for (const r of filtered) {
-    const m = matchRecipe(r, owned, o.allowSubstitutes);
-    if (m.ok) hits.push({ item: { recipe: r, match: m }, weight: score(r, m, recentIds) });
+    const m = matchRecipe(r, owned, o.allowSubstitutes, excludedIds, allowIdeaSubstitution);
+    if (m.ok) hits.push({ item: { recipe: r, match: m }, weight: score(r, m, recentIds) + (relevance.get(r.id) ?? 0) });
   }
 
   if (hits.length) {
@@ -203,7 +217,7 @@ export function generate(o: GenerateOptions): GeneratorResult {
       o.zeroProofMode ||
       (o.themes?.length ?? 0) > 0);
 
-  if (filtersAreTheProblem) {
+  if (filtersAreTheProblem && !idea) {
     return {
       ok: false,
       reason: 'filters',
@@ -215,9 +229,10 @@ export function generate(o: GenerateOptions): GeneratorResult {
   // Which single ingredient unlocks the most drinks?
   const unlocks = new Map<string, number>();
   const idByName = new Map<string, string | null>();
-  const pool = filtered.length ? filtered : o.recipes;
+  // Never broaden a typed request silently (especially "no gin" or "mocktail").
+  const pool = idea ? filtered : filtered.length ? filtered : o.recipes;
   for (const r of pool) {
-    const m = matchRecipe(r, owned, o.allowSubstitutes);
+    const m = matchRecipe(r, owned, o.allowSubstitutes, excludedIds, allowIdeaSubstitution);
     if (m.missing.length === 1) {
       const key = m.missing[0];
       unlocks.set(key, (unlocks.get(key) ?? 0) + 1);
@@ -239,9 +254,10 @@ export function generate(o: GenerateOptions): GeneratorResult {
 
   return {
     ok: false,
-    reason: suggestions.length ? 'nearly' : 'empty',
+    reason: suggestions.length ? 'nearly' : idea ? 'idea' : 'empty',
     suggestions,
     matchesWithoutFilters: unfilteredMakeable,
+    ...(idea ? { ideaMatches: idea.matches.length } : {}),
   };
 }
 

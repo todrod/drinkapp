@@ -1,5 +1,6 @@
 import { CATALOG_BY_ID } from './catalog';
 import { BOOK_SEEDS, THEMED_SEEDS } from './library';
+import { DISCOVERY_RECIPES } from './discoveryRecipes';
 import { Ing, Seed } from './seed';
 import { DrinkRecipe, RecipeIngredient } from '../types';
 
@@ -818,7 +819,7 @@ function toRecipe(s: Seed, id: string): DrinkRecipe {
     lastMadeAt: null,
     isFavorite: false,
     rating: null,
-    sourceUrl: null,
+    sourceUrl: s.sourceUrl ?? null,
     sourceNote: s.source ?? null,
     theme: s.theme ?? null,
     createdAt: Date.now(),
@@ -833,6 +834,7 @@ export const SEED_RECIPES: DrinkRecipe[] = [
   ...seeds.map((s, i) => toRecipe(s, `seed-${i + 1}`)),
   ...BOOK_SEEDS.map((s, i) => toRecipe(s, `book-${i + 1}`)),
   ...THEMED_SEEDS.map((s, i) => toRecipe(s, `theme-${i + 1}`)),
+  ...DISCOVERY_RECIPES.map((s) => toRecipe(s, `bank-${s.id}`)),
 ];
 
 /** Every distinct vibe tag in the library, for the Shaker filter rail. */

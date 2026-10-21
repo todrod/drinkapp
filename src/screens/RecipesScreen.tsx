@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -40,14 +41,23 @@ import { Icon } from '../icons';
 import { CocktailArt } from '../components/CocktailArt';
 import { IngredientArt } from '../components/IngredientArt';
 import { artForCatalog } from '../data/art';
+import { CURATION_DATE, inCollection, RATING_SOURCE, TREND_SOURCE, trendingRank } from '../data/curation';
+import { discoverDrinks, ideaAllowsSubstitution, type DrinkIntent } from '../logic/discovery';
+import { RecipeSources } from '../components/RecipeSources';
 
-type Filter = 'on-hand' | 'classic' | 'books' | 'themed' | 'mine';
+type Filter = 'on-hand' | 'classic' | 'books' | 'themed' | 'mine' | 'trending' | 'highly-rated' | 'all-time' | 'specialty' | 'zero-proof' | 'favorite';
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'on-hand', label: 'Can make now' },
+  { key: 'trending', label: 'Trending 2026' },
+  { key: 'highly-rated', label: 'Highly rated' },
   { key: 'classic', label: 'Classics' },
+  { key: 'all-time', label: 'All-time favorites' },
+  { key: 'themed', label: 'Themes' },
+  { key: 'specialty', label: 'Specialty' },
+  { key: 'zero-proof', label: 'Alcohol-free' },
   { key: 'books', label: 'From the books' },
-  { key: 'themed', label: 'Collections' },
+  { key: 'favorite', label: 'My favorites' },
   { key: 'mine', label: 'My recipes' },
 ];
 
@@ -56,6 +66,7 @@ export function RecipesScreen() {
     useData();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter | null>(null);
+  const [onlyReady, setOnlyReady] = useState(false);
   const [theme, setTheme] = useState<string | null>(null);
   const [detail, setDetail] = useState<DrinkRecipe | null>(null);
   const [editing, setEditing] = useState<DrinkRecipe | null>(null);
@@ -65,33 +76,36 @@ export function RecipesScreen() {
   const columns = width >= 1000 ? 4 : width >= 700 ? 3 : 2;
   const cardWidth = (Math.min(width, 1120) - 48 - 12 * (columns - 1)) / columns;
   const currentDetail = detail ? recipes.find((recipe) => recipe.id === detail.id) ?? detail : null;
+  const discovery = useMemo(() => discoverDrinks(recipes, query), [recipes, query]);
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return recipes.filter((r) => {
-      if (q && !r.name.toLowerCase().includes(q) &&
-          !r.ingredients.some((i) => i.displayName.toLowerCase().includes(q))) return false;
+    const candidates = query.trim() ? discovery.matches.map((m) => m.recipe) : recipes;
+    const filtered = candidates.filter((r) => {
+      if (onlyReady && !matchRecipe(r, owned, prefs.allowSubstitutes, discovery.intent.excludedIngredientIds,
+        (wanted, used) => ideaAllowsSubstitution(discovery.intent, wanted, used)).ok) return false;
       if (theme && r.theme !== theme) return false;
       switch (filter) {
-        case 'on-hand':
-          return matchRecipe(r, owned, prefs.allowSubstitutes).ok;
-        case 'classic':
-          return r.origin === 'seed' && !r.sourceNote && !r.theme;
+        case 'trending': case 'highly-rated': case 'all-time': case 'classic': case 'specialty': case 'zero-proof':
+          return inCollection(r, filter);
         case 'books':
-          return !!r.sourceNote;
+          return r.id.startsWith('book-');
         case 'themed':
           return !!r.theme;
         case 'mine':
           return r.origin === 'user';
+        case 'favorite':
+          return r.isFavorite;
         default:
           return true;
       }
     });
-  }, [recipes, query, filter, theme, owned, prefs.allowSubstitutes]);
+    if (filter === 'trending') filtered.sort((a, b) => trendingRank(a) - trendingRank(b));
+    return filtered;
+  }, [recipes, query, discovery, filter, theme, onlyReady, owned, prefs.allowSubstitutes]);
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <View style={styles.topBar}>
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={styles.eyebrow}>FIND YOUR NEW FAVORITE</Text>
@@ -112,7 +126,7 @@ export function RecipesScreen() {
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder={`Search ${recipes.length} recipes`}
+          placeholder="Name, flavor, ingredient or theme"
           placeholderTextColor={C.faint}
           style={styles.search}
           accessibilityLabel="Search recipes"
@@ -124,8 +138,9 @@ export function RecipesScreen() {
               <Chip
                 key={f.key}
                 label={f.label}
-                active={filter === f.key}
+                active={f.key === 'on-hand' ? onlyReady : filter === f.key}
                 onPress={() => {
+                  if (f.key === 'on-hand') { setOnlyReady((value) => !value); return; }
                   setFilter(filter === f.key ? null : f.key);
                   if (f.key !== 'themed') setTheme(null);
                 }}
@@ -134,6 +149,20 @@ export function RecipesScreen() {
             ))}
           </View>
         </ScrollView>
+
+        {filter === 'trending' || filter === 'highly-rated' ? <View style={{ gap: 4, marginTop: 12 }}>
+          <Dim>{filter === 'trending' ? 'Bacardi’s forecasted top bar calls for 2026; Aperol represents the spritz family.' : 'Cocktail families featured on the first page of Difford’s rating-sorted finder. Recipes may vary; stars are your own ratings.'}</Dim>
+          <Pressable accessibilityRole="link" accessibilityLabel="Open collection research source"
+            onPress={() => { Linking.openURL(filter === 'trending' ? TREND_SOURCE : RATING_SOURCE).catch(() => {}); }}
+            style={{ minHeight: 44, justifyContent: 'center' }}>
+            <Text style={{ color: C.accent, fontFamily: F.regular, fontSize: 12 }}>Source · checked {CURATION_DATE} · saved selection</Text>
+          </Pressable>
+        </View> : filter === 'all-time' ? <Dim style={{ marginTop: 12 }}>Familiar favorites, selected for this library. Save your own picks under My favorites.</Dim> : null}
+
+        {query.trim() ? <Dim style={{ marginTop: 12 }} accessibilityLiveRegion="polite">
+          {[...discovery.intent.include.map((g) => g.label), ...discovery.intent.exclude.map((g) => `without ${g.label}`)].join(' · ')}
+          {discovery.intent.unknown.length ? ` · Not recognized: ${discovery.intent.unknown.join(', ')}` : ''}
+        </Dim> : null}
 
         {filter === 'themed' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rail}>
@@ -161,12 +190,16 @@ export function RecipesScreen() {
             icon="book-open-variant"
             title="Nothing matches"
             body="Try clearing the filters, or write the drink down yourself."
-            action={<PrimaryButton label="NEW RECIPE" onPress={() => setEditing(blankRecipe())} />}
+            action={<View style={{ gap: S.sm }}>
+              <PrimaryButton label="CLEAR SEARCH AND FILTERS" onPress={() => { setQuery(''); setFilter(null); setTheme(null); setOnlyReady(false); }} />
+              <GhostButton label="Write my own recipe" onPress={() => setEditing(blankRecipe())} />
+            </View>}
           />
         ) : (
           <View style={styles.grid}>
             {visible.map((r) => {
-              const m = matchRecipe(r, owned, prefs.allowSubstitutes);
+              const m = matchRecipe(r, owned, prefs.allowSubstitutes, discovery.intent.excludedIngredientIds,
+                (wanted, used) => ideaAllowsSubstitution(discovery.intent, wanted, used));
               const total = r.ingredients.filter((i) => !i.isOptional).length;
               const have = total - m.missing.length - m.softMissing.length;
               return (
@@ -193,7 +226,7 @@ export function RecipesScreen() {
                             {THEME_BY_ID[r.theme]?.label}
                           </Text>
                         </View>
-                      ) : r.sourceNote ? (
+                      ) : r.id.startsWith('book-') ? (
                         <View style={styles.themeTag}>
                           <Text style={styles.themeTagText}>FROM A BOOK</Text>
                         </View>
@@ -233,6 +266,7 @@ export function RecipesScreen() {
         recipe={currentDetail}
         owned={owned}
         allowSubstitutes={prefs.allowSubstitutes}
+        ideaIntent={discovery.intent}
         onClose={() => setDetail(null)}
         onMade={(r) => {
           markMade(r.id);
@@ -291,6 +325,7 @@ function DetailSheet({
   recipe,
   owned,
   allowSubstitutes,
+  ideaIntent,
   onClose,
   onMade,
   onFavorite,
@@ -301,6 +336,7 @@ function DetailSheet({
   recipe: DrinkRecipe | null;
   owned: ReturnType<typeof buildOwned>;
   allowSubstitutes: boolean;
+  ideaIntent: DrinkIntent;
   onClose: () => void;
   onMade: (r: DrinkRecipe) => void;
   onFavorite: (r: DrinkRecipe) => void;
@@ -309,7 +345,8 @@ function DetailSheet({
   onDelete: (r: DrinkRecipe) => void;
 }) {
   if (!recipe) return null;
-  const m = matchRecipe(recipe, owned, allowSubstitutes);
+  const m = matchRecipe(recipe, owned, allowSubstitutes, ideaIntent.excludedIngredientIds,
+    (wanted, used) => ideaAllowsSubstitution(ideaIntent, wanted, used));
   const missing = new Set(m.missing.concat(m.softMissing));
   const total = recipe.ingredients.filter((i) => !i.isOptional).length;
 
@@ -333,16 +370,13 @@ function DetailSheet({
             </View>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: S.md, marginTop: S.sm }}>
+              <Dim>Your rating</Dim>
               <Stars value={recipe.rating} size={18} onRate={(n) => onRate(recipe, n)} />
               <HaveCount have={total - m.missing.length - m.softMissing.length} total={total} />
             </View>
 
-            {recipe.sourceNote ? (
-              <View style={styles.sourceRow}>
-                <Icon name="book-open-variant" size={13} color={C.faint} />
-                <Dim>{recipe.sourceNote}</Dim>
-              </View>
-            ) : null}
+            <RecipeSources recipe={recipe} />
+            {m.substitutions.map((sub, index) => <Dim key={index} style={{ color: C.amber, marginTop: 8 }}>Use {sub.used} for {sub.wanted}.</Dim>)}
 
             <Label style={{ marginTop: S.lg }}>Ingredients</Label>
             <View style={{ marginTop: S.sm, gap: 6 }}>

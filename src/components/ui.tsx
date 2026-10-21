@@ -182,7 +182,7 @@ export function Chip({
       style={styles.pillRadius}
       // Chips sit at ~34px tall by design; hitSlop brings the touch area up to
       // the 44px guidance without inflating the visual.
-      hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+      hitSlop={{ top: small ? 10 : 6, bottom: small ? 10 : 6, left: 4, right: 4 }}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected: !!active }}

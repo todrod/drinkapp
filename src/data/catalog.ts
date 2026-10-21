@@ -1,5 +1,6 @@
 import { CatalogItem, CatalogRow } from '../types';
 import { BAR_ROWS } from './bar';
+import { DISCOVERY_CATALOG } from './discoveryCatalog';
 
 /**
  * The bundled catalog. Ships with the app so Explore and My Kit work with the
@@ -125,7 +126,7 @@ const rows: CatalogRow[] = [
   { id: 'vb-sparkler', name: 'Sparklers', kind: 'extra', category: 'vibe', abv: 0, notes: [], subs: [], blurb: 'For punches that arrive rather than get served.', icon: '✨' },
 ];
 
-export const CATALOG: CatalogItem[] = [...rows, ...BAR_ROWS].map((r) => ({
+export const CATALOG: CatalogItem[] = [...rows, ...BAR_ROWS, ...DISCOVERY_CATALOG].map((r) => ({
   id: r.id,
   name: r.name,
   kind: r.kind,

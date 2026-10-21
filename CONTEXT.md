@@ -14,7 +14,7 @@ drinks you can actually pour. Four tabs:
 |---|---|
 | **Random** | Spin (or physically shake the phone) for a drink you can make right now |
 | **Cabinet** | Your inventory — add, remove, track how much is left. Second segment holds the shopping list |
-| **Recipes** | 96-recipe searchable library with filters, ratings, favourites |
+| **Recipes** | 144-recipe searchable library with collections, keyword search, ratings, favourites |
 | **Builder** | Pick a base, mixers and toppings from stock; see what it matches |
 
 | | |
@@ -37,13 +37,14 @@ npm run web                # browser instead
 npm run typecheck          # tsc --noEmit
 npm run build:web          # static export + PWA injection -> dist/
 npm run test:shake         # motion bridge + gesture tests (Node 22.18+)
+npm test                   # motion, recipe integrity and keyword discovery
 ```
 
 **Deployment is automatic.** Vercel builds on every push to `main` using
 `vercel.json`, which runs `npx expo export --platform web && node
 scripts/postbuild.mjs` and serves `dist/`. No dashboard config needed.
 
-Current export: **~1.15 MB**, 3 font files.
+Current export: **~1.2 MB**, four Outfit font weights plus the subset icon font.
 
 ---
 
@@ -79,6 +80,8 @@ src/
   logic/generator.ts      *** The matching algorithm. Start here. ***
   logic/shopping.ts       Purchase ranking and list projection
   logic/shake.ts          Shared gesture thresholds, distinct jolts, cooldown
+  logic/discovery.ts      Local phrase/keyword matching, exclusions, relevance
+  logic/text.ts           Accent/case/punctuation normalization
   sensors/
     motion.ts             Native accelerometer and motion permissions
     motion.web.ts         Browser motion permissions and acceleration in g
@@ -89,8 +92,11 @@ src/
   data/
     catalog.ts            95 base catalog items
     bar.ts                52 more catalog items + MY_BAR (the owner's shelf)
-    recipes.ts            59 core recipes; assembles all 96
+    recipes.ts            Original core recipes; assembles all 144
     library.ts            12 public-domain book recipes + 24 themed
+    discoveryRecipes.ts   48 sourced/popular styles and original house recipes
+    discoveryCatalog.ts   21 new, distinct specialty ingredients
+    curation.ts           Dated trending/highly-rated picks and collection rules
     seed.ts               Shared authoring types + theme definitions
     art.ts                Per-ingredient bottle shape + liquid colour
     liquids.ts            Canonical 11-liquid palette; recipe accent colour
@@ -112,6 +118,7 @@ scripts/
   assets/                 Image-generation pipeline (see §8)
 public/                   manifest, service worker, icons — copied to dist/
 docs/SPEC.html            Original architecture spec
+docs/DRINK_DISCOVERY.md    Research, keyword pipeline and content maintenance
 ```
 
 ---
@@ -120,7 +127,7 @@ docs/SPEC.html            Original architecture spec
 
 Three tables, and one idea that makes the whole thing work.
 
-**`CatalogItem`** — the bundled library of ~147 known ingredients. Stable ids
+**`CatalogItem`** — the bundled library of 168 ingredients, glasses and tools. Stable ids
 like `sp-gin`, `mx-lime-juice`, `lq-campari`. Ships with the app.
 
 **`InventoryItem`** — what the user owns. Points at a catalog item via
@@ -170,6 +177,12 @@ down; exact matches outrank substituted; favourites get a lift. The pick is
 **These fallbacks are the feature, not an edge case.** Do not let a refactor
 turn them back into an empty state.
 
+**Typed ideas** go through `discoverDrinks()` before inventory matching. Positive
+terms intersect; explicit OR groups broaden a term, and exclusions also block
+substitutions. An unmatched idea gets a typed `idea` miss rather than silently
+relaxing the user's words. The home finder and recipe-book search share the
+same rules; no AI or network service is involved. See `docs/DRINK_DISCOVERY.md`.
+
 ---
 
 ## 6b. The shopping list — `src/logic/shopping.ts`
@@ -179,7 +192,7 @@ six drinks, and this turns that into something actionable.
 
 - `rankPurchases()` sweeps **every** catalog item, not just ones that complete
   a recipe that is one short — a bottle finishing two different two-short
-  recipes deserves surfacing. ~150 items by ~96 recipes is trivial.
+  recipes deserves surfacing. 168 catalog items by 144 recipes is trivial.
 - `projectList()` evaluates the whole list **together**, because two bottles
   often unlock the same drink and summing the individual figures would lie.
   This is the headline number on the screen.
@@ -273,13 +286,18 @@ overwritten. Id prefixes (`seed-`, `book-`, `theme-`) are stable per collection;
 
 **The owner's real bar** is encoded as `MY_BAR` in `src/data/bar.ts` — 116
 bottles, mixers and bitters, with near-empties pre-marked `low`. Loaded by the
-"Load my bar" button on the empty Cabinet screen. With it loaded, **81 of the
-96 recipes are pourable.**
+"Load my bar" button on the empty Cabinet screen. With substitutions enabled,
+**97 of the 144 recipes are pourable** (84 with exact ingredients).
 
-**Recipe sources.** 59 core + 12 from bartending manuals that are public domain
+**Recipe sources.** Original core + 12 from bartending manuals that are public domain
 in the US (Jerry Thomas 1862/1876/1887, Ensslin 1917, Kappeler 1895, each
 carrying attribution) + 24 themed across four collections. *The Savoy Cocktail
 Book* (1930) is deliberately excluded — its status could not be settled.
+
+The bank now also includes 48 additions, with source links for standards and
+explicit house-recipe attribution for originals. Discovery collections use
+dated research from Bacardi and Difford's, separate from personal rating stars.
+No numeric external rating is invented. See `docs/DRINK_DISCOVERY.md`.
 
 **Ingredient art** is parametric SVG, not images: a silhouette by vessel type
 filled with a per-ingredient liquid colour. ~150 icons for a few kilobytes.
@@ -300,9 +318,9 @@ like one set; do not edit it between batches.
 
 ## 9. Deliberate decisions that look like mistakes
 
-- **Trending is not built.** It was descoped by the owner. `src/api/trending.ts`
-  has the types settled and `TRENDING_ENDPOINT = null`. There is no tab. Wiring
-  it up means standing up a caching proxy and setting that one constant.
+- **Trending is a saved 2026 collection**, with its source and check date.
+  The live feed in `src/api/trending.ts` is still unwired (`TRENDING_ENDPOINT =
+  null`). Keyword discovery and collections work offline.
 - **No Drizzle ORM**, despite the spec calling for it. Hand-written DDL with
   `PRAGMA user_version` migrations (currently **schema v3**). Schema is
   unchanged, so Drizzle can be layered on later.

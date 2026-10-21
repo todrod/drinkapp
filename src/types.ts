@@ -192,7 +192,7 @@ export interface GeneratorHit {
   substitutions: Substitution[];
 }
 
-export type MissReason = 'filters' | 'nearly' | 'empty';
+export type MissReason = 'filters' | 'nearly' | 'empty' | 'idea';
 
 export interface GeneratorMiss {
   ok: false;
@@ -205,6 +205,8 @@ export interface GeneratorMiss {
   suggestions: { name: string; catalogItemId: string | null; unlocks: number }[];
   /** How many drinks match if the active filters are cleared. */
   matchesWithoutFilters: number;
+  /** Number of library recipes matching the typed idea, before inventory/other filters. */
+  ideaMatches?: number;
 }
 
 export type GeneratorResult = GeneratorHit | GeneratorMiss;

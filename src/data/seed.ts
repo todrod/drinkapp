@@ -21,6 +21,7 @@ export type Seed = {
   accent: string;
   /** Book attribution, for recipes drawn from a published source. */
   source?: string;
+  sourceUrl?: string;
   /** Themed collection id, see THEMES. */
   theme?: string;
 };
@@ -34,6 +35,9 @@ export interface ThemeDef {
 }
 
 export const THEMES: ThemeDef[] = [
+  { id: 'holiday', label: 'Holiday', icon: '✨', accent: '#EEA6B5', blurb: 'Cranberry, cozy spices and winter celebrations.' },
+  { id: 'garden', label: 'Garden party', icon: '🌿', accent: '#A5D6C5', blurb: 'Fresh herbs, cucumber and bright garden flavors.' },
+  { id: 'beach', label: 'Beach escape', icon: '🌴', accent: '#F2B88D', blurb: 'Pineapple, coconut and a little sunshine.' },
   {
     id: 'middle-earth',
     label: 'Middle-earth',
