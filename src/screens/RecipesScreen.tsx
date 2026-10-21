@@ -7,10 +7,11 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F, GLASS, R, S, SHADOW } from '../theme';
+import { C, F, R, S, SCREEN, SHADOW } from '../theme';
 import { accentForRecipe } from '../data/liquids';
 import {
   Body,
@@ -35,16 +36,19 @@ import { THEMES, THEME_BY_ID } from '../data/seed';
 import { buildOwned, matchRecipe } from '../logic/generator';
 import { formatIngredient, pluralize } from '../format';
 import { ACCENTS } from '../theme';
-import { glyphForRecipe, Icon } from '../icons';
+import { Icon } from '../icons';
+import { CocktailArt } from '../components/CocktailArt';
+import { IngredientArt } from '../components/IngredientArt';
+import { artForCatalog } from '../data/art';
 
 type Filter = 'on-hand' | 'classic' | 'books' | 'themed' | 'mine';
 
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'on-hand', label: 'ON-HAND' },
-  { key: 'classic', label: 'CLASSIC' },
-  { key: 'books', label: 'BOOKS' },
-  { key: 'themed', label: 'THEMED' },
-  { key: 'mine', label: 'MINE' },
+  { key: 'on-hand', label: 'Can make now' },
+  { key: 'classic', label: 'Classics' },
+  { key: 'books', label: 'From the books' },
+  { key: 'themed', label: 'Collections' },
+  { key: 'mine', label: 'My recipes' },
 ];
 
 export function RecipesScreen() {
@@ -57,6 +61,10 @@ export function RecipesScreen() {
   const [editing, setEditing] = useState<DrinkRecipe | null>(null);
 
   const owned = useMemo(() => buildOwned(kit), [kit]);
+  const { width } = useWindowDimensions();
+  const columns = width >= 1000 ? 4 : width >= 700 ? 3 : 2;
+  const cardWidth = (Math.min(width, 1120) - 48 - 12 * (columns - 1)) / columns;
+  const currentDetail = detail ? recipes.find((recipe) => recipe.id === detail.id) ?? detail : null;
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -85,12 +93,17 @@ export function RecipesScreen() {
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
-          <Wordmark style={{ flex: 1, fontSize: 21, letterSpacing: 4.5 }}>RECIPE LIBRARY</Wordmark>
+          <View style={{ flex: 1, gap: 6 }}>
+            <Text style={styles.eyebrow}>FIND YOUR NEW FAVORITE</Text>
+            <Wordmark>The recipe book</Wordmark>
+            <Dim>A classic for every occasion. A twist for every mood.</Dim>
+          </View>
           <Pressable
             onPress={() => setEditing(blankRecipe())}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="New recipe"
+            style={styles.newButton}
           >
             <Icon name="plus" size={24} color={C.teal} />
           </Pressable>
@@ -157,56 +170,59 @@ export function RecipesScreen() {
               const total = r.ingredients.filter((i) => !i.isOptional).length;
               const have = total - m.missing.length - m.softMissing.length;
               return (
-                <Press
-                  key={r.id}
-                  onPress={() => setDetail(r)}
-                  scaleTo={0.965}
-                  accessibilityRole="button"
-                  style={styles.card}
-                >
-                  <View style={styles.cardEdge} pointerEvents="none" />
-                  <LinearGradient
-                    colors={[accentForRecipe(r) + 'CC', accentForRecipe(r) + '18']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.cardArt}
+                <View key={r.id} style={[styles.card, { width: cardWidth }]}>
+                  <Press
+                    onPress={() => setDetail(r)}
+                    scaleTo={0.965}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${r.name}`}
+                    style={{ flex: 1 }}
                   >
-                    <Icon name={glyphForRecipe(r)} size={40} color="rgba(255,255,255,0.92)" />
-                    <Pressable
-                      onPress={() => toggleFavorite(r.id)}
-                      hitSlop={8}
-                      accessibilityRole="button"
-                      accessibilityLabel={r.isFavorite ? 'Unfavorite' : 'Favorite'}
-                      style={styles.heart}
+                    <View style={styles.cardEdge} pointerEvents="none" />
+                    <LinearGradient
+                      colors={[accentForRecipe(r) + '24', accentForRecipe(r) + '08']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.cardArt}
                     >
-                      <Icon
-                        name={r.isFavorite ? 'heart' : 'heart-outline'}
-                        size={17}
-                        color={r.isFavorite ? C.rose : 'rgba(255,255,255,0.75)'}
-                      />
-                    </Pressable>
-                    {r.theme ? (
-                      <View style={styles.themeTag}>
-                        <Text style={styles.themeTagText}>
-                          {THEME_BY_ID[r.theme]?.label}
-                        </Text>
-                      </View>
-                    ) : r.sourceNote ? (
-                      <View style={styles.themeTag}>
-                        <Text style={styles.themeTagText}>FROM A BOOK</Text>
-                      </View>
-                    ) : null}
-                  </LinearGradient>
+                      <CocktailArt color={accentForRecipe(r)} glass={r.glass} size={128} />
 
-                  <View style={styles.cardBody}>
-                    <Text style={styles.cardName} numberOfLines={2}>
-                      {r.name.toUpperCase()}
-                    </Text>
-                    <Stars value={r.rating} size={11} />
-                    <HaveCount have={have} total={total} />
-                    <Dim style={{ fontSize: 10 }}>Tap to expand details</Dim>
-                  </View>
-                </Press>
+                      {r.theme ? (
+                        <View style={styles.themeTag}>
+                          <Text style={styles.themeTagText}>
+                            {THEME_BY_ID[r.theme]?.label}
+                          </Text>
+                        </View>
+                      ) : r.sourceNote ? (
+                        <View style={styles.themeTag}>
+                          <Text style={styles.themeTagText}>FROM A BOOK</Text>
+                        </View>
+                      ) : null}
+                    </LinearGradient>
+
+                    <View style={styles.cardBody}>
+                      <Text style={styles.cardName} numberOfLines={2}>
+                        {r.name}
+                      </Text>
+                      <Stars value={r.rating} size={11} />
+                      <HaveCount have={have} total={total} />
+                      <Dim style={{ fontSize: 11 }}>{r.method.charAt(0).toUpperCase() + r.method.slice(1)} · View recipe</Dim>
+                    </View>
+                  </Press>
+                  <Pressable
+                    onPress={() => toggleFavorite(r.id)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${r.isFavorite ? 'Unfavorite' : 'Favorite'} ${r.name}`}
+                    style={styles.heart}
+                  >
+                    <Icon
+                      name={r.isFavorite ? 'heart' : 'heart-outline'}
+                      size={17}
+                      color={r.isFavorite ? C.rose : 'rgba(255,255,255,0.75)'}
+                    />
+                  </Pressable>
+                </View>
               );
             })}
           </View>
@@ -214,7 +230,7 @@ export function RecipesScreen() {
       </ScrollView>
 
       <DetailSheet
-        recipe={detail}
+        recipe={currentDetail}
         owned={owned}
         allowSubstitutes={prefs.allowSubstitutes}
         onClose={() => setDetail(null)}
@@ -316,7 +332,7 @@ function DetailSheet({
               </Pressable>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.md, marginTop: S.sm }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: S.md, marginTop: S.sm }}>
               <Stars value={recipe.rating} size={18} onRate={(n) => onRate(recipe, n)} />
               <HaveCount have={total - m.missing.length - m.softMissing.length} total={total} />
             </View>
@@ -511,7 +527,7 @@ function Editor({
                 style={({ pressed }) => [styles.suggestion, pressed && { opacity: 0.6 }]}
                 accessibilityRole="button"
               >
-                <Text style={{ fontSize: 16 }}>{s.icon}</Text>
+                <IngredientArt {...artForCatalog(s.id, s.category)} seed={s.name} size={32} />
                 <Body style={{ flex: 1 }}>{s.name}</Body>
                 <Text style={styles.matchTag}>MATCH</Text>
               </Pressable>
@@ -597,8 +613,10 @@ function Editor({
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130 },
+  scroll: { ...SCREEN },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md },
+  eyebrow: { color: C.accent, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
+  newButton: { width: 44, height: 44, borderRadius: 15, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line },
 
   search: {
     backgroundColor: C.ink2,
@@ -614,13 +632,12 @@ const styles = StyleSheet.create({
   rail: { flexGrow: 0, marginHorizontal: -S.lg, marginTop: S.md },
   railRow: { flexDirection: 'row', gap: 6, paddingHorizontal: S.lg },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, marginTop: S.md },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 },
   card: {
-    width: '48.5%',
     borderRadius: R.md,
     borderWidth: 1,
     borderColor: C.line,
-    backgroundColor: 'rgba(190,250,246,0.05)',
+    backgroundColor: C.panel,
     overflow: 'hidden',
     ...SHADOW.card,
   },
@@ -633,9 +650,9 @@ const styles = StyleSheet.create({
     backgroundColor: C.edge,
     zIndex: 3,
   },
-  cardArt: { height: 96, alignItems: 'center', justifyContent: 'center' },
+  cardArt: { height: 150, alignItems: 'center', justifyContent: 'center' },
 
-  heart: { position: 'absolute', top: 7, right: 8, padding: 3 },
+  heart: { position: 'absolute', top: 2, right: 2, padding: 13 },
   themeTag: {
     position: 'absolute',
     bottom: 6,
@@ -647,10 +664,13 @@ const styles = StyleSheet.create({
   },
   themeTagText: { color: C.text, fontSize: 8.5, fontWeight: '800', letterSpacing: 0.4 },
   cardBody: { padding: S.md, gap: 4 },
-  cardName: { color: C.text, fontFamily: F.semibold, fontSize: 12.5, letterSpacing: 0.3, lineHeight: 15, minHeight: 30 },
+  cardName: { color: C.text, fontFamily: F.medium, fontSize: 16, letterSpacing: -0.2, lineHeight: 21, minHeight: 42 },
 
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     backgroundColor: C.panel,
     borderTopLeftRadius: R.xl,
     borderTopRightRadius: R.xl,

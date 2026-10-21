@@ -8,9 +8,10 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { C, CATEGORY_COLOR, F, GLASS, R, S, SHADOW } from '../theme';
+import { C, CATEGORY_COLOR, F, GLASS, R, S, SCREEN, SHADOW } from '../theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Body,
@@ -61,6 +62,9 @@ export function CabinetScreen({
   const [adding, setAdding] = useState(false);
   const [settings, setSettings] = useState(false);
   const [undo, setUndo] = useState<InventoryItem | null>(null);
+  const { width } = useWindowDimensions();
+  const columns = width >= 1000 ? 4 : width >= 700 ? 3 : 2;
+  const cardWidth = (Math.min(width, 1120) - 48 - 12 * (columns - 1)) / columns;
 
   const makeable = useMemo(
     () => countMakeable(recipes, kit, prefs.allowSubstitutes),
@@ -93,12 +97,17 @@ export function CabinetScreen({
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
-          <Wordmark style={{ flex: 1, fontSize: 21, letterSpacing: 4.5 }}>MY CABINET</Wordmark>
+          <View style={{ flex: 1, gap: 6 }}>
+            <Text style={styles.eyebrow}>THE GOOD STUFF</Text>
+            <Wordmark>My bar</Wordmark>
+            <Dim>Your bottles. Endless possibilities.</Dim>
+          </View>
           <Pressable
             onPress={() => setSettings(true)}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Cabinet settings"
+            style={styles.settingsButton}
           >
             <Icon name="cog-outline" size={20} color={C.dim} />
           </Pressable>
@@ -106,8 +115,8 @@ export function CabinetScreen({
 
         <View style={styles.segment}>
           {([
-            ['stock', `IN STOCK · ${kit.length}`],
-            ['shopping', `SHOPPING · ${shopping.length}`],
+            ['stock', `In stock · ${kit.length}`],
+            ['shopping', `Shopping list · ${shopping.length}`],
           ] as const).map(([key, label]) => {
             const on = view === key;
             return (
@@ -139,7 +148,8 @@ export function CabinetScreen({
             accessibilityRole="button"
             style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.75 }]}
           >
-            <Text style={styles.addBtnText}>+ ADD NEW</Text>
+            <Icon name="plus" size={16} color={C.ink} />
+            <Text style={styles.addBtnText}>Add ingredient</Text>
           </Pressable>
         </View>
 
@@ -193,7 +203,7 @@ export function CabinetScreen({
                   >
                     <Icon name={CATEGORY_GLYPH[cat]} size={15} color={CATEGORY_COLOR[cat]} />
                     <Text style={[styles.sectionTitle, { color: CATEGORY_COLOR[cat] }]}>
-                      {CATEGORY_LABEL[cat].toUpperCase()}
+                      {CATEGORY_LABEL[cat]}
                     </Text>
                     <Text style={styles.sectionCount}>({items.length})</Text>
                     <View style={{ flex: 1 }} />
@@ -206,6 +216,7 @@ export function CabinetScreen({
                         <ItemCard
                           key={item.id}
                           item={item}
+                          width={cardWidth}
                           onLevel={(l) => setLevel(item.id, l)}
                           onRemove={() => remove(item)}
                         />
@@ -328,10 +339,12 @@ function SettingRow({
 
 function ItemCard({
   item,
+  width,
   onLevel,
   onRemove,
 }: {
   item: InventoryItem;
+  width: number;
   onLevel: (l: Level) => void;
   onRemove: () => void;
 }) {
@@ -340,7 +353,7 @@ function ItemCard({
       colors={GLASS.card}
       start={{ x: 0.1, y: 0 }}
       end={{ x: 0.9, y: 1 }}
-      style={[styles.card, item.level === 'out' ? { opacity: 0.45 } : null]}
+      style={[styles.card, { width }, item.level === 'out' ? { opacity: 0.45 } : null]}
     >
       <View style={styles.cardEdge} pointerEvents="none" />
       <Pressable
@@ -354,12 +367,12 @@ function ItemCard({
       </Pressable>
 
       <View style={styles.cardIcon}>
-        <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={54} />
+        <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={72} />
       </View>
       <Text style={styles.cardName} numberOfLines={2}>
         {item.name}
       </Text>
-      <Text style={styles.cardMeta}>Remaining quantity</Text>
+      <Text style={[styles.cardMeta, item.level === 'low' && { color: C.amber }]}>{({ full: 'Well stocked', half: 'Half remaining', low: 'Running low', out: 'Time to restock' })[item.level]}</Text>
       <QuantityBar level={item.level} onChange={onLevel} />
     </LinearGradient>
   );
@@ -508,8 +521,10 @@ function AddSheet({
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130 },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md, marginBottom: S.md },
+  scroll: { ...SCREEN },
+  topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md, marginBottom: 24 },
+  eyebrow: { color: C.accent, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
+  settingsButton: { width: 44, height: 44, borderRadius: 15, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line },
 
 
   countRow: { flexDirection: 'row', gap: S.sm, alignItems: 'center' },
@@ -522,16 +537,14 @@ const styles = StyleSheet.create({
   },
   countChipText: { color: C.dim, fontSize: 10.5, fontWeight: '800', letterSpacing: 1 },
   addBtn: {
-    backgroundColor: C.teal,
+    backgroundColor: C.accent,
     borderRadius: R.pill,
-    paddingVertical: 8,
+    minHeight: 44,
+    paddingVertical: 10,
     paddingHorizontal: 15,
-    shadowColor: C.teal,
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
+    flexDirection: 'row', alignItems: 'center', gap: 6,
   },
-  addBtnText: { color: C.ink, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  addBtnText: { color: C.ink, fontSize: 12, fontFamily: F.semibold },
 
   segment: {
     flexDirection: 'row',
@@ -543,10 +556,10 @@ const styles = StyleSheet.create({
     backgroundColor: C.glass,
     marginBottom: S.lg,
   },
-  segmentTab: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: R.pill },
-  segmentTabOn: { backgroundColor: C.teal },
-  segmentText: { color: C.dim, fontSize: 10.5, letterSpacing: 1.2, fontWeight: '700' },
-  segmentTextOn: { color: C.ink },
+  segmentTab: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: R.pill },
+  segmentTabOn: { backgroundColor: C.raise },
+  segmentText: { color: C.dim, fontSize: 13, fontFamily: F.medium },
+  segmentTextOn: { color: C.accent },
   want: { padding: 4, marginRight: 2 },
   search: {
     backgroundColor: C.ink2,
@@ -569,13 +582,12 @@ const styles = StyleSheet.create({
     borderBottomColor: C.line,
   },
 
-  sectionTitle: { fontSize: 12, fontWeight: '800', letterSpacing: 1.4 },
+  sectionTitle: { fontSize: 17, fontFamily: F.medium },
   sectionCount: { color: C.faint, fontSize: 12, fontWeight: '700' },
 
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, marginTop: S.md },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: S.md },
   card: {
-    width: '48.5%',
     borderRadius: R.md,
     borderWidth: 1,
     borderColor: C.line,
@@ -592,11 +604,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: C.edge,
   },
-  cardX: { position: 'absolute', top: 6, right: 6, padding: 6, zIndex: 2 },
+  cardX: { position: 'absolute', top: 2, right: 2, padding: 14, zIndex: 2 },
 
-  cardIcon: { marginBottom: 6, height: 56, justifyContent: 'center' },
-  cardName: { color: C.text, fontSize: 13.5, fontWeight: '700', minHeight: 36 },
-  cardMeta: { color: C.faint, fontSize: 9.5, letterSpacing: 0.4, marginBottom: 4 },
+  cardIcon: { marginBottom: 10, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: R.sm, backgroundColor: C.glass },
+  cardName: { color: C.text, fontFamily: F.medium, fontSize: 14, lineHeight: 19, minHeight: 40 },
+  cardMeta: { color: C.dim, fontFamily: F.regular, fontSize: 11, marginBottom: 15 },
 
   toast: {
     position: 'absolute',
@@ -616,6 +628,9 @@ const styles = StyleSheet.create({
 
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     backgroundColor: C.panel,
     borderTopLeftRadius: R.xl,
     borderTopRightRadius: R.xl,

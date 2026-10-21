@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import {
   Animated,
+  Platform,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -79,7 +80,7 @@ export function Press({
   const to = (v: number) =>
     Animated.spring(scale, {
       toValue: v,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
       speed: 40,
       bounciness: 6,
     }).start();
@@ -107,11 +108,7 @@ export function Press({
 
 // ── Surfaces ───────────────────────────────────────────────────────────────
 
-/**
- * Glass panel: gradient fill, a light catch along the top edge, hairline
- * border and a real shadow. The top edge is what sells it — without it a
- * translucent rectangle just looks like a lighter rectangle.
- */
+/** Quiet, opaque surfaces keep small text legible over the room's backdrop. */
 export function Panel({
   children,
   style,
@@ -147,7 +144,7 @@ export function Panel({
 export function Chip({
   label,
   active,
-  color = C.teal,
+  color = C.accent,
   onPress,
   small,
 }: {
@@ -163,7 +160,6 @@ export function Chip({
         styles.chip,
         small ? { paddingVertical: 5, paddingHorizontal: 11 } : null,
         active ? { backgroundColor: color, borderColor: 'transparent' } : null,
-        active ? SHADOW.glow(color, 0.4) : null,
         active ? { borderRadius: R.pill } : null,
       ]}
     >
@@ -188,6 +184,7 @@ export function Chip({
       // the 44px guidance without inflating the visual.
       hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ selected: !!active }}
     >
       {body}
@@ -212,12 +209,11 @@ export function PrimaryButton({
       disabled={disabled}
       scaleTo={0.975}
       accessibilityRole="button"
-      // The glow has to sit on a rounded element: on a square parent the halo
-      // stops at the rectangle, leaving the pill's corners as dark notches.
-      style={[styles.pillRadius, disabled ? { opacity: 0.3 } : SHADOW.glow(C.teal, 0.5), style]}
+      accessibilityLabel={label}
+      style={[styles.pillRadius, disabled ? { opacity: 0.4 } : null, style]}
     >
       <LinearGradient
-        colors={[C.tealSoft, C.teal, '#1FB6AC']}
+        colors={[C.accentSoft, C.accent, '#E6A779']}
         locations={[0, 0.45, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -242,7 +238,7 @@ export function GhostButton({
   style?: StyleProp<ViewStyle>;
 }) {
   return (
-    <Press onPress={onPress} scaleTo={0.975} accessibilityRole="button" style={[styles.pillRadius, style]}>
+    <Press onPress={onPress} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={label} style={[styles.pillRadius, style]}>
       <View style={styles.ghost}>
         <View style={styles.edge} pointerEvents="none" />
         <Text style={[styles.ghostText, { color }]}>{label}</Text>
@@ -321,7 +317,9 @@ export function Stars({
             onPress={() => onRate(n)}
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel={`Rate ${n} of 5`}
+            accessibilityLabel={`Rate ${n} of 5${value === n ? ', current rating' : ''}`}
+            accessibilityState={{ selected: value === n }}
+            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
           >
             {star}
           </Pressable>
@@ -396,9 +394,10 @@ const styles = StyleSheet.create({
   label: { ...type.label },
 
   pressInner: { flex: 1, width: '100%' },
-  panelWrap: { borderRadius: R.lg },
+  panelWrap: { borderRadius: R.lg, width: '100%' },
   pillRadius: { borderRadius: R.pill },
   panel: {
+    width: '100%',
     borderRadius: R.lg,
     borderWidth: 1,
     borderColor: C.line,
@@ -419,13 +418,15 @@ const styles = StyleSheet.create({
     borderRadius: R.pill,
     paddingVertical: 7,
     paddingHorizontal: 13,
-    backgroundColor: 'rgba(190,250,246,0.035)',
+    backgroundColor: C.glass,
   },
   chipText: { color: C.dim, ...type.small, fontSize: 12.5 },
 
   primaryFill: {
     borderRadius: R.pill,
+    minHeight: 52,
     paddingVertical: 16,
+    paddingHorizontal: 20,
     alignItems: 'center',
     overflow: 'hidden',
   },
@@ -437,15 +438,17 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
-  primaryText: { color: '#03251F', ...type.label, fontSize: 12.5 },
+  primaryText: { color: '#2C1B17', ...type.h3, fontSize: 14, letterSpacing: 0.2, textAlign: 'center' },
 
   ghost: {
     borderWidth: 1,
     borderColor: C.line2,
     borderRadius: R.pill,
+    minHeight: 48,
     paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    backgroundColor: 'rgba(190,250,246,0.04)',
+    backgroundColor: C.glass,
     overflow: 'hidden',
   },
   ghostText: { ...type.small, fontSize: 13.5, fontFamily: type.h3.fontFamily },
@@ -458,9 +461,9 @@ const styles = StyleSheet.create({
     borderRadius: 31,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(47,212,198,0.10)',
+    backgroundColor: '#34303D',
     borderWidth: 1,
-    borderColor: 'rgba(47,212,198,0.28)',
+    borderColor: C.line2,
   },
 
   stars: { flexDirection: 'row', gap: 1 },
@@ -487,11 +490,11 @@ const styles = StyleSheet.create({
   },
   trackZones: {
     position: 'absolute',
-    top: -8,
+    top: -20,
     left: 0,
     right: 0,
     flexDirection: 'row',
-    height: 20,
+    height: 44,
   },
   zone: { flex: 1 },
 

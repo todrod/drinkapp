@@ -3,15 +3,17 @@ import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F, R, S } from '../theme';
+import { C, F, R, S, SCREEN } from '../theme';
 import { accentForRecipe } from '../data/liquids';
 import {
   Body,
@@ -26,14 +28,16 @@ import {
   Stars,
 } from '../components/ui';
 import { useData } from '../store';
-import { buildOwned, generate, matchRecipe } from '../logic/generator';
+import { buildOwned, countMakeable, generate, matchRecipe } from '../logic/generator';
 import { DrinkRecipe, GeneratorResult } from '../types';
 import { VIBE_TAGS } from '../data/recipes';
 import { THEMES } from '../data/seed';
 import { useShakeDetector } from '../hooks/useShakeDetector';
 import { formatIngredient, pluralize } from '../format';
 import { TabKey } from '../components/NavPill';
-import { glyphForRecipe, Icon } from '../icons';
+import { Icon } from '../icons';
+import { CrystalBall } from '../components/CrystalBall';
+import { CocktailArt } from '../components/CocktailArt';
 
 export function RandomScreen({
   goTo,
@@ -46,25 +50,41 @@ export function RandomScreen({
   const [result, setResult] = useState<GeneratorResult | null>(null);
   const [recent, setRecent] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(true);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const { width } = useWindowDimensions();
+  const wide = width >= 640;
+  const scrollRef = useRef<ScrollView>(null);
+  const resultOffset = useRef(0);
 
   const spin = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
   const reveal = useRef(new Animated.Value(0)).current;
 
   const owned = useMemo(() => buildOwned(kit), [kit]);
+  const readyCount = useMemo(() => countMakeable(recipes, kit, prefs.allowSubstitutes), [recipes, kit, prefs.allowSubstitutes]);
+  const selectedRecipe = result?.ok ? recipes.find((recipe) => recipe.id === result.recipe.id) ?? result.recipe : null;
+
+  useEffect(() => {
+    if (!result) return;
+    // The recipe can land below the hero on short screens. Bring it into view.
+    const frame = requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: Math.max(0, resultOffset.current - 24), animated: !reduceMotion }));
+    return () => cancelAnimationFrame(frame);
+  }, [result, reduceMotion]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => subscription.remove();
   }, []);
 
-  // Slow breathing glow on the orb while it waits.
+  // A quiet float at rest; reduced motion leaves the crystal still.
   useEffect(() => {
     if (reduceMotion) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.quad), useNativeDriver: Platform.OS !== 'web' }),
+        Animated.timing(pulse, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.quad), useNativeDriver: Platform.OS !== 'web' }),
       ])
     );
     loop.start();
@@ -72,6 +92,8 @@ export function RandomScreen({
   }, [pulse, reduceMotion]);
 
   const onSpin = () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
     const next = generate({
@@ -85,6 +107,7 @@ export function RandomScreen({
     });
 
     const show = () => {
+      setIsSpinning(false);
       setResult(next);
       if (next.ok) {
         setRecent((prev) => [next.recipe.id, ...prev].slice(0, 3));
@@ -97,7 +120,7 @@ export function RandomScreen({
         toValue: 1,
         duration: reduceMotion ? 120 : 300,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     };
 
@@ -111,7 +134,7 @@ export function RandomScreen({
       toValue: 1,
       duration: 850,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start(show);
   };
 
@@ -128,9 +151,8 @@ export function RandomScreen({
   const filterCount =
     vibes.length + themes.length + (prefs.zeroProofMode ? 1 : 0);
 
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '1080deg'] });
-  const glowScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.06] });
-  const glowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
+  const rotate = spin.interpolate({ inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1], outputRange: ['0deg', '-9deg', '9deg', '-6deg', '6deg', '0deg'] });
+  const float = pulse.interpolate({ inputRange: [0, 1], outputRange: [0, -7] });
   const revealStyle = {
     opacity: reveal,
     transform: [
@@ -140,64 +162,53 @@ export function RandomScreen({
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <View style={styles.masthead}>
-        <Text style={styles.wordmark}>MIXOLOGIST</Text>
-        <Text style={styles.tagline}>RANDOM DRINK SELECTOR</Text>
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <View style={styles.brandRow}>
+        <View style={styles.brandLockup}>
+          <View style={styles.brandIcon}><Icon name="shaker" size={22} color={C.accent} /></View>
+          <Text style={[styles.brandName, width < 360 && { fontSize: 19 }]}>drink shaker<Text style={{ color: C.accent }}>.</Text></Text>
+        </View>
+        <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Open my bar" style={styles.stockPill}>
+          <View style={styles.readyDot} />
+          <Text style={styles.stockText}>{readyCount} drinks ready</Text>
+        </Pressable>
       </View>
 
-      {/* ── The orb ─────────────────────────────────────────────────────── */}
-      <View style={styles.orbWrap}>
-        {/* Concentric rings rather than one disc — React Native cannot blur a
-            view, so the falloff has to be built out of layers. */}
-        {[0, 1, 2].map((i) => (
-          <Animated.View
-            key={i}
-            pointerEvents="none"
-            style={[
-              styles.orbGlow,
-              {
-                width: ORB + 30 + i * 26,
-                height: ORB + 30 + i * 26,
-                borderRadius: (ORB + 30 + i * 26) / 2,
-                opacity: Animated.multiply(glowOpacity, 0.3 - i * 0.09),
-                transform: [{ scale: glowScale }],
-              },
-            ]}
-          />
+      <LinearGradient colors={['#302637', '#231F2D', '#1E1B25']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={[styles.hero, wide && styles.heroWide]}>
+        <View style={[styles.heroCopy, wide && { flex: 1 }]}>
+          <Text style={styles.eyebrow}>A LITTLE SPONTANEITY, PERFECTLY MIXED</Text>
+          <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }]}>A little magic.{'\n'}A great drink.</Text>
+          <Text style={styles.heroBody}>Find your next favorite cocktail, made with what's already on your shelf.</Text>
+          <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} />
+          <Text style={styles.heroHint}>{prefs.shakeToShake && shakeSensor.available ? 'Tap the crystal ball, or give your phone a shake.' : 'Let the spirits decide. Tap the crystal ball to begin.'}</Text>
+        </View>
+        <View style={[styles.crystalStage, wide && { flex: 1 }]}>
+          <Animated.View style={{ transform: [{ translateY: reduceMotion ? 0 : float }, { rotate }] }}>
+            <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Find a drink with the crystal ball"
+              style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }, styles.crystalButton]}>
+              <CrystalBall size={width >= 1000 ? 316 : wide ? 232 : 248} />
+            </Pressable>
+          </Animated.View>
+          <View style={styles.crystalCaption}><Icon name="shuffle-variant" size={13} color={C.accent} /><Text style={styles.crystalCaptionText}>GOOD TASTE. A LITTLE FATE.</Text></View>
+        </View>
+      </LinearGradient>
+
+      <View style={styles.moodHead}>
+        <Text style={styles.sectionTitle}>What's the mood?</Text>
+        <Pressable onPress={() => setShowFilters(v => !v)} accessibilityRole="button" accessibilityLabel="Customize drink filters"
+          accessibilityState={{ expanded: showFilters }} style={styles.filterToggle}>
+          <Icon name="tune-variant" size={17} color={C.dim} />
+          <Text style={styles.filterToggleText}>{showFilters ? 'Less' : 'More filters'}{filterCount ? ' · ' + filterCount : ''}</Text>
+        </Pressable>
+      </View>
+      <View style={styles.moodRow}>
+        <Chip label="Surprise me" active={vibes.length === 0 && !prefs.zeroProofMode} onPress={() => { setVibes([]); setPref('zeroProofMode', false); }} />
+        {[['refreshing', 'Refreshing'], ['spirit-forward', 'Spirit-forward'], ['tropical', 'Tropical']].map(([key, label]) => (
+          <Chip key={key} label={label} active={vibes.includes(key)} onPress={() => setVibes(v => v.includes(key) ? v.filter(t => t !== key) : [...v, key])} />
         ))}
-        <Animated.View style={{ transform: [{ rotate }] }}>
-          <Pressable
-            onPress={onSpin}
-            accessibilityRole="button"
-            accessibilityLabel="Spin for a random drink"
-            style={({ pressed }) => [styles.orb, pressed && { opacity: 0.85 }]}
-          >
-            <LinearGradient
-              colors={['rgba(126,240,228,0.42)', 'rgba(24,120,116,0.30)', 'rgba(6,20,26,0.92)']}
-              start={{ x: 0.25, y: 0 }}
-              end={{ x: 0.85, y: 1 }}
-              style={styles.orbFill}
-            >
-              <View style={styles.orbSheen} />
-              <Text style={styles.orbMark}>?</Text>
-            </LinearGradient>
-          </Pressable>
-        </Animated.View>
+        <Chip label="Zero proof" color={C.teal} active={prefs.zeroProofMode} onPress={() => setPref('zeroProofMode', !prefs.zeroProofMode)} />
       </View>
-
-      <PrimaryButton label="SPIN TO SELECT" onPress={onSpin} style={styles.cta} />
-
-      <Pressable
-        onPress={() => setShowFilters((v) => !v)}
-        accessibilityRole="button"
-        style={styles.filterToggle}
-      >
-        <Text style={styles.filterToggleText}>
-          {showFilters ? 'HIDE FILTERS' : 'FILTERS'}
-          {filterCount ? `  ·  ${filterCount}` : ''}
-        </Text>
-      </Pressable>
 
       {showFilters ? (
         <View style={{ gap: S.sm }}>
@@ -217,7 +228,7 @@ export function RandomScreen({
               />
               {shakeSensor.available ? (
                 <Chip
-                  label={prefs.shakeToShake ? '📳 Shake on' : '📳 Shake off'}
+                  label={prefs.shakeToShake ? 'Shake on' : 'Shake off'}
                   active={prefs.shakeToShake}
                   color={C.violet}
                   onPress={toggleShakeSensor}
@@ -271,29 +282,26 @@ export function RandomScreen({
       ) : null}
 
       {/* ── Result ──────────────────────────────────────────────────────── */}
+      <View onLayout={(event) => { resultOffset.current = event.nativeEvent.layout.y; }}>
       {result === null ? (
-        <Panel style={styles.idle}>
-          <Dim style={{ textAlign: 'center' }}>
-            {kit.length === 0
-              ? 'Your cabinet is empty — nothing to pour from yet.'
-              : `${kit.length} ${pluralize(kit.length, 'ingredient')} in the cabinet.${
-                  prefs.shakeToShake && shakeSensor.available ? ' Spin, or shake your phone.' : ''
-                }`}
-          </Dim>
-          {kit.length === 0 ? (
-            <GhostButton
-              label="Set up My Cabinet"
-              color={C.teal}
-              onPress={() => goTo('cabinet')}
-              style={{ marginTop: S.md, alignSelf: 'stretch' }}
-            />
-          ) : null}
-        </Panel>
+        <View style={styles.quickLinks}>
+          <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Explore my bar" style={styles.quickCard}>
+            <View style={styles.quickIcon}><Icon name="cupboard" size={24} color={C.teal} /></View>
+            <View style={{ flex: 1 }}><Text style={styles.quickTitle}>{kit.length ? 'Your bar, full of possibilities' : 'Great drinks start here'}</Text><Dim>{kit.length ? readyCount + ' drinks from ' + kit.length + ' ingredients' : 'Add the bottles and mixers you have.'}</Dim></View>
+            <Icon name="chevron-right" size={20} color={C.faint} />
+          </Pressable>
+          <Pressable onPress={() => goTo('recipes')} accessibilityRole="button" accessibilityLabel="Browse cocktail recipes" style={styles.quickCard}>
+            <View style={[styles.quickIcon, { backgroundColor: '#3B2B32' }]}><Icon name="book-open-variant" size={24} color={C.accent} /></View>
+            <View style={{ flex: 1 }}><Text style={styles.quickTitle}>Something for every mood</Text><Dim>Explore {recipes.length} cocktail recipes</Dim></View>
+            <Icon name="chevron-right" size={20} color={C.faint} />
+          </Pressable>
+        </View>
       ) : (
-        <Animated.View style={revealStyle}>
+        <Animated.View accessibilityLiveRegion="polite" style={revealStyle}>
+          <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Your next pour</Text>
           {result.ok ? (
             <ResultCard
-              recipe={result.recipe}
+              recipe={selectedRecipe ?? result.recipe}
               have={countHave(result.recipe, owned, prefs.allowSubstitutes)}
               substitutions={result.substitutions.length}
               onMade={() => {
@@ -322,6 +330,7 @@ export function RandomScreen({
           )}
         </Animated.View>
       )}
+      </View>
     </ScrollView>
   );
 }
@@ -351,26 +360,25 @@ function ResultCard({
   onRate: (n: number) => void;
   onAgain: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
-    <Panel accent={accentForRecipe(recipe)} style={{ padding: 0, overflow: 'hidden' }}>
-      <Pressable onPress={() => setExpanded((v) => !v)} accessibilityRole="button">
+    <Panel padded={false} accent={accentForRecipe(recipe)} style={{ overflow: 'hidden' }}>
+      <Pressable onPress={() => setExpanded((v) => !v)} accessibilityRole="button" accessibilityLabel={recipe.name + ", toggle recipe details"} accessibilityState={{ expanded }}>
         <View style={styles.resultTop}>
           <LinearGradient
-            colors={[accentForRecipe(recipe) + 'DD', accentForRecipe(recipe) + '22']}
+            colors={[accentForRecipe(recipe) + '22', accentForRecipe(recipe) + '08']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.thumb}
           >
-            <Icon name={glyphForRecipe(recipe)} size={36} color="rgba(255,255,255,0.95)" />
+            <CocktailArt color={accentForRecipe(recipe)} glass={recipe.glass} size={100} />
           </LinearGradient>
 
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.resultName} numberOfLines={2}>
               {recipe.name}
             </Text>
-            <Stars value={recipe.rating} onRate={onRate} />
             <HaveCount have={have.have} total={have.total} />
             <Dim style={{ fontSize: 11 }}>
               {expanded ? 'Tap to collapse' : 'Tap to expand details'}
@@ -378,6 +386,10 @@ function ResultCard({
           </View>
         </View>
       </Pressable>
+
+      <View style={{ paddingHorizontal: S.md, paddingBottom: S.sm }}>
+        <Stars value={recipe.rating} size={18} onRate={onRate} />
+      </View>
 
       {expanded ? (
         <View style={styles.resultBody}>
@@ -506,61 +518,43 @@ function FallbackPanel({
   );
 }
 
-const ORB = 216;
-
 const styles = StyleSheet.create({
-  scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130, gap: S.lg },
-  masthead: { alignItems: 'center', gap: 4 },
-  wordmark: {
-    fontFamily: F.light,
-    fontSize: 30,
-    letterSpacing: 7,
-    color: C.text,
-    textShadowColor: 'rgba(47,212,198,0.55)',
-    textShadowRadius: 22,
-  },
-  tagline: { color: C.dim, fontFamily: F.regular, fontSize: 10, letterSpacing: 3.4 },
-
-  orbWrap: { alignItems: 'center', justifyContent: 'center', height: ORB + 24 },
-  orbGlow: { position: 'absolute', backgroundColor: C.teal },
-  orb: {
-    width: ORB,
-    height: ORB,
-    borderRadius: ORB / 2,
-    borderWidth: 1,
-    borderColor: 'rgba(160,248,238,0.7)',
-    overflow: 'hidden',
-  },
-  orbFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  orbSheen: {
-    position: 'absolute',
-    top: ORB * 0.09,
-    left: ORB * 0.16,
-    width: ORB * 0.44,
-    height: ORB * 0.26,
-    borderRadius: ORB * 0.22,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-  },
-  orbMark: {
-    fontFamily: F.semibold,
-    fontSize: 76,
-    color: '#EAFFFB',
-    textShadowColor: 'rgba(53,214,196,0.8)',
-    textShadowRadius: 22,
-  },
-
-  cta: { marginTop: -S.sm },
-  filterToggle: { alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 12 },
-  filterToggleText: { color: C.faint, fontSize: 10, letterSpacing: 1.6, fontWeight: '800' },
+  scroll: { ...SCREEN, gap: 20 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
+  brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  brandIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#33262A', alignItems: 'center', justifyContent: 'center' },
+  brandName: { fontFamily: F.semibold, fontSize: 23, letterSpacing: -0.7, color: C.text },
+  stockPill: { flexDirection: 'row', alignItems: 'center', gap: 7, padding: 10, minHeight: 44 },
+  readyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.teal },
+  stockText: { fontFamily: F.regular, fontSize: 12, color: C.dim },
+  hero: { borderRadius: R.xl, borderWidth: 1, borderColor: C.line2, padding: 24, overflow: 'hidden' },
+  heroWide: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 40, paddingVertical: 20, minHeight: 360 },
+  heroCopy: { gap: 16, zIndex: 1 },
+  eyebrow: { fontFamily: F.medium, color: C.accent, fontSize: 10, letterSpacing: 1.8, lineHeight: 15 },
+  heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 36, lineHeight: 40, letterSpacing: -1.4 },
+  heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
+  heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
+  heroHint: { color: C.faint, fontFamily: F.regular, fontSize: 11, lineHeight: 17, maxWidth: 290 },
+  crystalStage: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
+  crystalButton: { borderRadius: 160 },
+  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: -12, paddingBottom: 6 },
+  crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 9, letterSpacing: 1.7 },
+  moodHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 },
+  sectionTitle: { fontFamily: F.medium, fontSize: 20, letterSpacing: -0.3, color: C.text },
+  filterToggle: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
+  filterToggleText: { color: C.dim, fontFamily: F.regular, fontSize: 12 },
+  moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: -12 },
   rail: { flexGrow: 0, marginHorizontal: -S.lg },
   railRow: { flexDirection: 'row', gap: S.sm, paddingHorizontal: S.lg },
-
-  idle: { alignItems: 'center', paddingVertical: S.xl },
+  quickLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
+  quickCard: { flexGrow: 1, flexBasis: 300, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderRadius: R.md, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line },
+  quickIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#27352F' },
+  quickTitle: { fontFamily: F.medium, color: C.text, fontSize: 14, marginBottom: 3 },
 
   resultTop: { flexDirection: 'row', gap: S.md, padding: S.md },
   thumb: {
-    width: 78,
-    height: 78,
+    width: 100,
+    height: 100,
     borderRadius: R.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -586,7 +580,7 @@ const styles = StyleSheet.create({
   },
 
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: S.lg },
-  fallback: { alignItems: 'center', paddingVertical: S.xl },
+  fallback: { alignItems: 'center', paddingVertical: S.xl, maxWidth: 640, alignSelf: 'center' },
   fallbackIcon: { marginBottom: S.md },
   fallbackBody: { textAlign: 'center', marginTop: S.sm, maxWidth: 320, lineHeight: 20 },
   fallbackBtn: { marginTop: S.lg, alignSelf: 'stretch' },

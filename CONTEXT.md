@@ -90,10 +90,13 @@ src/
     liquids.ts            Canonical 11-liquid palette; recipe accent colour
   components/
     ui.tsx                Panel, Chip, buttons, Press, Stars, QuantityBar
-    NavPill.tsx           Floating glass tab bar
+    NavPill.tsx           Labelled bottom tabs: Discover, My bar, Recipes, Mix lab
     ShoppingList.tsx      The shopping list, rendered inside Cabinet
-    Atmosphere.tsx        Drifting background fields + grain overlay
+    Atmosphere.tsx        Quiet background glow + grain overlay
     IngredientArt.tsx     Parametric SVG bottles
+    CocktailArt.tsx       Recipe illustrations, chosen by serving glass
+    CrystalBall.tsx       Interactive home-screen centerpiece (SVG)
+    LineIcon.tsx          Shared SVG interface icons on a 24-unit grid
   screens/                One per tab, plus AgeGate
   hooks/useShakeDetector.ts
   api/trending.ts         DEFERRED feature — types only, no network
@@ -215,7 +218,11 @@ grid of cards collapses into shrink-wrapped columns.
 The index imports every icon set and therefore every bundled font — about 4 MB
 of TTFs. Import `@expo/vector-icons/build/createIconSet` directly.
 
-### The icon font is a generated subset
+### Interface icons and the generated font subset
+
+Navigation and common actions use `LineIcon.tsx`, a small SVG set. New SVG
+icons do not need font regeneration. `Icon` falls back to the generated font
+for specialist ingredient symbols; its name type covers both sets.
 `assets/fonts/ShakerIcons.ttf` is 12 KB, subset from a 1.3 MB face. After
 referencing a new glyph, run `python scripts/build-icon-font.py`. `GlyphName` is
 typed off the generated map, so an out-of-subset glyph is a **compile error**,
@@ -298,9 +305,9 @@ fixed in `0db0e87`.
 
 Known open items, roughly by value:
 
-1. **The cabinet is a wall of identical bottles.** Six gins render the same;
-   only the name differs. The asset pipeline will not fix this — it dedupes the
-   same way. Needs a per-bottle differentiator.
+1. **Completed 21 Oct 2026: per-bottle identity.** `IngredientArt` accepts an
+   optional display-name seed for a label initial and a deterministic ±8-point
+   lightness shift. Keep passing inventory names, since catalog ids are shared.
 2. **The editor can create a drink that can never be poured** (no ingredients).
    It is correctly excluded from the generator but should say so.
 3. **Guests land with an empty cabinet** — storage is per-browser, so the
@@ -313,6 +320,13 @@ Known open items, roughly by value:
 ---
 
 ## 11. Conventions
+
+The interface uses charcoal-plum surfaces, ivory text, apricot primary actions,
+and mint stock indicators. Shared `SCREEN` spacing caps desktop content at
+1120px; Cabinet and Recipes use two, three, or four columns by viewport width.
+The home crystal's float and selection animation respect reduced motion.
+Keep favorite and rating buttons separate from the button that opens a recipe
+or toggles its details: nesting buttons produces invalid HTML on web.
 
 - TypeScript strict; `npm run typecheck` must pass before commit.
 - Comments explain *why*, especially where something looks wrong but is not.

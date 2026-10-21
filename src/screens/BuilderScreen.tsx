@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F, R, S, SHADOW } from '../theme';
+import { C, F, R, S, SCREEN } from '../theme';
 import { accentForRecipe } from '../data/liquids';
 import {
   Body,
@@ -53,6 +53,7 @@ export function BuilderScreen({
   goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
   const { kit, recipes, saveRecipe } = useData();
+  const { width } = useWindowDimensions();
   const [stepIndex, setStepIndex] = useState(0);
   const [picked, setPicked] = useState<Record<string, string[]>>({ base: [], mixers: [], toppings: [] });
   const [done, setDone] = useState(false);
@@ -174,7 +175,8 @@ export function BuilderScreen({
   if (kit.length === 0) {
     return (
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Wordmark style={styles.screenTitle}>DRINK BUILDER</Wordmark>
+        <Text style={styles.eyebrow}>MAKE IT YOUR OWN</Text>
+        <Wordmark>Mix lab</Wordmark>
         <EmptyState
           icon="glass-cocktail"
           title="Nothing to build with"
@@ -187,7 +189,11 @@ export function BuilderScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Wordmark style={styles.screenTitle}>DRINK BUILDER</Wordmark>
+      <View style={{ gap: 6, marginBottom: 8 }}>
+        <Text style={styles.eyebrow}>MAKE IT YOUR OWN</Text>
+        <Wordmark>Mix lab</Wordmark>
+        <Dim>A good drink, one ingredient at a time.</Dim>
+      </View>
 
       {/* ── Stepper ─────────────────────────────────────────────────────── */}
       <View style={styles.stepper}>
@@ -312,6 +318,7 @@ export function BuilderScreen({
                     accessibilityState={{ selected: on }}
                     style={({ pressed }) => [
                       styles.tile,
+                      { width: width < 700 ? '47%' : '31.2%' },
                       on && styles.tileOn,
                       full && { opacity: 0.35 },
                       pressed && { opacity: 0.75 },
@@ -321,7 +328,7 @@ export function BuilderScreen({
                       <Icon name={on ? 'check' : 'plus'} size={11} color={on ? C.ink : C.dim} />
                     </View>
                     <View style={styles.tileIcon}>
-                      <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={40} />
+                      <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={56} />
                     </View>
                     <Text style={styles.tileName} numberOfLines={2}>
                       {item.name}
@@ -394,15 +401,15 @@ export function BuilderScreen({
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: S.lg, paddingTop: S.lg, paddingBottom: 130, gap: S.md },
-  screenTitle: { fontSize: 21, letterSpacing: 4.5 },
+  scroll: { ...SCREEN, gap: 16 },
+  eyebrow: { color: C.accent, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
 
   stepper: { flexDirection: 'row', alignItems: 'center', marginVertical: S.sm },
   stepItem: { alignItems: 'center', gap: 5 },
   stepDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 2,
     borderColor: C.line2,
     alignItems: 'center',
@@ -410,20 +417,16 @@ const styles = StyleSheet.create({
   },
   stepDotActive: {
     borderColor: C.teal,
-    backgroundColor: 'rgba(53,214,196,0.25)',
-    shadowColor: C.teal,
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
+    backgroundColor: '#2A3932',
   },
   stepDotDone: { borderColor: C.teal, backgroundColor: C.teal },
 
-  stepLabel: { color: C.faint, fontSize: 9, fontWeight: '800', letterSpacing: 0.8 },
+  stepLabel: { color: C.dim, fontSize: 11, fontFamily: F.medium, letterSpacing: 0.4 },
   stepLine: { flex: 1, height: 1, backgroundColor: C.line2, marginHorizontal: 6, marginBottom: 14 },
   stepLineOn: { backgroundColor: C.teal },
 
   stepHeadRow: { flexDirection: 'row', alignItems: 'baseline', gap: S.sm },
-  stepHeading: { color: C.text, fontSize: 12.5, fontWeight: '800', letterSpacing: 1.1 },
+  stepHeading: { color: C.text, fontSize: 15, fontFamily: F.medium, letterSpacing: 0.4 },
   stepCount: { color: C.teal, fontSize: 12, fontWeight: '800' },
 
   rail: { flexGrow: 0, marginHorizontal: -S.lg },
@@ -432,27 +435,22 @@ const styles = StyleSheet.create({
   body: { flexDirection: 'row', gap: S.md, marginTop: S.sm },
   // Capped so the glass and the Next button stay on screen; the grid scrolls
   // inside itself rather than pushing them below the fold.
-  optionScroll: { flex: 1, maxHeight: 330 },
+  optionScroll: { flex: 1, maxHeight: 420 },
   optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, paddingBottom: S.sm },
   tile: {
     width: '31.2%',
-    aspectRatio: 0.78,
+    minHeight: 150,
     borderRadius: R.md,
     borderWidth: 1,
     borderColor: C.line,
     backgroundColor: C.glass,
-    padding: S.sm,
-    justifyContent: 'flex-end',
-    gap: 3,
+    padding: 12,
+    justifyContent: 'center',
+    gap: 8,
   },
   tileOn: {
     borderColor: C.teal,
-    ...SHADOW.glow(C.teal, 0.45),
-    backgroundColor: 'rgba(53,214,196,0.12)',
-    shadowColor: C.teal,
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
+    backgroundColor: '#29372F',
   },
   tilePlus: {
     position: 'absolute',
@@ -467,8 +465,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  tileIcon: { marginBottom: 4, height: 42, justifyContent: 'flex-end' },
-  tileName: { color: C.text, fontSize: 10, fontWeight: '700', lineHeight: 13 },
+  tileIcon: { height: 64, alignItems: 'center', justifyContent: 'center' },
+  tileName: { color: C.text, fontSize: 12, fontFamily: F.medium, lineHeight: 16, minHeight: 32 },
 
   glassCol: { width: 76, alignItems: 'center', gap: 6 },
   glass: {

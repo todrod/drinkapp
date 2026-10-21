@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleProp, TextStyle } from 'react-native';
+import { StyleProp, TextStyle, ViewStyle } from 'react-native';
 // Direct module path, not the package index: importing '@expo/vector-icons'
 // pulls in every icon set and therefore every bundled font — about 4 MB of
 // TTFs for the handful of glyphs this app draws.
@@ -8,9 +8,12 @@ import glyphMap from './generated/glyphmap.json';
 import { CATALOG_BY_ID } from './data/catalog';
 import { Category, DrinkRecipe } from './types';
 import { C } from './theme';
+import { hasLineIcon, LineIcon, LineIconName } from './components/LineIcon';
 
 /**
- * Icons.
+ * Interface icons use the small, consistent SVG set in LineIcon. The subset
+ * font remains for specialized ingredient symbols; SVG additions need no font
+ * regeneration.
  *
  * MaterialCommunityIcons ships inside @expo/vector-icons — free, offline, and
  * with real barware glyphs (shaker, keg, hops, every glass shape) rather than
@@ -25,7 +28,7 @@ import { C } from './theme';
  * free-typed custom item still gets something sensible.
  */
 
-export type GlyphName = keyof typeof glyphMap;
+export type GlyphName = keyof typeof glyphMap | LineIconName;
 
 /** App.tsx also registers the face via useFonts so nothing paints before it. */
 const ShakerIcon = createIconSet(
@@ -45,6 +48,7 @@ export function Icon({
   color?: string;
   style?: StyleProp<TextStyle>;
 }) {
+  if (hasLineIcon(name)) return <LineIcon name={name} size={size} color={color} style={style as StyleProp<ViewStyle>} />;
   return <ShakerIcon name={name as string} size={size} color={color} style={style} />;
 }
 
@@ -52,7 +56,7 @@ export const TAB_ICON: Record<string, GlyphName> = {
   random: 'shuffle-variant',
   cabinet: 'cupboard',
   recipes: 'book-open-variant',
-  builder: 'glass-cocktail',
+  builder: 'shaker',
 };
 
 export const CATEGORY_GLYPH: Record<Category, GlyphName> = {
