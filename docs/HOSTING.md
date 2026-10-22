@@ -28,6 +28,14 @@ Counts are planned recipe servings, not estimates of what the inventory can supp
 
 The host uses one native modal while moving between menu, recipe, editor and serving content. Returning from a batch’s serving view restores the batch tab. Shake selection and hero animation suspend while a host overlay is open.
 
+On 22 October, recipe ingredients and methods increased to 19 px with more
+line spacing. Serving view uses 22 px measures and 26 px steps; batch ingredient
+totals use the same 19 px ingredient token. The home shortcut now mentions the
+guest QR, and the third host tab is labeled **3 · Guest QR**. The menu, batch
+calculator and guest QR/link remain part of the app. A two-drink menu with an
+alcohol-free choice, edited counts, batch totals, reload persistence and guest
+link opening was rechecked at phone sizes, including a 286 px QR at 320 px width.
+
 ## Read-only guest links
 
 Guest view builds a compressed URL fragment containing only the selected menu. Standard unedited recipes use IDs with a content fingerprint; modified or custom recipes carry a validated recipe snapshot. No bar inventory, serving counts, ratings, favorites, preferences or made history are included. The fragment stays out of HTTP requests, and no external QR service is used.

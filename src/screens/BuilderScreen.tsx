@@ -337,7 +337,7 @@ export function BuilderScreen({
                     <View style={styles.tileIcon}>
                       <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={56} />
                     </View>
-                    <Text style={styles.tileName} numberOfLines={2}>
+                    <Text style={styles.tileName}>
                       {item.name}
                     </Text>
                   </Pressable>
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   },
 
   tileIcon: { height: 64, alignItems: 'center', justifyContent: 'center' },
-  tileName: { color: C.text, fontSize: 12, fontFamily: F.medium, lineHeight: 16, minHeight: 32 },
+  tileName: { color: C.text, fontSize: 16, fontFamily: F.medium, lineHeight: 23, minHeight: 46 },
 
   glassCol: { width: 76, alignItems: 'center', gap: 6 },
   glass: {

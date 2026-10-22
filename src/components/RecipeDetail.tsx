@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import type { DrinkRecipe } from '../types';
-import { C } from '../theme';
+import { C, type } from '../theme';
 import { useData } from '../store';
 import { alcoholStatus, isServingReady, recipeIssues } from '../logic/recipes';
 import { buildOwned, matchRecipe } from '../logic/generator';
@@ -26,13 +26,13 @@ export function RecipeDetail({ recipe, onClose, onServe, onEdit, onParty, onShop
     {restricted ? <Dim style={{ color: C.text }}>Saved in your notebook. Zero-proof mode excludes this recipe from serving and party menus.</Dim> : null}
     {match.substitutions.map((s, n) => <Body key={n} style={{ color: C.text }}>On hand: {s.used} for {s.wanted}. Serving measures show the original recipe.</Body>)}
     <Label>Ingredients · one serving</Label>
-    {recipe.ingredients.map((ing, n) => <View key={n} style={{ gap: 3 }}><Body>{formatIngredient(ing)}{ing.isOptional ? ' (optional)' : ''}</Body>{match.missing.includes(ing.displayName) ? <Dim style={{ color: C.text }}>Missing from your bar</Dim> : null}</View>)}
+    {recipe.ingredients.map((ing, n) => <View key={n} style={{ gap: 5 }}><Body style={type.ingredient}>{formatIngredient(ing)}{ing.isOptional ? ' (optional)' : ''}</Body>{match.missing.includes(ing.displayName) ? <Dim style={{ color: C.text }}>Missing from your bar</Dim> : null}</View>)}
     {match.missing.length ? <GhostButton label="Add missing ingredients to shopping list" onPress={() => {
       recipe.ingredients.filter((i) => match.missing.includes(i.displayName)).forEach((i) => addToShopping(i.catalogItemId, i.displayName));
       onShopping();
     }} /> : null}
-    <Label>Method</Label>{recipe.steps.map((s, n) => <Body key={n}>{n + 1}. {s}</Body>)}
-    {recipe.garnish ? <Body>Garnish · {recipe.garnish}</Body> : null}
+    <Label>Method</Label>{recipe.steps.map((s, n) => <Body key={n} style={type.instruction}>{n + 1}. {s}</Body>)}
+    {recipe.garnish ? <Body style={type.ingredient}>Garnish · {recipe.garnish}</Body> : null}
     <PrimaryButton label={!ready ? 'Complete this recipe' : restricted ? 'Back to my notebook' : 'Start mixing'} onPress={() => !ready ? onEdit(recipe) : restricted ? onClose() : onServe(recipe)} />
     {ready && !restricted ? <GhostButton label={onMenu ? 'View party menu' : party.entries.length >= MAX_MENU ? 'Party menu full · manage menu' : 'Add to party menu'} onPress={() => { if (!onMenu) addToParty(recipe.id); onParty(); }} /> : null}
     <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>

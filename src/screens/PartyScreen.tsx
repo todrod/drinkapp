@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Linking, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import type { DrinkRecipe } from '../types';
-import { C, F, R } from '../theme';
+import { C, F, R, type } from '../theme';
 import { useData } from '../store';
 import { buildOwned, matchRecipe } from '../logic/generator';
 import { alcoholStatus, isAlcoholFree, isServingReady } from '../logic/recipes';
@@ -74,7 +74,7 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
   return <Sheet title="Your party, on the menu" eyebrow="The host’s corner" onClose={onClose}>
     <Dim>Choose a few signatures, include an alcohol-free option, then prep with a plan.</Dim>
     {prefs.zeroProofMode ? <Body style={{ color: C.text }}>Zero-proof mode · showing alcohol-free recipes.</Body> : null}
-    <View style={styles.tabs}>{([['menu', '1 · Menu'], ['batch', '2 · Batch & shop'], ['guest', '3 · Guest view']] as const).map(([key, label]) => <Chip key={key} label={label} active={mode === key} onPress={() => { setMode(key); setNotice(''); }} />)}</View>
+    <View style={styles.tabs}>{([['menu', '1 · Menu'], ['batch', '2 · Batch & shop'], ['guest', '3 · Guest QR']] as const).map(([key, label]) => <Chip key={key} label={label} active={mode === key} onPress={() => { setMode(key); setNotice(''); }} />)}</View>
     <Panel raised style={{ gap: 10 }}>
       <Label>{selected.length} signatures · {zeroCount} alcohol-free</Label>
       <TextInput accessibilityLabel="Party name" value={party.title} onChangeText={(title) => setParty({ ...party, title })} maxLength={80} placeholder="Name your gathering" placeholderTextColor={C.faint} style={styles.titleInput} />
@@ -113,24 +113,24 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
           const lines = batchRecipe(recipe, servings, party.unit);
           return <Panel key={recipe.id} style={{ gap: 12 }}><Heading>{recipe.name}</Heading><Label color={C.text}>{servings} planned servings</Label>
             <Body>{prepAdvice(recipe)}</Body>
-            <Label>Measure ahead · still ingredients</Label>{lines.filter((l) => !l.atServing).map((l) => <Body key={l.key}>{batchLineLabel(l)}</Body>)}
+            <Label>Measure ahead · still ingredients</Label>{lines.filter((l) => !l.atServing).map((l) => <Body key={l.key} style={type.ingredient}>{batchLineLabel(l)}</Body>)}
             {!lines.some((l) => !l.atServing) ? <Dim>Prepare this drink fresh at serving.</Dim> : null}
-            {lines.some((l) => l.atServing) ? <><Label>At serving · keep separate</Label>{lines.filter((l) => l.atServing).map((l) => <Body key={l.key}>{batchLineLabel(l)}</Body>)}</> : null}
+            {lines.some((l) => l.atServing) ? <><Label>At serving · keep separate</Label>{lines.filter((l) => l.atServing).map((l) => <Body key={l.key} style={type.ingredient}>{batchLineLabel(l)}</Body>)}</> : null}
             {recipe.garnish ? <Dim>Garnish each glass · {recipe.garnish}</Dim> : null}
             <GhostButton label="Open serving view" accessibilityLabel={`Open serving view · ${recipe.name}`} onPress={() => onServe(recipe, servings, party.unit)} />
           </Panel>;
         })}
         <Heading>Your combined shopping quantities</Heading><Dim>Check the total against what’s left in your bottles. Optional items are separate; ice and top-ups stay per glass.</Dim>
-        {totals.map((l) => <View key={l.key} style={{ gap: 4 }}><Body>{batchLineLabel(l)}</Body><Dim style={{ color: missing.includes(l) ? C.text : C.dim }}>{l.optional ? 'Optional · check on hand' : missing.includes(l) ? 'Missing from your bar' : 'On hand · verify enough remains'}</Dim></View>)}
+        {totals.map((l) => <View key={l.key} style={{ gap: 4 }}><Body style={type.ingredient}>{batchLineLabel(l)}</Body><Dim style={{ color: missing.includes(l) ? C.text : C.dim }}>{l.optional ? 'Optional · check on hand' : missing.includes(l) ? 'Missing from your bar' : 'On hand · verify enough remains'}</Dim></View>)}
         <PrimaryButton label={missing.length ? 'Add missing ingredients to shopping list' : 'Open shopping list'} onPress={() => {
           missing.forEach((l) => addToShopping(l.catalogItemId, l.name)); onShopping();
         }} />
         <Dim>The shopping list saves ingredient names. Use these totals to choose bottle and package sizes; no exact stock volume is assumed.</Dim>
       </>}
     </> : <>
-      <Heading>The guest experience</Heading><Dim>A read-only snapshot of the drinks you selected. Your cabinet, counts, ratings and history stay private. Share a new link when the menu changes.</Dim>
+      <Heading>Your guest menu & QR code</Heading><Dim>A read-only snapshot of the drinks you selected. Your cabinet, counts, ratings and history stay private. Share a new link when the menu changes.</Dim>
       {!selected.length ? <PrimaryButton label="Choose drinks first" onPress={() => setMode('menu')} /> : <>
-        <Panel style={{ gap: 16 }}><Label color={C.text}>{party.title.trim() || 'Tonight’s drinks'}</Label>{selected.map(({ recipe }) => <View key={recipe.id} style={{ gap: 5 }}><Heading>{recipe.name}</Heading><Dim>{isAlcoholFree(recipe) ? 'Alcohol-free · ' : ''}{recipe.ingredients.filter((i) => i.role !== 'ice' && i.role !== 'garnish').map((i) => i.displayName).join(' · ')}</Dim></View>)}</Panel>
+        <Panel style={{ gap: 16 }}><Label color={C.text}>{party.title.trim() || 'Tonight’s drinks'}</Label>{selected.map(({ recipe }) => <View key={recipe.id} style={{ gap: 5 }}><Heading>{recipe.name}</Heading><Body>{isAlcoholFree(recipe) ? 'Alcohol-free · ' : ''}{recipe.ingredients.filter((i) => i.role !== 'ice' && i.role !== 'garnish').map((i) => i.displayName).join(' · ')}</Body></View>)}</Panel>
         {linkError ? <Body style={{ color: C.text }}>{linkError}</Body> : <>
           {localAddress ? <Dim style={{ color: C.text }}>This preview address works on this computer. For guests’ phones, use the reachable web address running this version of the app.</Dim> : <Dim>Scan to see tonight’s drinks. Guests can read the recipes without changing your bar.</Dim>}
           {link.length <= 1800 ? <MenuQR value={link} /> : <Dim>This custom menu is too detailed for a clear QR code. Share the link instead.</Dim>}

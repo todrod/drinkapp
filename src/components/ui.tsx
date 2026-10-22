@@ -171,7 +171,7 @@ export function Chip({
       <Text
         style={[
           styles.chipText,
-          small ? { fontSize: 11.5 } : null,
+          small ? { fontSize: 13 } : null,
           active ? { color: C.onAccent, fontFamily: type.label.fontFamily } : null,
         ]}
       >
@@ -371,7 +371,7 @@ export function QuantityBar({
       <Pressable onPress={() => setOpen(true)} accessibilityRole="button"
         accessibilityLabel={`${name}: ${level}. Change remaining stock`} aria-expanded={open}
         style={{ minHeight: 44, justifyContent: 'center', gap: 7 }}>
-      <Text style={{ color: C.text, fontSize: 12, fontFamily: type.label.fontFamily }}>{level.toUpperCase()} · CHANGE</Text>
+      <Text style={{ color: C.text, fontSize: 13, lineHeight: 19, fontFamily: type.label.fontFamily }}>{level.toUpperCase()} · CHANGE</Text>
       <View style={styles.track} pointerEvents="none">
         <LinearGradient
           colors={[color + '99', color]}
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     backgroundColor: C.glass,
   },
-  chipText: { color: C.dim, ...type.small, fontSize: 12.5 },
+  chipText: { color: C.dim, ...type.small, fontSize: 14, lineHeight: 20 },
 
   primaryFill: {
     borderRadius: R.pill,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
-  primaryText: { color: C.onAccent, ...type.h3, fontSize: 14, letterSpacing: 0.2, textAlign: 'center' },
+  primaryText: { color: C.onAccent, ...type.h3, fontSize: 16, lineHeight: 23, letterSpacing: 0.2, textAlign: 'center' },
 
   ghost: {
     borderWidth: 1,
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.glass,
     overflow: 'hidden',
   },
-  ghostText: { ...type.small, fontSize: 13.5, fontFamily: type.h3.fontFamily },
+  ghostText: { ...type.small, fontSize: 15, fontFamily: type.h3.fontFamily, textAlign: 'center' },
 
   header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: S.lg, gap: S.md },
 
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
 
   haveRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   haveDot: { width: 5, height: 5, borderRadius: 3 },
-  have: { ...type.label, fontSize: 11, letterSpacing: 0.5 },
+  have: { ...type.label, fontSize: 12, letterSpacing: 0.5 },
 
   track: {
     height: 4,

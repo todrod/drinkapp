@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppState, Pressable, Text, View } from 'react-native';
 import { activateKeepAwakeAsync, deactivateKeepAwake, isAvailableAsync } from 'expo-keep-awake';
 import type { DrinkRecipe } from '../types';
-import { C, F } from '../theme';
+import { C, type } from '../theme';
 import { useData } from '../store';
 import { batchLineLabel, batchRecipe, prepAdvice } from '../logic/hosting';
 import { alcoholStatus } from '../logic/recipes';
@@ -57,17 +57,17 @@ export function ServingView({ recipe, servings = 1, unit = 'ml', guest = false, 
     {notice ? <Dim accessibilityLiveRegion="polite">{notice}</Dim> : null}
     <Dim style={{ color: alcohol === 'none' ? C.text : C.dim }}>{alcohol === 'none' ? 'Alcohol-free' : alcohol === 'contains' ? 'Contains alcohol' : 'Alcohol content not confirmed'}</Dim>
     <Label>{servings > 1 ? 'Total ingredients · recipe as written' : 'Ingredients · recipe as written'}</Label>
-    {lines.map((line) => <Text key={line.key} style={{ color: C.text, fontFamily: F.medium, fontSize: 21, lineHeight: 29 }}>{batchLineLabel(line)}</Text>)}
+    {lines.map((line) => <Body key={line.key} style={type.servingIngredient}>{batchLineLabel(line)}</Body>)}
     {servings > 1 ? <Panel style={{ gap: 10 }}><Label>Prep & service</Label><Body>{prepAdvice(recipe)}</Body><Dim>The steps below describe one glass. Use one portion of the batch per glass; any measurements written inside the steps are for the original recipe.</Dim></Panel> : null}
     <Panel raised style={{ gap: 18 }}>
       <Label color={C.text}>Step {step + 1} of {recipe.steps.length}</Label>
-      <Text accessibilityLiveRegion="polite" style={{ fontSize: 25, lineHeight: 35, fontFamily: F.medium, color: C.text }}>{recipe.steps[step]}</Text>
+      <Text accessibilityLiveRegion="polite" style={{ ...type.servingInstruction, color: C.text }}>{recipe.steps[step]}</Text>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         {step > 0 ? <GhostButton label="Previous step" onPress={() => setStep((s) => s - 1)} style={{ flex: 1 }} /> : null}
         {!isLastStep ? <PrimaryButton label="Next step" onPress={() => setStep((s) => s + 1)} style={{ flex: 1 }} /> : null}
       </View>
     </Panel>
-    {recipe.garnish ? <Body>Finish · {recipe.garnish}{servings > 1 ? ' · for each glass' : ''}</Body> : null}
+    {recipe.garnish ? <Body style={type.ingredient}>Finish · {recipe.garnish}{servings > 1 ? ' · for each glass' : ''}</Body> : null}
     {guest ? <GhostButton label="Back to the menu" onPress={onClose} /> : completed ? <Panel accent={C.teal} style={{ gap: 12 }}>
       <Body accessibilityLiveRegion="polite" style={{ color: C.text }}>✓ Marked as made. Enjoy your gathering.</Body>
       <GhostButton label="Undo mark as made" onPress={() => {

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F, GLASS, R, S, SCREEN } from '../theme';
+import { C, F, GLASS, R, S, SCREEN, type } from '../theme';
 import { accentForRecipe } from '../data/liquids';
 import {
   Body,
@@ -250,7 +250,7 @@ export function RandomScreen({
       </View>
 
       <Pressable onPress={onParty} accessibilityRole="button" accessibilityLabel="Plan a party menu" style={styles.hostEntry}>
-        <View style={{ flex: 1, gap: 3 }}><Text style={styles.quickTitle}>Good company. Great drinks.</Text><Dim>Plan a party menu · batch · serve</Dim></View>
+        <View style={{ flex: 1, gap: 3 }}><Text style={styles.quickTitle}>Good company. Great drinks.</Text><Dim>Party menu · batches · guest QR</Dim></View>
         <Icon name="chevron-right" size={22} color={C.accent} />
       </Pressable>
       <Panel style={{ gap: 12 }}>
@@ -493,11 +493,11 @@ function ResultCard({
           </LinearGradient>
 
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={styles.resultName} numberOfLines={2}>
+            <Text style={styles.resultName}>
               {recipe.name}
             </Text>
             <HaveCount have={have.have} total={have.total} />
-            <Dim style={{ fontSize: 11 }}>
+            <Dim>
               {expanded ? 'Tap to collapse' : 'Tap to expand details'}
             </Dim>
           </View>
@@ -516,21 +516,21 @@ function ResultCard({
       {expanded ? (
         <View style={styles.resultBody}>
           <Label>Ingredients</Label>
-          <View style={{ marginTop: S.sm, gap: 5 }}>
+          <View style={{ marginTop: S.sm, gap: 10 }}>
             {recipe.ingredients.map((ing, i) => (
               <View key={i} style={styles.ingRow}>
                 <View style={[styles.dot, { backgroundColor: accentForRecipe(recipe) }]} />
-                <Body style={{ flex: 1 }}>{formatIngredient(ing)}</Body>
+                <Body style={[type.ingredient, { flex: 1 }]}>{formatIngredient(ing)}</Body>
               </View>
             ))}
           </View>
 
           <Label style={{ marginTop: S.lg }}>Method</Label>
-          <View style={{ marginTop: S.sm, gap: 7 }}>
+          <View style={{ marginTop: S.sm, gap: 14 }}>
             {recipe.steps.map((s, i) => (
               <View key={i} style={styles.stepRow}>
                 <Text style={styles.stepNum}>{String(i + 1).padStart(2, '0')}</Text>
-                <Body style={{ flex: 1 }}>{s}</Body>
+                <Body style={[type.instruction, { flex: 1 }]}>{s}</Body>
               </View>
             ))}
           </View>
@@ -538,7 +538,7 @@ function ResultCard({
           {recipe.garnish ? (
             <>
               <Label style={{ marginTop: S.lg }}>Garnish</Label>
-              <Body style={{ marginTop: 4 }}>{recipe.garnish}</Body>
+              <Body style={[type.ingredient, { marginTop: 4 }]}>{recipe.garnish}</Body>
             </>
           ) : null}
 
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   sourceOptions: { flexDirection: 'row', gap: 8 },
   sourceOption: { flex: 1, minHeight: 54, paddingHorizontal: 10, paddingVertical: 12, borderRadius: R.sm, borderWidth: 1, borderColor: C.line2, flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', backgroundColor: C.ink2 },
   sourceSelected: { backgroundColor: C.raise, borderColor: C.accent },
-  sourceLabel: { fontFamily: F.medium, fontSize: 14, color: C.dim, flexShrink: 1 },
+  sourceLabel: { fontFamily: F.medium, fontSize: 16, lineHeight: 23, color: C.dim, flexShrink: 1 },
   scroll: { ...SCREEN, gap: 18 },
   brandRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
   brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 9 },
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
   heroCopy: { gap: 12, zIndex: 1, flexGrow: 1, flexBasis: 260, minWidth: 0 },
   eyebrow: { fontFamily: F.medium, color: C.text, fontSize: 10, letterSpacing: 1.8, lineHeight: 15 },
   heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 30, lineHeight: 35, letterSpacing: -1.4 },
-  heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
+  heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 17, lineHeight: 26, maxWidth: 330 },
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
   shakerStage: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
   shakerButton: { borderRadius: 24 },
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   quickLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
   quickCard: { flexGrow: 1, flexBasis: 300, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderRadius: R.md, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line },
   quickIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: C.raise },
-  quickTitle: { fontFamily: F.medium, color: C.text, fontSize: 14, marginBottom: 3 },
+  quickTitle: { fontFamily: F.medium, color: C.text, fontSize: 17, lineHeight: 24, marginBottom: 3 },
 
   resultTop: { flexDirection: 'row', gap: S.md, padding: S.md },
   thumb: {
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  resultName: { color: C.text, fontFamily: F.semibold, fontSize: 19, lineHeight: 23 },
+  resultName: { color: C.text, fontFamily: F.semibold, fontSize: 21, lineHeight: 28 },
   resultBody: {
     paddingHorizontal: S.md,
     paddingBottom: S.md,
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   ingRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
   dot: { width: 5, height: 5, borderRadius: 3 },
   stepRow: { flexDirection: 'row', gap: S.md },
-  stepNum: { color: C.faint, fontSize: 11, fontWeight: '800', paddingTop: 4, width: 20 },
+  stepNum: { color: C.faint, fontSize: 15, lineHeight: 29, fontFamily: F.medium, width: 24 },
   resultActions: {
     flexDirection: 'row',
     gap: S.sm,
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: S.lg },
   fallback: { alignItems: 'center', paddingVertical: S.xl, maxWidth: 640, alignSelf: 'center' },
   fallbackIcon: { marginBottom: S.md },
-  fallbackBody: { textAlign: 'center', marginTop: S.sm, maxWidth: 320, lineHeight: 20 },
+  fallbackBody: { textAlign: 'center', marginTop: S.sm, maxWidth: 320 },
   fallbackBtn: { marginTop: S.lg, alignSelf: 'stretch' },
   suggestRow: { flexDirection: 'row', gap: 6, marginTop: S.md, flexWrap: 'wrap', justifyContent: 'center' },
 });

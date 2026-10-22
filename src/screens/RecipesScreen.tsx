@@ -223,7 +223,7 @@ export function RecipesScreen({ onOpen, onNew }: { onOpen: (r: DrinkRecipe) => v
                     </LinearGradient>
 
                     <View style={styles.cardBody}>
-                      <Text style={styles.cardName} numberOfLines={2}>
+                      <Text style={styles.cardName}>
                         {r.name}
                       </Text>
                       <Stars value={r.rating} size={11} />
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     color: C.text,
     paddingHorizontal: S.md,
     paddingVertical: 11,
-    fontSize: 15,
+    fontSize: 16,
     marginTop: S.md,
   },
   rail: { flexGrow: 0, marginHorizontal: -S.lg, marginTop: S.md },
@@ -307,6 +307,6 @@ const styles = StyleSheet.create({
   },
   themeTagText: { color: C.text, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
   cardBody: { padding: S.md, gap: 4 },
-  cardName: { color: C.text, fontFamily: F.medium, fontSize: 16, letterSpacing: -0.2, lineHeight: 21, minHeight: 42 },
+  cardName: { color: C.text, fontFamily: F.medium, fontSize: 18, letterSpacing: -0.2, lineHeight: 25, minHeight: 50 },
 
 });

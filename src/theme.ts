@@ -132,9 +132,14 @@ export const type = {
   wordmark: { fontFamily: F.semibold, fontSize: 32, letterSpacing: -0.8 },
   h1: { fontFamily: F.semibold, fontSize: 26, lineHeight: 31, letterSpacing: 0.4 },
   h2: { fontFamily: F.semibold, fontSize: 21, lineHeight: 26, letterSpacing: 0.2 },
-  h3: { fontFamily: F.medium, fontSize: 17, lineHeight: 22 },
-  body: { fontFamily: F.regular, fontSize: 15, lineHeight: 22 },
-  small: { fontFamily: F.regular, fontSize: 14, lineHeight: 20 },
-  label: { fontFamily: F.medium, fontSize: 11, letterSpacing: 1.3 },
+  h3: { fontFamily: F.medium, fontSize: 19, lineHeight: 25 },
+  body: { fontFamily: F.regular, fontSize: 17, lineHeight: 26 },
+  small: { fontFamily: F.regular, fontSize: 15, lineHeight: 23 },
+  // Measures and methods need to be readable while preparing a drink on a phone.
+  ingredient: { fontFamily: F.medium, fontSize: 19, lineHeight: 28 },
+  instruction: { fontFamily: F.regular, fontSize: 19, lineHeight: 29 },
+  servingIngredient: { fontFamily: F.medium, fontSize: 22, lineHeight: 31 },
+  servingInstruction: { fontFamily: F.medium, fontSize: 26, lineHeight: 37 },
+  label: { fontFamily: F.medium, fontSize: 12, lineHeight: 18, letterSpacing: 1.1 },
   mono: { fontFamily: F.medium, fontSize: 11, letterSpacing: 0.6 },
 } as const;

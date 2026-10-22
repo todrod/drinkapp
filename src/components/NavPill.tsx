@@ -49,6 +49,6 @@ const styles = StyleSheet.create({
   tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 3 },
   icon: { width: 54, height: 32, borderRadius: R.pill, alignItems: 'center', justifyContent: 'center' },
   iconOn: { backgroundColor: C.accentDeep },
-  label: { color: C.dim, fontFamily: F.medium, fontSize: 11 },
+  label: { color: C.dim, fontFamily: F.medium, fontSize: 12, lineHeight: 17 },
   labelOn: { color: C.text, fontFamily: F.semibold },
 });

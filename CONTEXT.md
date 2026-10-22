@@ -1,5 +1,22 @@
 # The Drink Shaker — project context
 
+## Larger phone text and party discoverability · 22 October 2026
+
+Shared body text is now 17 px, supporting text 15 px and headings 19 px.
+Recipe details and Discover results use dedicated 19 px ingredient/method
+tokens with 28–29 px line spacing. Serving view uses 22 px measures and 26 px
+instructions. Cabinet ingredient names are 17 px; ingredient and recipe names
+wrap fully instead of being cut off after two lines. The cabinet action row
+wraps on narrow phones to keep Add ingredient within the screen.
+
+The home party shortcut explicitly mentions the guest QR; the host's third
+tab is now **3 · Guest QR**. The saved drink list, batch calculator, generated
+QR and read-only guest link remain included. Verified on an isolated origin:
+two-drink menu, count changes, batch totals, refresh persistence, QR rendering
+and guest-link round-trip without host actions. Phone layouts at 320 and 390 px
+fit without horizontal overflow; long bottle names remain visible. Typecheck,
+all 54 tests and web/Android/iOS exports pass. No storage schema change.
+
 ## Red and black readability update · 22 October 2026
 
 The shared theme now uses near-black surfaces, deep red selected controls and

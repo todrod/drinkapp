@@ -377,7 +377,7 @@ function ItemCard({
       <View style={styles.cardIcon}>
         <IngredientArt {...artForCatalog(item.catalogItemId, item.category)} seed={item.name} size={72} />
       </View>
-      <Text style={styles.cardName} numberOfLines={2}>
+      <Text style={styles.cardName}>
         {item.name}
       </Text>
       <Text style={[styles.cardMeta, item.level === 'low' && { color: C.text }]}>{({ full: 'Well stocked', half: 'Half remaining', low: 'Running low', out: 'Time to restock' })[item.level]}</Text>
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   settingsButton: { width: 44, height: 44, borderRadius: 15, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line },
 
 
-  countRow: { flexDirection: 'row', gap: S.sm, alignItems: 'center' },
+  countRow: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, alignItems: 'center' },
   countChip: {
     borderWidth: 1,
     borderColor: C.line2,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     flexDirection: 'row', alignItems: 'center', gap: 6,
   },
-  addBtnText: { color: C.onAccent, fontSize: 12, fontFamily: F.semibold },
+  addBtnText: { color: C.onAccent, fontSize: 15, lineHeight: 22, fontFamily: F.semibold },
 
   segment: {
     flexDirection: 'row',
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   },
   segmentTab: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: R.pill },
   segmentTabOn: { backgroundColor: C.raise },
-  segmentText: { color: C.dim, fontSize: 13, fontFamily: F.medium },
+  segmentText: { color: C.dim, fontSize: 15, lineHeight: 22, fontFamily: F.medium },
   segmentTextOn: { color: C.text },
   want: { padding: 4, marginRight: 2 },
   search: {
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     color: C.text,
     paddingHorizontal: S.md,
     paddingVertical: 11,
-    fontSize: 15,
+    fontSize: 16,
     marginTop: S.md,
   },
 
@@ -615,8 +615,8 @@ const styles = StyleSheet.create({
   cardX: { position: 'absolute', top: 2, right: 2, padding: 14, zIndex: 2 },
 
   cardIcon: { marginBottom: 10, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: R.sm, backgroundColor: C.glass },
-  cardName: { color: C.text, fontFamily: F.medium, fontSize: 14, lineHeight: 19, minHeight: 40 },
-  cardMeta: { color: C.dim, fontFamily: F.regular, fontSize: 11, marginBottom: 15 },
+  cardName: { color: C.text, fontFamily: F.medium, fontSize: 17, lineHeight: 24, minHeight: 48 },
+  cardMeta: { color: C.dim, fontFamily: F.regular, fontSize: 13, lineHeight: 20, marginBottom: 12 },
 
   toast: {
     position: 'absolute',
