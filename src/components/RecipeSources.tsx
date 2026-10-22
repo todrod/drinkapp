@@ -27,6 +27,6 @@ export function RecipeSources({ recipe }: { recipe: DrinkRecipe }) {
 const styles = StyleSheet.create({
   wrap: { gap: 4, marginTop: 12 },
   link: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 9 },
-  text: { color: C.accent, fontFamily: F.regular, fontSize: 12, lineHeight: 18, flex: 1 },
+  text: { color: C.text, fontFamily: F.regular, fontSize: 12, lineHeight: 18, flex: 1 },
   note: { color: C.faint, fontFamily: F.regular, fontSize: 12, lineHeight: 18 },
 });

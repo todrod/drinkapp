@@ -20,7 +20,7 @@ export function Sheet({ title, eyebrow, onClose, closeLabel = 'Close', children,
   const body = <SafeAreaView style={styles.backdrop}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
         <View style={styles.header}>
-          <View style={{ flex: 1, gap: 5 }}>{eyebrow ? <Label color={C.accent}>{eyebrow}</Label> : null}
+          <View style={{ flex: 1, gap: 5 }}>{eyebrow ? <Label color={C.text}>{eyebrow}</Label> : null}
             <Text accessibilityRole="header" style={styles.title}>{title}</Text>
           </View>
           <GhostButton label={closeLabel} onPress={onClose} />

@@ -2,30 +2,32 @@ import { Platform } from 'react-native';
 
 // Design tokens.
 //
-// A quiet cocktail lounge: warm paper, apricot, and mint on deep burgundy.
+// Black surfaces, deep red controls, and bright neutral text.
 
 export const C = {
   // Ground gets three steps so panels can sit *on* something rather than float
   // on one flat colour.
-  ink: '#19090D',
-  ink2: '#210D14',
-  ink3: '#2A111A',
-  panel: '#32151D',
-  raise: '#481E29',
-  ambient: '#B3283D',
+  ink: '#050505',
+  ink2: '#0D0D0F',
+  ink3: '#161618',
+  panel: '#151517',
+  raise: '#340D13',
+  ambient: '#CF102A',
 
-  line: 'rgba(245, 232, 216, 0.09)',
-  line2: 'rgba(245, 232, 216, 0.18)',
+  line: 'rgba(255, 255, 255, 0.16)',
+  line2: 'rgba(255, 255, 255, 0.30)',
   /** The 1px light catch along the top of a raised surface. */
-  edge: 'rgba(255, 242, 224, 0.08)',
+  edge: 'rgba(255, 255, 255, 0.12)',
   /** Flat translucent fill for surfaces that do not warrant a gradient. */
-  glass: 'rgba(245, 232, 216, 0.035)',
+  glass: 'rgba(255, 255, 255, 0.04)',
 
-  text: '#F7F0E8',
-  dim: '#C0AFB2',
-  faint: '#AD989E',
-  accent: '#F2B88D',
-  accentSoft: '#F9D3B2',
+  text: '#FFFFFF',
+  dim: '#E2E2E5',
+  faint: '#C5C5CD',
+  accent: '#E83A4F',
+  accentSoft: '#CF253B',
+  accentDeep: '#AA1028',
+  onAccent: '#FFFFFF',
 
   teal: '#A5D6C5',
   tealSoft: '#C3E6D9',
@@ -39,10 +41,11 @@ export const C = {
 
 /** Translucent fills for glass surfaces, lightest at the top of the stack. */
 export const GLASS = {
-  card: ['#3A1822', '#291219'] as const,
-  raised: ['#481E29', '#35151F'] as const,
-  sheet: ['#3D1823', '#2A111A'] as const,
-  hero: ['#591F2B', '#39151F', '#241016'] as const,
+  card: ['#1A1A1D', '#101012'] as const,
+  raised: ['#261014', '#160E10'] as const,
+  sheet: ['#1C1215', '#0E0E10'] as const,
+  hero: ['#430B15', '#200A0F', '#0B0B0D'] as const,
+  primary: ['#CF253B', '#BD1730', '#A71027'] as const,
 };
 
 /**

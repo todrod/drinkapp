@@ -228,9 +228,9 @@ export function BuilderScreen({
                     state === 'done' && styles.stepDotDone,
                   ]}
                 >
-                  {state === 'done' ? <Icon name="check" size={11} color={C.ink} /> : null}
+                  {state === 'done' ? <Icon name="check" size={11} color={C.onAccent} /> : null}
                 </View>
-                <Text style={[styles.stepLabel, state !== 'todo' && { color: C.teal }]}>
+                <Text style={[styles.stepLabel, state !== 'todo' && { color: C.text }]}>
                   {i + 1}. {s.label}
                 </Text>
               </Pressable>
@@ -242,7 +242,7 @@ export function BuilderScreen({
       {done ? (
         <>
           <Panel style={{ gap: S.md }}>
-            <Label color={C.teal}>Your build</Label>
+            <Label color={C.text}>Your build</Label>
             <View style={styles.pickWrap}>
               {pickedRows.map((row) => (
                 <Chip key={row.id} label={row.name} small />
@@ -250,7 +250,7 @@ export function BuilderScreen({
             </View>
             <View style={{ flexDirection: 'row', gap: S.sm }}>
               <PrimaryButton label="SET MEASURES & SAVE" onPress={saveAsRecipe} style={{ flex: 1 }} />
-              <GhostButton label="Start over" onPress={reset} color={C.teal} style={{ flex: 1 }} />
+              <GhostButton label="Start over" onPress={reset} color={C.text} style={{ flex: 1 }} />
             </View>
           </Panel>
 
@@ -409,7 +409,7 @@ export function BuilderScreen({
 
 const styles = StyleSheet.create({
   scroll: { ...SCREEN, gap: 16 },
-  eyebrow: { color: C.accent, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
+  eyebrow: { color: C.text, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
 
   stepper: { flexDirection: 'row', alignItems: 'center', marginVertical: S.sm },
   stepItem: { alignItems: 'center', gap: 5 },
@@ -424,9 +424,9 @@ const styles = StyleSheet.create({
   },
   stepDotActive: {
     borderColor: C.teal,
-    backgroundColor: '#2A3932',
+    backgroundColor: C.raise,
   },
-  stepDotDone: { borderColor: C.teal, backgroundColor: C.teal },
+  stepDotDone: { borderColor: C.accent, backgroundColor: C.accentDeep },
 
   stepLabel: { color: C.dim, fontSize: 11, fontFamily: F.medium, letterSpacing: 0.4 },
   stepLine: { flex: 1, height: 1, backgroundColor: C.line2, marginHorizontal: 6, marginBottom: 14 },
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
 
   stepHeadRow: { flexDirection: 'row', alignItems: 'baseline', gap: S.sm },
   stepHeading: { color: C.text, fontSize: 15, fontFamily: F.medium, letterSpacing: 0.4 },
-  stepCount: { color: C.teal, fontSize: 12, fontWeight: '800' },
+  stepCount: { color: C.text, fontSize: 12, fontWeight: '800' },
 
   rail: { flexGrow: 0, marginHorizontal: -S.lg },
   railRow: { flexDirection: 'row', gap: 6, paddingHorizontal: S.lg },
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   },
   tileOn: {
     borderColor: C.teal,
-    backgroundColor: '#29372F',
+    backgroundColor: C.raise,
   },
   tilePlus: {
     position: 'absolute',
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     width: 62,
     height: 148,
     borderWidth: 1.5,
-    borderColor: 'rgba(140,232,224,0.4)',
+    borderColor: C.line2,
     borderTopWidth: 0,
     borderBottomLeftRadius: R.md,
     borderBottomRightRadius: R.md,

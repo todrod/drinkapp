@@ -164,7 +164,7 @@ export function Chip({
       style={[
         styles.chip,
         small ? { paddingVertical: 5, paddingHorizontal: 11 } : null,
-        active ? { backgroundColor: color, borderColor: 'transparent' } : null,
+        active ? { backgroundColor: C.accentDeep, borderColor: color } : null,
         active ? { borderRadius: R.pill } : null,
       ]}
     >
@@ -172,7 +172,7 @@ export function Chip({
         style={[
           styles.chipText,
           small ? { fontSize: 11.5 } : null,
-          active ? { color: C.ink, fontFamily: type.label.fontFamily } : null,
+          active ? { color: C.onAccent, fontFamily: type.label.fontFamily } : null,
         ]}
       >
         {label}
@@ -215,10 +215,10 @@ export function PrimaryButton({
       scaleTo={0.975}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={[styles.pillRadius, disabled ? { opacity: 0.4 } : null, style]}
+      style={[styles.pillRadius, disabled ? { opacity: 0.65 } : null, style]}
     >
       <LinearGradient
-        colors={[C.accentSoft, C.accent, '#E6A779']}
+        colors={GLASS.primary}
         locations={[0, 0.45, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -247,7 +247,7 @@ export function GhostButton({
   style?: StyleProp<ViewStyle>;
 }) {
   return (
-    <Press onPress={onPress} disabled={disabled} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} style={[styles.pillRadius, disabled ? { opacity: 0.4 } : null, style]}>
+    <Press onPress={onPress} disabled={disabled} scaleTo={0.975} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} style={[styles.pillRadius, disabled ? { opacity: 0.65 } : null, style]}>
       <View style={styles.ghost}>
         <View style={styles.edge} pointerEvents="none" />
         <Text style={[styles.ghostText, { color }]}>{label}</Text>
@@ -347,7 +347,7 @@ export function HaveCount({ have, total }: { have: number; total: number }) {
   return (
     <View style={styles.haveRow}>
       <View style={[styles.haveDot, { backgroundColor: color }]} />
-      <Text style={[styles.have, { color }]} numberOfLines={1}>
+      <Text style={[styles.have, { color: C.text }]} numberOfLines={1}>
         {have}/{total} ON HAND
       </Text>
     </View>
@@ -371,7 +371,7 @@ export function QuantityBar({
       <Pressable onPress={() => setOpen(true)} accessibilityRole="button"
         accessibilityLabel={`${name}: ${level}. Change remaining stock`} aria-expanded={open}
         style={{ minHeight: 44, justifyContent: 'center', gap: 7 }}>
-      <Text style={{ color, fontSize: 12, fontFamily: type.label.fontFamily }}>{level.toUpperCase()} · CHANGE</Text>
+      <Text style={{ color: C.text, fontSize: 12, fontFamily: type.label.fontFamily }}>{level.toUpperCase()} · CHANGE</Text>
       <View style={styles.track} pointerEvents="none">
         <LinearGradient
           colors={[color + '99', color]}
@@ -396,7 +396,7 @@ export function QuantityBar({
               accessibilityLabel={`Set ${name} remaining to ${l}`} aria-pressed={level === l} accessibilityState={{ selected: level === l }}
               onPress={() => { onChange(l); setOpen(false); }}
               style={{ minHeight: 48, padding: 12, borderRadius: R.sm, backgroundColor: l === level ? C.raise : C.ink2, flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Body>{l.charAt(0).toUpperCase() + l.slice(1)}</Body>{l === level ? <Body style={{ color: C.teal }}>✓</Body> : null}
+              <Body>{l.charAt(0).toUpperCase() + l.slice(1)}</Body>{l === level ? <Body style={{ color: C.text }}>✓</Body> : null}
             </Pressable>)}
             <GhostButton label="Cancel" onPress={() => setOpen(false)} />
           </View>
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.5)',
   },
-  primaryText: { color: '#2C1B17', ...type.h3, fontSize: 14, letterSpacing: 0.2, textAlign: 'center' },
+  primaryText: { color: C.onAccent, ...type.h3, fontSize: 14, letterSpacing: 0.2, textAlign: 'center' },
 
   ghost: {
     borderWidth: 1,

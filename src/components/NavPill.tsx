@@ -28,7 +28,7 @@ export function NavPill({ active, onChange }: { active: TabKey; onChange: (key: 
                 onChange(tab.key);
               }}>
               <View style={[styles.icon, selected && styles.iconOn]}>
-                <Icon name={TAB_ICON[tab.key]} size={22} color={selected ? C.accent : C.dim} />
+                <Icon name={TAB_ICON[tab.key]} size={22} color={selected ? C.onAccent : C.dim} />
               </View>
               <Text style={[styles.label, selected && styles.labelOn]}>{tab.label}</Text>
             </Pressable>
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 3 },
   icon: { width: 54, height: 32, borderRadius: R.pill, alignItems: 'center', justifyContent: 'center' },
-  iconOn: { backgroundColor: C.raise },
+  iconOn: { backgroundColor: C.accentDeep },
   label: { color: C.dim, fontFamily: F.medium, fontSize: 11 },
-  labelOn: { color: C.accent },
+  labelOn: { color: C.text, fontFamily: F.semibold },
 });

@@ -1,5 +1,20 @@
 # The Drink Shaker — project context
 
+## Red and black readability update · 22 October 2026
+
+The shared theme now uses near-black surfaces, deep red selected controls and
+white primary text. Secondary labels are brighter neutral grays; stock dots,
+ingredient illustrations and other small semantic graphics retain their colors.
+Use `GLASS.primary` or `C.accentDeep` with `C.onAccent` for filled controls so
+white button and chip labels remain readable. PWA and native backgrounds match
+the black theme; the service-worker cache version changed without touching
+device-local inventory or preferences.
+
+Verified: typecheck, all 54 tests, web and Android/iOS exports, plus 390 px browser
+checks of Discover, stocked cabinet and recipe details. Shared token contrast
+is at least 5.28:1 for white text on primary fills and 9.44:1 for secondary labels
+on panel/hero surfaces. Sample inventory checks used a separate localhost origin.
+
 ## Random recipe sources · 22 October 2026
 
 Discover's **Pick from** control switches **All recipes / My inventory** for

@@ -72,7 +72,7 @@ export function ShoppingList() {
             <Icon name="arrow-right" size={18} color={C.faint} />
             <View>
               <Text style={styles.projNext}>{projection.projected}</Text>
-              <Label color={C.teal}>after this list</Label>
+              <Label color={C.text}>after this list</Label>
             </View>
             <View style={{ flex: 1 }} />
             <View style={styles.gainPill}>
@@ -137,7 +137,7 @@ export function ShoppingList() {
           {bought > 0 ? (
             <GhostButton
               label={`Move ${bought} ticked ${pluralize(bought, 'item')} to the cabinet`}
-              color={C.teal}
+              color={C.text}
               onPress={() => {
                 shopping.filter((s) => s.done).forEach((s) => buyShoppingItem(s.id));
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -251,7 +251,7 @@ function Row({
         accessibilityLabel={`${item.name}, ${item.done ? 'bought' : 'not bought'}`}
         style={[styles.check, item.done ? styles.checkOn : null]}
       >
-        {item.done ? <Icon name="check" size={13} color={C.ink} /> : null}
+        {item.done ? <Icon name="check" size={13} color={C.onAccent} /> : null}
       </Pressable>
 
       {cat ? (
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   proj: { gap: S.sm },
   projRow: { flexDirection: 'row', alignItems: 'center', gap: S.md },
   projNow: { color: C.text, fontFamily: type.h1.fontFamily, fontSize: 26, lineHeight: 29 },
-  projNext: { color: C.teal, fontFamily: type.h1.fontFamily, fontSize: 26, lineHeight: 29 },
+  projNext: { color: C.text, fontFamily: type.h1.fontFamily, fontSize: 26, lineHeight: 29 },
   gainPill: {
     borderWidth: 1,
     borderColor: C.teal,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 11,
   },
-  gainText: { color: C.teal, ...type.label, fontSize: 12 },
+  gainText: { color: C.text, ...type.label, fontSize: 12 },
   bar: { flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: S.md },
   barNow: { backgroundColor: C.tealDeep },
   barGain: {},
@@ -340,9 +340,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkOn: { backgroundColor: C.teal, borderColor: 'transparent' },
+  checkOn: { backgroundColor: C.accentDeep, borderColor: C.accent },
   struck: { textDecorationLine: 'line-through', color: C.dim },
-  unlocks: { color: C.teal, ...type.label, fontSize: 9.5, letterSpacing: 0.9, marginTop: 2 },
+  unlocks: { color: C.text, ...type.label, fontSize: 9.5, letterSpacing: 0.9, marginTop: 2 },
   gotIt: {
     borderWidth: 1,
     borderColor: C.line2,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
   },
-  gotItText: { color: C.teal, ...type.label, fontSize: 9 },
+  gotItText: { color: C.text, ...type.label, fontSize: 9 },
 
   sug: { borderRadius: R.md },
   sugInner: {

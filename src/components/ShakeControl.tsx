@@ -25,7 +25,7 @@ export function ShakeControl({ status, onToggle }: { status: ShakeStatus; onTogg
           accessibilityLabel={active ? 'Shake is on. Turn off phone shake' : label}
           accessibilityState={{ disabled: status === 'requesting' }} style={styles.button}>
           <Icon name="phone-shake" size={18} color={active ? C.teal : C.accent} />
-          <Text style={[styles.label, { color: active ? C.teal : C.accent }]}>{label}</Text>
+          <Text style={[styles.label, { color: C.text }]}>{label}</Text>
         </Pressable>
       ) : null}
       <Text accessibilityLiveRegion="polite" style={styles.hint}>{help}</Text>

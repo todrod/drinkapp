@@ -144,7 +144,7 @@ export function RecipesScreen({ onOpen, onNew }: { onOpen: (r: DrinkRecipe) => v
           <Pressable accessibilityRole="link" accessibilityLabel="Open collection research source"
             onPress={() => { Linking.openURL(filter === 'trending' ? TREND_SOURCE : RATING_SOURCE).catch(() => {}); }}
             style={{ minHeight: 44, justifyContent: 'center' }}>
-            <Text style={{ color: C.accent, fontFamily: F.regular, fontSize: 12 }}>Source · checked {CURATION_DATE} · saved selection</Text>
+            <Text style={{ color: C.text, fontFamily: F.regular, fontSize: 12 }}>Source · checked {CURATION_DATE} · saved selection</Text>
           </Pressable>
         </View> : filter === 'all-time' ? <Dim style={{ marginTop: 12 }}>Familiar favorites, selected for this library. Save your own picks under My favorites.</Dim> : null}
 
@@ -227,7 +227,7 @@ export function RecipesScreen({ onOpen, onNew }: { onOpen: (r: DrinkRecipe) => v
                         {r.name}
                       </Text>
                       <Stars value={r.rating} size={11} />
-                      {isServingReady(r) ? <HaveCount have={have} total={total} /> : <Dim style={{ color: C.amber }}>Draft recipe</Dim>}
+                      {isServingReady(r) ? <HaveCount have={have} total={total} /> : <Dim style={{ color: C.text }}>Draft recipe</Dim>}
                       <Dim>{isServingReady(r) ? r.method.charAt(0).toUpperCase() + r.method.slice(1) + ' · View recipe' : 'Draft · add measures and steps'}</Dim>
                     </View>
                   </Press>
@@ -258,7 +258,7 @@ export function RecipesScreen({ onOpen, onNew }: { onOpen: (r: DrinkRecipe) => v
 const styles = StyleSheet.create({
   scroll: { ...SCREEN },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md },
-  eyebrow: { color: C.accent, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
+  eyebrow: { color: C.text, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
   newButton: { width: 44, height: 44, borderRadius: 15, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line },
 
   search: {

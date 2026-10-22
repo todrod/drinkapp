@@ -19,14 +19,14 @@ export function RecipeDetail({ recipe, onClose, onServe, onEdit, onParty, onShop
   const status = alcoholStatus(recipe);
   const restricted = prefs.zeroProofMode && status !== 'none';
   return <Sheet title={recipe.name} eyebrow={`${recipe.method} · ${recipe.glass?.replace('gl-', '') ?? 'your favorite glass'}`} onClose={onClose}>
-    <Dim style={{ color: status === 'none' ? C.teal : C.dim }}>{status === 'none' ? 'Alcohol-free' : status === 'contains' ? 'Contains alcohol' : 'Alcohol content not confirmed'}{!ready ? ' · Draft' : ''}</Dim>
+    <Dim style={{ color: status === 'none' ? C.text : C.dim }}>{status === 'none' ? 'Alcohol-free' : status === 'contains' ? 'Contains alcohol' : 'Alcohol content not confirmed'}{!ready ? ' · Draft' : ''}</Dim>
     <Stars value={recipe.rating} size={20} onRate={(n) => rateRecipe(recipe.id, n)} />
     <RecipeSources recipe={recipe} />
-    {!ready ? <Dim style={{ color: C.amber }}>{recipeIssues(recipe).join(' ')}</Dim> : null}
-    {restricted ? <Dim style={{ color: C.amber }}>Saved in your notebook. Zero-proof mode excludes this recipe from serving and party menus.</Dim> : null}
-    {match.substitutions.map((s, n) => <Body key={n} style={{ color: C.amber }}>On hand: {s.used} for {s.wanted}. Serving measures show the original recipe.</Body>)}
+    {!ready ? <Dim style={{ color: C.text }}>{recipeIssues(recipe).join(' ')}</Dim> : null}
+    {restricted ? <Dim style={{ color: C.text }}>Saved in your notebook. Zero-proof mode excludes this recipe from serving and party menus.</Dim> : null}
+    {match.substitutions.map((s, n) => <Body key={n} style={{ color: C.text }}>On hand: {s.used} for {s.wanted}. Serving measures show the original recipe.</Body>)}
     <Label>Ingredients · one serving</Label>
-    {recipe.ingredients.map((ing, n) => <View key={n} style={{ gap: 3 }}><Body>{formatIngredient(ing)}{ing.isOptional ? ' (optional)' : ''}</Body>{match.missing.includes(ing.displayName) ? <Dim style={{ color: C.amber }}>Missing from your bar</Dim> : null}</View>)}
+    {recipe.ingredients.map((ing, n) => <View key={n} style={{ gap: 3 }}><Body>{formatIngredient(ing)}{ing.isOptional ? ' (optional)' : ''}</Body>{match.missing.includes(ing.displayName) ? <Dim style={{ color: C.text }}>Missing from your bar</Dim> : null}</View>)}
     {match.missing.length ? <GhostButton label="Add missing ingredients to shopping list" onPress={() => {
       recipe.ingredients.filter((i) => match.missing.includes(i.displayName)).forEach((i) => addToShopping(i.catalogItemId, i.displayName));
       onShopping();
@@ -39,6 +39,6 @@ export function RecipeDetail({ recipe, onClose, onServe, onEdit, onParty, onShop
       <GhostButton label={recipe.isFavorite ? 'Favorited' : 'Favorite'} onPress={() => toggleFavorite(recipe.id)} style={{ flex: 1 }} />
       <GhostButton label={recipe.origin === 'user' ? 'Edit recipe' : 'Make my own copy'} onPress={() => onEdit(recipe)} style={{ flex: 1 }} />
     </View>
-    {recipe.origin === 'user' ? <GhostButton label="Delete recipe" color={C.rose} onPress={() => { removeRecipe(recipe.id); onClose(); }} /> : null}
+    {recipe.origin === 'user' ? <GhostButton label="Delete recipe" color={C.text} onPress={() => { removeRecipe(recipe.id); onClose(); }} /> : null}
   </Sheet>;
 }

@@ -52,15 +52,15 @@ export function ServingView({ recipe, servings = 1, unit = 'ml', guest = false, 
   return <Sheet title={recipe.name} eyebrow={`Serving view · ${servings === 1 ? 'one glass' : `${servings} planned servings`}`} onClose={onClose} closeLabel={guest ? 'Back to menu' : 'Done'}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'center' }}>
       <Dim>{recipe.method.toUpperCase()} · {recipe.glass?.replace('gl-', '') ?? 'your favorite glass'}</Dim>
-      <Pressable accessibilityRole="switch" accessibilityLabel="Keep screen awake" aria-checked={awake} accessibilityState={{ checked: awake }} onPress={toggleAwake} style={{ minHeight: 44, padding: 10 }}><Body style={{ color: awake ? C.teal : C.accent }}>{awake ? 'Screen awake ✓' : 'Keep screen awake'}</Body></Pressable>
+      <Pressable accessibilityRole="switch" accessibilityLabel="Keep screen awake" aria-checked={awake} accessibilityState={{ checked: awake }} onPress={toggleAwake} style={{ minHeight: 44, padding: 10 }}><Body style={{ color: C.text }}>{awake ? 'Screen awake ✓' : 'Keep screen awake'}</Body></Pressable>
     </View>
     {notice ? <Dim accessibilityLiveRegion="polite">{notice}</Dim> : null}
-    <Dim style={{ color: alcohol === 'none' ? C.teal : C.dim }}>{alcohol === 'none' ? 'Alcohol-free' : alcohol === 'contains' ? 'Contains alcohol' : 'Alcohol content not confirmed'}</Dim>
+    <Dim style={{ color: alcohol === 'none' ? C.text : C.dim }}>{alcohol === 'none' ? 'Alcohol-free' : alcohol === 'contains' ? 'Contains alcohol' : 'Alcohol content not confirmed'}</Dim>
     <Label>{servings > 1 ? 'Total ingredients · recipe as written' : 'Ingredients · recipe as written'}</Label>
     {lines.map((line) => <Text key={line.key} style={{ color: C.text, fontFamily: F.medium, fontSize: 21, lineHeight: 29 }}>{batchLineLabel(line)}</Text>)}
     {servings > 1 ? <Panel style={{ gap: 10 }}><Label>Prep & service</Label><Body>{prepAdvice(recipe)}</Body><Dim>The steps below describe one glass. Use one portion of the batch per glass; any measurements written inside the steps are for the original recipe.</Dim></Panel> : null}
     <Panel raised style={{ gap: 18 }}>
-      <Label color={C.teal}>Step {step + 1} of {recipe.steps.length}</Label>
+      <Label color={C.text}>Step {step + 1} of {recipe.steps.length}</Label>
       <Text accessibilityLiveRegion="polite" style={{ fontSize: 25, lineHeight: 35, fontFamily: F.medium, color: C.text }}>{recipe.steps[step]}</Text>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         {step > 0 ? <GhostButton label="Previous step" onPress={() => setStep((s) => s - 1)} style={{ flex: 1 }} /> : null}
@@ -69,7 +69,7 @@ export function ServingView({ recipe, servings = 1, unit = 'ml', guest = false, 
     </Panel>
     {recipe.garnish ? <Body>Finish · {recipe.garnish}{servings > 1 ? ' · for each glass' : ''}</Body> : null}
     {guest ? <GhostButton label="Back to the menu" onPress={onClose} /> : completed ? <Panel accent={C.teal} style={{ gap: 12 }}>
-      <Body accessibilityLiveRegion="polite" style={{ color: C.teal }}>✓ Marked as made. Enjoy your gathering.</Body>
+      <Body accessibilityLiveRegion="polite" style={{ color: C.text }}>✓ Marked as made. Enjoy your gathering.</Body>
       <GhostButton label="Undo mark as made" onPress={() => {
         if (!completionGuard.current) return;
         completionGuard.current = false; undoMade(recipe.id, previousLastMadeAt.current); setCompleted(false);

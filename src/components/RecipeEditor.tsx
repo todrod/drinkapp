@@ -29,7 +29,7 @@ export function RecipeEditor({ recipe, onClose, onSave }: { recipe: DrinkRecipe;
   return <Sheet title={recipe.name ? 'Edit recipe' : 'New recipe'} eyebrow="Your recipe notebook" onClose={onClose} closeLabel="Cancel">
     <Label>Name</Label><TextInput autoFocus={!recipe.name} value={draft.name} maxLength={100} accessibilityLabel="Recipe name" placeholder="What do you call it?" placeholderTextColor={C.faint} style={styles.input} onChangeText={(name) => setDraft({ ...draft, name })} />
     <Label>Method</Label><View style={styles.wrap}>{(['build', 'shake', 'stir', 'blend', 'muddle'] as Method[]).map((method) => <Chip key={method} label={method} active={draft.method === method} onPress={() => setDraft({ ...draft, method })} />)}</View>
-    {draft.method === 'shake' && draft.ingredients.some(isCarbonated) ? <Dim style={{ color: C.amber }}>Shake only the still ingredients. Write a separate step to add bubbles after shaking.</Dim> : null}
+    {draft.method === 'shake' && draft.ingredients.some(isCarbonated) ? <Dim style={{ color: C.text }}>Shake only the still ingredients. Write a separate step to add bubbles after shaking.</Dim> : null}
     <Label>Ingredients & measures</Label>
     {draft.ingredients.map((ing, index) => <Panel key={index} style={{ gap: 10 }}>
       <View style={styles.row}><Body style={{ flex: 1 }}>{ing.displayName}</Body><GhostButton label="Remove" accessibilityLabel={`Remove ${ing.displayName}`} onPress={() => {
@@ -58,8 +58,8 @@ export function RecipeEditor({ recipe, onClose, onSave }: { recipe: DrinkRecipe;
     <Label>Glass & garnish</Label><TextInput value={draft.glass?.replace('gl-', '') ?? ''} onChangeText={(glass) => setDraft({ ...draft, glass: glass || null })} accessibilityLabel="Serving glass" placeholder="Glass (optional)" placeholderTextColor={C.faint} style={styles.input} />
     <TextInput value={draft.garnish ?? ''} onChangeText={(garnish) => setDraft({ ...draft, garnish: garnish || null })} accessibilityLabel="Garnish" placeholder="Garnish (optional)" placeholderTextColor={C.faint} style={styles.input} />
     <View accessibilityLiveRegion="polite" style={{ gap: 8 }}>
-      {invalidAmount ? <Body style={{ color: C.rose }}>Enter a positive number for each filled amount.</Body> : null}
-      {issues.length ? <Dim>Draft · {issues.join(' ')} Drafts stay in your notebook until ready to serve.</Dim> : <Dim style={{ color: C.teal }}>Ready for serving and party planning.</Dim>}
+      {invalidAmount ? <Body style={{ color: C.text }}>Enter a positive number for each filled amount.</Body> : null}
+      {issues.length ? <Dim>Draft · {issues.join(' ')} Drafts stay in your notebook until ready to serve.</Dim> : <Dim style={{ color: C.text }}>Ready for serving and party planning.</Dim>}
       <Dim>{isAlcoholFree(resolved) ? 'Confirmed alcohol-free ingredients.' : 'Contains alcohol or an ingredient with unknown alcohol content.'}</Dim>
     </View>
     <PrimaryButton label={issues.length ? 'Save draft' : 'Save recipe'} disabled={!draft.name.trim() || invalidAmount} onPress={() => onSave({ ...resolved, name: draft.name.trim(), isZeroProof: isAlcoholFree(resolved) })} />

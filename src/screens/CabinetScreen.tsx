@@ -117,7 +117,7 @@ export function CabinetScreen({
         </View>
 
         <Pressable accessibilityRole="button" accessibilityLabel="My local bars and backups" onPress={onLocalBars} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 16, borderWidth: 1, borderColor: C.teal + '66', borderRadius: R.md, backgroundColor: C.panel, marginTop: 16 }}>
-          <View style={{ flex: 1, gap: 4 }}><Body style={{ color: C.teal }}>Saved on this device</Body><Dim>My local bars · switch · backup & restore</Dim></View><Body style={{ color: C.teal }}>→</Body>
+          <View style={{ flex: 1, gap: 4 }}><Body style={{ color: C.text }}>Saved on this device</Body><Dim>My local bars · switch · backup & restore</Dim></View><Body style={{ color: C.text }}>→</Body>
         </Pressable>
 
         <View style={styles.segment}>
@@ -155,7 +155,7 @@ export function CabinetScreen({
             accessibilityRole="button"
             style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.75 }]}
           >
-            <Icon name="plus" size={16} color={C.ink} />
+            <Icon name="plus" size={16} color={C.onAccent} />
             <Text style={styles.addBtnText}>Add ingredient</Text>
           </Pressable>
         </View>
@@ -210,7 +210,7 @@ export function CabinetScreen({
                     style={styles.sectionHead}
                   >
                     <Icon name={CATEGORY_GLYPH[cat]} size={15} color={CATEGORY_COLOR[cat]} />
-                    <Text style={[styles.sectionTitle, { color: CATEGORY_COLOR[cat] }]}>
+                    <Text style={[styles.sectionTitle, { color: C.text }]}>
                       {CATEGORY_LABEL[cat]}
                     </Text>
                     <Text style={styles.sectionCount}>({items.length})</Text>
@@ -380,7 +380,7 @@ function ItemCard({
       <Text style={styles.cardName} numberOfLines={2}>
         {item.name}
       </Text>
-      <Text style={[styles.cardMeta, item.level === 'low' && { color: C.amber }]}>{({ full: 'Well stocked', half: 'Half remaining', low: 'Running low', out: 'Time to restock' })[item.level]}</Text>
+      <Text style={[styles.cardMeta, item.level === 'low' && { color: C.text }]}>{({ full: 'Well stocked', half: 'Half remaining', low: 'Running low', out: 'Time to restock' })[item.level]}</Text>
       <QuantityBar name={item.name} level={item.level} onChange={onLevel} />
     </LinearGradient>
   );
@@ -511,7 +511,7 @@ function AddSheet({
                 />
                 <GhostButton
                   label={`Add as ${CATEGORY_LABEL[cat ?? 'beverage'].toLowerCase()}`}
-                  color={C.teal}
+                  color={C.text}
                   onPress={() => {
                     if (!customName.trim()) return;
                     onAddCustom(customName, cat ?? 'beverage');
@@ -531,7 +531,7 @@ function AddSheet({
 const styles = StyleSheet.create({
   scroll: { ...SCREEN },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: S.md, marginBottom: 24 },
-  eyebrow: { color: C.accent, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
+  eyebrow: { color: C.text, fontFamily: F.medium, fontSize: 10, letterSpacing: 2 },
   settingsButton: { width: 44, height: 44, borderRadius: 15, backgroundColor: C.panel, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line },
 
 
@@ -545,14 +545,14 @@ const styles = StyleSheet.create({
   },
   countChipText: { color: C.dim, fontSize: 10.5, fontWeight: '800', letterSpacing: 1 },
   addBtn: {
-    backgroundColor: C.accent,
+    backgroundColor: C.accentDeep,
     borderRadius: R.pill,
     minHeight: 44,
     paddingVertical: 10,
     paddingHorizontal: 15,
     flexDirection: 'row', alignItems: 'center', gap: 6,
   },
-  addBtnText: { color: C.ink, fontSize: 12, fontFamily: F.semibold },
+  addBtnText: { color: C.onAccent, fontSize: 12, fontFamily: F.semibold },
 
   segment: {
     flexDirection: 'row',
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   segmentTab: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: R.pill },
   segmentTabOn: { backgroundColor: C.raise },
   segmentText: { color: C.dim, fontSize: 13, fontFamily: F.medium },
-  segmentTextOn: { color: C.accent },
+  segmentTextOn: { color: C.text },
   want: { padding: 4, marginRight: 2 },
   search: {
     backgroundColor: C.ink2,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.line2,
   },
-  undoText: { color: C.teal, fontWeight: '800', fontSize: 12, letterSpacing: 1 },
+  undoText: { color: C.text, fontWeight: '800', fontSize: 12, letterSpacing: 1 },
 
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   sheet: {
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: S.sm,
   },
-  close: { color: C.teal, fontWeight: '800', fontSize: 14 },
+  close: { color: C.text, fontWeight: '800', fontSize: 14 },
 
   settingRow: {
     flexDirection: 'row',
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.line,
   },
   rowIcon: { width: 34, alignItems: 'center' },
-  add: { color: C.teal, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
+  add: { color: C.text, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
   customBox: {
     marginTop: S.xl,
     marginBottom: S.xxl,

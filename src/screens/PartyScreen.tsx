@@ -22,7 +22,7 @@ function ServingCount({ name, text, onText, onChange }: { name: string; text: st
       onText(next); const n = Number(next); const ok = /^\d+$/.test(next) && validServings(n);
       if (ok) onChange(n);
     }} keyboardType="number-pad" maxLength={4} accessibilityLabel={`Planned servings for ${name}`} aria-invalid={!valid} style={[styles.input, { width: 76 }]} /><Dim>planned servings</Dim></View>
-    {!valid ? <Dim style={{ color: C.rose }}>Use a whole number from 1 to 100.</Dim> : null}
+    {!valid ? <Dim style={{ color: C.text }}>Use a whole number from 1 to 100.</Dim> : null}
   </View>;
 }
 
@@ -73,19 +73,19 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
   const remove = (id: string) => setParty({ ...party, entries: party.entries.filter((e) => e.recipeId !== id) });
   return <Sheet title="Your party, on the menu" eyebrow="The host’s corner" onClose={onClose}>
     <Dim>Choose a few signatures, include an alcohol-free option, then prep with a plan.</Dim>
-    {prefs.zeroProofMode ? <Body style={{ color: C.teal }}>Zero-proof mode · showing alcohol-free recipes.</Body> : null}
+    {prefs.zeroProofMode ? <Body style={{ color: C.text }}>Zero-proof mode · showing alcohol-free recipes.</Body> : null}
     <View style={styles.tabs}>{([['menu', '1 · Menu'], ['batch', '2 · Batch & shop'], ['guest', '3 · Guest view']] as const).map(([key, label]) => <Chip key={key} label={label} active={mode === key} onPress={() => { setMode(key); setNotice(''); }} />)}</View>
     <Panel raised style={{ gap: 10 }}>
       <Label>{selected.length} signatures · {zeroCount} alcohol-free</Label>
       <TextInput accessibilityLabel="Party name" value={party.title} onChangeText={(title) => setParty({ ...party, title })} maxLength={80} placeholder="Name your gathering" placeholderTextColor={C.faint} style={styles.titleInput} />
-      {!zeroCount && selected.length ? <Dim style={{ color: C.amber }}>Make everyone welcome · add an alcohol-free option.</Dim> : <Dim>Keep it easy to choose: 3–5 drinks is a good place to start.</Dim>}
+      {!zeroCount && selected.length ? <Dim style={{ color: C.text }}>Make everyone welcome · add an alcohol-free option.</Dim> : <Dim>Keep it easy to choose: 3–5 drinks is a good place to start.</Dim>}
     </Panel>
     {unavailable.map((e) => <Panel key={e.recipeId} style={{ gap: 8 }}><Dim>{byId.get(e.recipeId)?.name ?? 'Deleted recipe'} · {byId.has(e.recipeId) ? 'hidden by zero-proof mode or incomplete' : 'no longer in your recipe book'}.</Dim><GhostButton label={`Remove ${byId.get(e.recipeId)?.name ?? 'unavailable recipe'} from menu`} onPress={() => remove(e.recipeId)} /></Panel>)}
     {mode === 'menu' ? <>
       {selected.map(({ recipe, servings }) => <Panel key={recipe.id} style={{ gap: 12 }}>
         <View style={styles.row}>
           <CocktailArt color={accentForRecipe(recipe)} glass={recipe.glass} size={56} />
-          <View style={{ flex: 1 }}><Heading>{recipe.name}</Heading><Dim style={isAlcoholFree(recipe) ? { color: C.teal } : undefined}>{isAlcoholFree(recipe) ? 'Alcohol-free' : alcoholStatus(recipe) === 'contains' ? 'Contains alcohol' : 'Alcohol content unconfirmed'} · {recipe.method}</Dim></View>
+          <View style={{ flex: 1 }}><Heading>{recipe.name}</Heading><Dim style={isAlcoholFree(recipe) ? { color: C.text } : undefined}>{isAlcoholFree(recipe) ? 'Alcohol-free' : alcoholStatus(recipe) === 'contains' ? 'Contains alcohol' : 'Alcohol content unconfirmed'} · {recipe.method}</Dim></View>
           <Pressable onPress={() => remove(recipe.id)} accessibilityRole="button" accessibilityLabel={`Remove ${recipe.name} from menu`} style={styles.remove}><Body>×</Body></Pressable>
         </View>
         <ServingCount name={recipe.name} text={countDrafts[recipe.id] ?? String(servings)} onText={(text) => setCountDrafts((prev) => ({ ...prev, [recipe.id]: text }))} onChange={(n) => setParty({ ...party, entries: party.entries.map((e) => e.recipeId === recipe.id ? { ...e, servings: n } : e) })} />
@@ -100,18 +100,18 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
       </View>
       <TextInput value={query} onChangeText={(text) => { setQuery(text); setLimit(8); }} accessibilityLabel="Search drinks for the party menu" placeholder="Search a drink, ingredient or mood" placeholderTextColor={C.faint} style={styles.input} />
       {party.entries.length >= MAX_MENU ? <Dim>Your menu has six drinks. Remove one before adding another.</Dim> : candidates.slice(0, limit).map((r) => <Pressable key={r.id} accessibilityRole="button" accessibilityLabel={`Add ${r.name} to party menu`} style={styles.candidate} onPress={() => { addToParty(r.id); setNotice(`${r.name} added to your menu.`); }}>
-        <View style={{ flex: 1, gap: 4 }}><Body>{r.name}</Body><Dim style={isAlcoholFree(r) ? { color: C.teal } : undefined}>{isAlcoholFree(r) ? 'Alcohol-free' : r.method} · {matchRecipe(r, owned, prefs.allowSubstitutes).ok ? 'from your bar' : 'plan a shop'}</Dim></View><Body style={{ color: C.accent }}>＋</Body>
+        <View style={{ flex: 1, gap: 4 }}><Body>{r.name}</Body><Dim style={isAlcoholFree(r) ? { color: C.text } : undefined}>{isAlcoholFree(r) ? 'Alcohol-free' : r.method} · {matchRecipe(r, owned, prefs.allowSubstitutes).ok ? 'from your bar' : 'plan a shop'}</Dim></View><Body style={{ color: C.text }}>＋</Body>
       </Pressable>)}
       {!candidates.length && party.entries.length < MAX_MENU ? <Dim>No complete recipes match. Try All recipes or another search.</Dim> : null}
       {candidates.length > limit && party.entries.length < MAX_MENU ? <GhostButton label="Show more drinks" onPress={() => setLimit((n) => n + 12)} /> : null}
       {selected.length ? <PrimaryButton label="Calculate batches & shopping" disabled={badCounts} onPress={() => setMode('batch')} /> : null}
     </> : mode === 'batch' ? <>
-      {!selected.length ? <PrimaryButton label="Choose the menu first" onPress={() => setMode('menu')} /> : badCounts ? <><Body style={{ color: C.rose }}>Fix the serving counts before calculating.</Body><PrimaryButton label="Back to menu" onPress={() => setMode('menu')} /></> : <>
+      {!selected.length ? <PrimaryButton label="Choose the menu first" onPress={() => setMode('menu')} /> : badCounts ? <><Body style={{ color: C.text }}>Fix the serving counts before calculating.</Body><PrimaryButton label="Back to menu" onPress={() => setMode('menu')} /></> : <>
         <View style={styles.tabs}><Chip label="Milliliters" active={party.unit === 'ml'} onPress={() => setParty({ ...party, unit: 'ml' })} /><Chip label="US fluid ounces" active={party.unit === 'oz'} onPress={() => setParty({ ...party, unit: 'oz' })} /></View>
         <Dim>Totals use each recipe as written, before dilution. Substitutions are not applied to batches. A “full” bottle is not a measured quantity.</Dim>
         {selected.map(({ recipe, servings }) => {
           const lines = batchRecipe(recipe, servings, party.unit);
-          return <Panel key={recipe.id} style={{ gap: 12 }}><Heading>{recipe.name}</Heading><Label color={C.teal}>{servings} planned servings</Label>
+          return <Panel key={recipe.id} style={{ gap: 12 }}><Heading>{recipe.name}</Heading><Label color={C.text}>{servings} planned servings</Label>
             <Body>{prepAdvice(recipe)}</Body>
             <Label>Measure ahead · still ingredients</Label>{lines.filter((l) => !l.atServing).map((l) => <Body key={l.key}>{batchLineLabel(l)}</Body>)}
             {!lines.some((l) => !l.atServing) ? <Dim>Prepare this drink fresh at serving.</Dim> : null}
@@ -121,7 +121,7 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
           </Panel>;
         })}
         <Heading>Your combined shopping quantities</Heading><Dim>Check the total against what’s left in your bottles. Optional items are separate; ice and top-ups stay per glass.</Dim>
-        {totals.map((l) => <View key={l.key} style={{ gap: 4 }}><Body>{batchLineLabel(l)}</Body><Dim style={{ color: missing.includes(l) ? C.amber : C.dim }}>{l.optional ? 'Optional · check on hand' : missing.includes(l) ? 'Missing from your bar' : 'On hand · verify enough remains'}</Dim></View>)}
+        {totals.map((l) => <View key={l.key} style={{ gap: 4 }}><Body>{batchLineLabel(l)}</Body><Dim style={{ color: missing.includes(l) ? C.text : C.dim }}>{l.optional ? 'Optional · check on hand' : missing.includes(l) ? 'Missing from your bar' : 'On hand · verify enough remains'}</Dim></View>)}
         <PrimaryButton label={missing.length ? 'Add missing ingredients to shopping list' : 'Open shopping list'} onPress={() => {
           missing.forEach((l) => addToShopping(l.catalogItemId, l.name)); onShopping();
         }} />
@@ -130,9 +130,9 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
     </> : <>
       <Heading>The guest experience</Heading><Dim>A read-only snapshot of the drinks you selected. Your cabinet, counts, ratings and history stay private. Share a new link when the menu changes.</Dim>
       {!selected.length ? <PrimaryButton label="Choose drinks first" onPress={() => setMode('menu')} /> : <>
-        <Panel style={{ gap: 16 }}><Label color={C.accent}>{party.title.trim() || 'Tonight’s drinks'}</Label>{selected.map(({ recipe }) => <View key={recipe.id} style={{ gap: 5 }}><Heading>{recipe.name}</Heading><Dim>{isAlcoholFree(recipe) ? 'Alcohol-free · ' : ''}{recipe.ingredients.filter((i) => i.role !== 'ice' && i.role !== 'garnish').map((i) => i.displayName).join(' · ')}</Dim></View>)}</Panel>
-        {linkError ? <Body style={{ color: C.rose }}>{linkError}</Body> : <>
-          {localAddress ? <Dim style={{ color: C.amber }}>This preview address works on this computer. For guests’ phones, use the reachable web address running this version of the app.</Dim> : <Dim>Scan to see tonight’s drinks. Guests can read the recipes without changing your bar.</Dim>}
+        <Panel style={{ gap: 16 }}><Label color={C.text}>{party.title.trim() || 'Tonight’s drinks'}</Label>{selected.map(({ recipe }) => <View key={recipe.id} style={{ gap: 5 }}><Heading>{recipe.name}</Heading><Dim>{isAlcoholFree(recipe) ? 'Alcohol-free · ' : ''}{recipe.ingredients.filter((i) => i.role !== 'ice' && i.role !== 'garnish').map((i) => i.displayName).join(' · ')}</Dim></View>)}</Panel>
+        {linkError ? <Body style={{ color: C.text }}>{linkError}</Body> : <>
+          {localAddress ? <Dim style={{ color: C.text }}>This preview address works on this computer. For guests’ phones, use the reachable web address running this version of the app.</Dim> : <Dim>Scan to see tonight’s drinks. Guests can read the recipes without changing your bar.</Dim>}
           {link.length <= 1800 ? <MenuQR value={link} /> : <Dim>This custom menu is too detailed for a clear QR code. Share the link instead.</Dim>}
           <PrimaryButton label="Copy guest menu link" onPress={copyLink} />
           <GhostButton label="Share guest menu link" onPress={() => { Share.share({ message: link, title: party.title }).catch(() => setNotice('Sharing is unavailable here. Copy the link instead.')); }} />
@@ -143,7 +143,7 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
         {showAddress ? <TextInput value={shareAddress} onChangeText={setShareAddress} autoCapitalize="none" autoCorrect={false} accessibilityLabel="Guest web address" placeholder="https://your-app-address/" placeholderTextColor={C.faint} style={styles.input} /> : null}
       </>}
     </>}
-    {notice ? <Body accessibilityLiveRegion="polite" style={{ color: C.teal }}>{notice}</Body> : null}
+    {notice ? <Body accessibilityLiveRegion="polite" style={{ color: C.text }}>{notice}</Body> : null}
   </Sheet>;
 }
 const styles = StyleSheet.create({

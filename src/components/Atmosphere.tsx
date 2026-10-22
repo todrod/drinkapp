@@ -11,7 +11,7 @@ export function Atmosphere() {
       <Svg width={width} height={height}>
         <Defs>
           <RadialGradient id="room-glow">
-            <Stop offset="0" stopColor={C.ambient} stopOpacity={0.15} />
+            <Stop offset="0" stopColor={C.ambient} stopOpacity={0.10} />
             <Stop offset="1" stopColor={C.ambient} stopOpacity={0} />
           </RadialGradient>
         </Defs>

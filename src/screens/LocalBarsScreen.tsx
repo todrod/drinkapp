@@ -28,19 +28,19 @@ export function LocalBarsScreen({ onClose }: { onClose: () => void }) {
     try { await fn(); } catch (e) { if (mounted.current) setError(e instanceof Error ? e.message : 'That action could not be completed. Please try again.'); }
     finally { running.current = false; if (mounted.current) setBusy(false); }
   };
-  return <Sheet title="Your bars, on your device" eyebrow="Personal by default" onClose={onClose} status={error ? <Body accessibilityRole="alert" accessibilityLiveRegion="assertive" style={{ color: C.rose }}>{error}</Body> : message ? <Body accessibilityLiveRegion="polite" style={{ color: C.teal }}>{message}</Body> : undefined}>
+  return <Sheet title="Your bars, on your device" eyebrow="Personal by default" onClose={onClose} status={error ? <Body accessibilityRole="alert" accessibilityLiveRegion="assertive" style={{ color: C.text }}>{error}</Body> : message ? <Body accessibilityLiveRegion="polite" style={{ color: C.text }}>{message}</Body> : undefined}>
     <Panel raised style={{ gap: 12 }}>
-      <Label color={C.teal}>{LOCAL_STORAGE_KIND === 'phone' ? 'Saved on this phone' : 'Saved in this browser'}</Label>
+      <Label color={C.text}>{LOCAL_STORAGE_KIND === 'phone' ? 'Saved on this phone' : 'Saved in this browser'}</Label>
       <Heading>{profile.name}</Heading><Body>{kit.length} stock items · {recipes.length} recipes · {shopping.length} shopping items</Body>
       <Dim>Your inventory, favorites, recipes and party plans are kept locally. Drink Shaker doesn’t upload them to a storage server or require an account.</Dim>
     </Panel>
-    {storageError ? <Panel accent={C.amber} style={{ gap: 12 }}><Body style={{ color: C.amber }}>{storageError}</Body><PrimaryButton label="Retry saving on this device" disabled={busy} onPress={() => action(() => { retryDeviceSave(); setMessage('Your current bar was saved on this device.'); })} /></Panel> : null}
+    {storageError ? <Panel accent={C.amber} style={{ gap: 12 }}><Body style={{ color: C.text }}>{storageError}</Body><PrimaryButton label="Retry saving on this device" disabled={busy} onPress={() => action(() => { retryDeviceSave(); setMessage('Your current bar was saved on this device.'); })} /></Panel> : null}
     <Label>Rename this bar</Label>
     <TextInput value={name} onChangeText={setName} maxLength={60} accessibilityLabel="Local bar name" placeholder="e.g. Alex’s home bar" placeholderTextColor={C.faint} style={styles.input} editable={!busy} />
     <PrimaryButton label="Save bar name" disabled={busy || !name.trim() || name.trim() === profile.name} onPress={() => action(() => { renameLocalBar(name); setMessage('Bar name saved on this device.'); })} />
     <Heading>Local bars</Heading><Dim>Like individual folders, each bar keeps its own stock, favorites, shopping list and party menu. These are separate setups on this device, without passwords or sign-in.</Dim>
     {profiles.map((p) => <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`${p.name}${p.id === profile.id ? ', current local bar' : ', switch to local bar'}`} accessibilityState={{ selected: p.id === profile.id, disabled: busy || p.id === profile.id }} aria-pressed={p.id === profile.id} aria-disabled={busy || p.id === profile.id} disabled={busy || p.id === profile.id} onPress={() => action(() => switchLocalBar(p.id))} style={[styles.bar, p.id === profile.id && { borderColor: C.teal }]}>
-      <View style={styles.initial}><Text style={styles.initialText}>{p.name[0]?.toUpperCase()}</Text></View><Body style={{ flex: 1 }}>{p.name}</Body><Dim style={{ color: p.id === profile.id ? C.teal : C.accent }}>{p.id === profile.id ? 'Current' : 'Open →'}</Dim>
+      <View style={styles.initial}><Text style={styles.initialText}>{p.name[0]?.toUpperCase()}</Text></View><Body style={{ flex: 1 }}>{p.name}</Body><Dim style={{ color: C.text }}>{p.id === profile.id ? 'Current' : 'Open →'}</Dim>
     </Pressable>)}
     <Label>Start another bar</Label><TextInput value={newName} onChangeText={setNewName} maxLength={60} accessibilityLabel="New local bar name" placeholder="e.g. Patio bar or Vacation kit" placeholderTextColor={C.faint} style={styles.input} editable={!busy} />
     <PrimaryButton label="Create a new local bar" disabled={busy || !newName.trim() || profiles.length >= MAX_PROFILES || !!storageError} onPress={() => action(() => createLocalBar(newName))} />
@@ -55,7 +55,7 @@ export function LocalBarsScreen({ onClose }: { onClose: () => void }) {
       const text = await pickBackupFile();
       if (text !== null && mounted.current) setPreview({ text, parsed: parseBackup(text) });
     })} />
-    {preview ? <Panel accent={C.teal} style={{ gap: 12 }}><Label color={C.teal}>Ready to restore</Label><Heading>{preview.parsed.name}</Heading>
+    {preview ? <Panel accent={C.teal} style={{ gap: 12 }}><Label color={C.text}>Ready to restore</Label><Heading>{preview.parsed.name}</Heading>
       <Body>{preview.parsed.data.kit.length} stock items · {preview.parsed.data.recipes.length} recipes · {preview.parsed.data.shopping.length} shopping items</Body>
       <Dim>Backup from {new Date(preview.parsed.exportedAt).toLocaleDateString()}. Restoring creates a new local bar and opens it. Your existing bars stay saved.</Dim>
       <PrimaryButton label="Restore as a new local bar" disabled={busy || !!storageError || profiles.length >= MAX_PROFILES} onPress={() => action(() => restoreLocalBar(preview.text))} />
@@ -75,5 +75,5 @@ const styles = StyleSheet.create({
   input: { minHeight: 50, padding: 13, borderWidth: 1, borderColor: C.line2, borderRadius: R.sm, backgroundColor: C.ink, color: C.text, fontSize: 16, fontFamily: F.regular },
   bar: { flexDirection: 'row', gap: 12, alignItems: 'center', minHeight: 72, padding: 14, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line2, borderRadius: R.md },
   initial: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: C.raise },
-  initialText: { fontFamily: F.semibold, color: C.accent, fontSize: 19 },
+  initialText: { fontFamily: F.semibold, color: C.text, fontSize: 19 },
 });

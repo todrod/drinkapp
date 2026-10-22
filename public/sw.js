@@ -7,7 +7,7 @@
  * cache-first safe: a new build produces new URLs rather than stale hits.
  */
 
-const CACHE = 'shaker-v2';
+const CACHE = 'shaker-v3-red';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {

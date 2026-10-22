@@ -241,11 +241,11 @@ export function RandomScreen({
       <View style={styles.brandRow}>
         <View style={styles.brandLockup}>
           <View style={styles.brandIcon}><Icon name="shaker" size={22} color={C.accent} /></View>
-          <Text style={[styles.brandName, width < 360 && { fontSize: 19 }]}>drink shaker<Text style={{ color: C.accent }}>.</Text></Text>
+          <Text style={[styles.brandName, width < 360 && { fontSize: 19 }]}>drink shaker<Text style={{ color: C.text }}>.</Text></Text>
         </View>
         <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Open my bar" style={styles.stockPill}>
           <View style={styles.readyDot} />
-          <View style={{ gap: 3, maxWidth: width < 560 ? 160 : 260 }}><Text numberOfLines={1} style={[styles.stockText, { color: C.teal }]}>{profile.name}</Text><Text style={styles.stockText}>{readyCount} ready from your inventory</Text></View>
+          <View style={{ gap: 3, maxWidth: width < 560 ? 160 : 260 }}><Text numberOfLines={1} style={[styles.stockText, { color: C.text }]}>{profile.name}</Text><Text style={styles.stockText}>{readyCount} ready from your inventory</Text></View>
         </Pressable>
       </View>
 
@@ -509,7 +509,7 @@ function ResultCard({
       </View>
 
       {source === 'all' ? <View style={{ paddingHorizontal: S.md, paddingBottom: S.md, gap: 8 }}>
-        <Label color={missing.length ? C.amber : C.teal}>{missing.length ? 'Required ingredients not in your bar' : 'You have the required ingredients'}</Label>
+        <Label color={C.text}>{missing.length ? 'Required ingredients not in your bar' : 'You have the required ingredients'}</Label>
         {missing.length ? <><Body>{[...new Set(missing)].join(' · ')}</Body><GhostButton label="Add missing ingredients to shopping list" onPress={onAddMissing} /></> : null}
       </View> : null}
 
@@ -543,13 +543,13 @@ function ResultCard({
           ) : null}
 
           <RecipeSources recipe={recipe} />
-          {substitutions.map((sub, index) => <Dim key={index} style={{ marginTop: S.sm, color: C.amber }}>Use {sub.used} for {sub.wanted}.</Dim>)}
+          {substitutions.map((sub, index) => <Dim key={index} style={{ marginTop: S.sm, color: C.text }}>Use {sub.used} for {sub.wanted}.</Dim>)}
         </View>
       ) : null}
 
       <View style={styles.resultActions}>
         <PrimaryButton label="Start mixing" onPress={onMade} style={{ flex: 1 }} />
-        <GhostButton label="Spin again" onPress={onAgain} color={C.teal} style={{ flex: 1 }} />
+        <GhostButton label="Spin again" onPress={onAgain} color={C.text} style={{ flex: 1 }} />
       </View>
     </Panel>
   );
@@ -588,7 +588,7 @@ function FallbackPanel({
         <Heading style={{ textAlign: 'center' }}>Filters are too tight</Heading>
         <Dim style={styles.fallbackBody}>
           Nothing matches those settings — but{' '}
-          <Text style={{ color: C.teal, fontWeight: '800' }}>
+          <Text style={{ color: C.text, fontWeight: '800' }}>
             {result.matchesWithoutFilters} {pluralize(result.matchesWithoutFilters, 'drink')}
           </Text>{' '}
           match without them.
@@ -605,7 +605,7 @@ function FallbackPanel({
         <Icon name="cart-outline" size={34} color={C.amber} style={styles.fallbackIcon} />
         <Heading style={{ textAlign: 'center' }}>You're one bottle away</Heading>
         <Dim style={styles.fallbackBody}>
-          Add <Text style={{ color: C.teal, fontWeight: '800' }}>{top.name}</Text> and {top.unlocks}{' '}
+          Add <Text style={{ color: C.text, fontWeight: '800' }}>{top.name}</Text> and {top.unlocks}{' '}
           {pluralize(top.unlocks, 'drink')} unlock{top.unlocks === 1 ? 's' : ''}.
         </Dim>
         {result.suggestions.length > 1 ? (
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
   hero: { gap: 22, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', borderRadius: R.xl, borderWidth: 1, borderColor: C.line2, padding: 24, overflow: 'hidden' },
   heroWide: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 28, paddingVertical: 24, minHeight: 300 },
   heroCopy: { gap: 12, zIndex: 1, flexGrow: 1, flexBasis: 260, minWidth: 0 },
-  eyebrow: { fontFamily: F.medium, color: C.accent, fontSize: 10, letterSpacing: 1.8, lineHeight: 15 },
+  eyebrow: { fontFamily: F.medium, color: C.text, fontSize: 10, letterSpacing: 1.8, lineHeight: 15 },
   heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 30, lineHeight: 35, letterSpacing: -1.4 },
   heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   railRow: { flexDirection: 'row', gap: S.sm, paddingHorizontal: S.lg },
   quickLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
   quickCard: { flexGrow: 1, flexBasis: 300, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderRadius: R.md, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line },
-  quickIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#27352F' },
+  quickIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: C.raise },
   quickTitle: { fontFamily: F.medium, color: C.text, fontSize: 14, marginBottom: 3 },
 
   resultTop: { flexDirection: 'row', gap: S.md, padding: S.md },
