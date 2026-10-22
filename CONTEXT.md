@@ -1,5 +1,24 @@
 # The Drink Shaker — project context
 
+## Manual update checks in settings · 22 October 2026
+
+**My bar → settings gear → App updates → Check for updates** now checks the
+published web app immediately. It reports checking, current, offline or failed
+checks and offers **Update now** in the settings sheet when a release is ready.
+The manual and automatic paths share one controller and deduplicate requests.
+An installing worker must finish downloading and answer the build-version
+handshake before a manual check finishes; failed downloads and 30-second
+timeouts stay retryable. A cached update remains applicable offline. Native
+and development builds without the published worker hide this web-only section.
+
+Settings now scroll within a height-limited sheet, keeping Done accessible on
+narrow phones. Existing switches are preserved. Update now is disabled while
+device storage has unsaved changes. All 82 tests, typecheck and platform exports
+pass. Browser checks at 320/390 px verified current status, failed-check retry,
+manual discovery of a new local release and applying it from settings; all eight
+test ingredients survived the refresh. Real installed-phone lifecycle behavior
+remains a device check.
+
 ## In-app update prompt · 22 October 2026
 
 Installed web apps and browser tabs now check for releases every minute while

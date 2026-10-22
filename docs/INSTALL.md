@@ -54,6 +54,14 @@ Native imports use no-op install/update hooks.
   Later leaves a compact **Update available · Update now** action for this
   session. A different release gets a new invitation. Install suggestions wait
   while an update is available.
+- **My bar → settings gear → App updates → Check for updates** checks immediately
+  and reports **You’re up to date**, an available update, an offline message or
+  a retryable failure. A new release finishes downloading and answers its build
+  handshake before the check completes. Checks time out after 30 seconds and
+  share any in-progress automatic check. **Update now** is available directly
+  in settings even if the Discover invitation was deferred; it is disabled if
+  local changes could not be saved. Settings scroll on small screens. Unsupported
+  native/development builds hide the web-app update section.
 - Update now activates the waiting worker, then refreshes this window once.
   Your saved local bar, recipes, preferences and party plans remain. Unsaved
   search/filter/selection state can reset. Activation failures show a retry.
@@ -72,12 +80,15 @@ does not overwrite it with HTML from an incompletely downloaded future release.
 
 ## Verification
 
-All 75 tests, typecheck and web/Android/iOS exports pass. Eighteen install/PWA/update tests
+All 82 tests, typecheck and web/Android/iOS exports pass. Twenty-five install/PWA/update tests
 cover early event capture, synchronous activation, single-use events, concurrent
 taps, accepted/dismissed/error outcomes, old `userChoice` promises, cooldowns,
 Apple device detection, installed states, unavailable storage and build cache
 generation/failure behavior, explicit activation, first installs, fresh pages,
-multi-window activation, deferral, retry, deduplicated checks and cleanup.
+multi-window activation, deferral, retry, deduplicated checks and cleanup. Manual
+checks cover current status, download completion, offline cached updates,
+synchronous errors, retries, failed installs, version timeouts, shared checks,
+registration recovery and unsupported pages.
 Browser checks at 320/390 px cover the visible
 button, selectable device instructions and backup shortcut. A first-visit cache
 reloaded and selected a recipe after stopping that origin's server. Browser
@@ -87,4 +98,7 @@ no forced reload in another window and no prompt on an already-current page.
 After stopping the origin server, the update button loaded the new cached
 release with all eight test ingredients and the named Daiquiri party menu
 intact. Random selection still worked. Physical-device installation and
-installed iOS/Android foreground/update behavior remain phone checks.
+installed iOS/Android foreground/update behavior remain phone checks. Manual
+settings checks at 320/390 px reported current status, recovered after stopping
+and restarting the origin server, discovered a local release change and applied
+it with all eight sample ingredients intact.

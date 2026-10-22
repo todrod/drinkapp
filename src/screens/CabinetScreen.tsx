@@ -43,6 +43,7 @@ import { ShoppingList } from '../components/ShoppingList';
 import { IngredientArt } from '../components/IngredientArt';
 import { artForCatalog } from '../data/art';
 import { pluralize } from '../format';
+import { UpdateSettings } from '../components/UpdateSettings';
 
 export type CabinetView = 'stock' | 'shopping';
 
@@ -57,7 +58,7 @@ export function CabinetScreen({
 }) {
   const {
     profile, kit, recipes, prefs, setPref, addFromCatalog, addCustom, setLevel,
-    removeFromKit, restoreKitItem, addStarterKit, loadMyBar, shopping, addToShopping,
+    removeFromKit, restoreKitItem, addStarterKit, loadMyBar, shopping, addToShopping, storageError,
   } = useData();
 
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -281,7 +282,7 @@ export function CabinetScreen({
 
       <Modal visible={settings} animationType="slide" transparent onRequestClose={() => setSettings(false)}>
         <View style={styles.sheetBackdrop}>
-          <View style={[styles.sheet, { height: 'auto', paddingBottom: S.xxl }]}>
+          <View style={[styles.sheet, { height: 'auto', maxHeight: '92%', paddingBottom: 0 }]}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
               <Heading>Settings</Heading>
@@ -289,7 +290,7 @@ export function CabinetScreen({
                 <Text style={styles.close}>Done</Text>
               </Pressable>
             </View>
-            <View style={{ gap: S.sm, marginTop: S.sm }}>
+            <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} contentContainerStyle={{ gap: S.sm, paddingTop: S.sm, paddingBottom: S.xxl }}>
               <SettingRow
                 label="Zero-proof mode"
                 hint="Show confirmed alcohol-free recipes and Mix lab ingredients"
@@ -308,7 +309,8 @@ export function CabinetScreen({
                 on={prefs.shakeToShake}
                 onToggle={() => setPref('shakeToShake', !prefs.shakeToShake)}
               />
-            </View>
+              <UpdateSettings storageError={storageError} />
+            </ScrollView>
           </View>
         </View>
       </Modal>

@@ -90,6 +90,7 @@ test('resume, online and minute checks are deduplicated; background/offline chec
   const b = setup(); await tick(); let release;
   b.holdChecks(new Promise((resolve) => { release = resolve; }));
   b.browser.emit('focus'); b.browser.emit('online'); b.document.emit('visibilitychange');
+  await tick();
   assert.equal(b.counts().checks, 1); release(); await tick();
   b.document.visibilityState = 'hidden'; [...b.intervals.values()][0](); assert.equal(b.counts().checks, 1);
   b.document.visibilityState = 'visible'; b.browser.navigator.onLine = false; b.browser.emit('focus'); assert.equal(b.counts().checks, 1);
@@ -112,4 +113,76 @@ test('registration waits for load; development/unsupported pages and disposed se
   b.browser.emit('load'); await tick(); assert.equal(b.counts().registrations, 1); b.controller.dispose();
   const dev = setup({ supported: false }); await tick(); assert.equal(dev.counts().registrations, 0); dev.controller.dispose();
   const gone = setup({ complete: false }); gone.controller.dispose(); gone.browser.emit('load'); await tick(); assert.equal(gone.counts().registrations, 0);
+});
+
+test('manual checks report current only after a successful check and can be repeated', async () => {
+  const b = setup(); await tick();
+  const first = b.controller.check(); assert.equal(b.controller.getSnapshot().checking, true);
+  await first;
+  assert.equal(b.controller.getSnapshot().checking, false); assert.equal(b.controller.getSnapshot().checkResult, 'current');
+  assert.equal(b.counts().checks, 1); assert.equal(b.counts().reloads, 0); assert.equal(b.timeouts.size, 0);
+  await b.controller.check(); assert.equal(b.counts().checks, 2); b.controller.dispose();
+});
+
+test('manual checks wait for downloading assets and a version reply before offering an update', async () => {
+  const b = setup(); await tick(); const worker = b.makeWorker(NEXT, 'installing');
+  b.registration.update = async () => { b.registration.installing = worker; b.registration.emit('updatefound'); };
+  await b.controller.check();
+  assert.equal(b.controller.getSnapshot().checking, true); assert.equal(b.controller.getSnapshot().available, false);
+  assert.notEqual(b.controller.getSnapshot().checkResult, 'current');
+  b.registration.installing = null; b.registration.waiting = worker; worker.state = 'installed'; worker.emit('statechange');
+  assert.equal(b.controller.getSnapshot().checking, false); assert.equal(b.controller.getSnapshot().available, true);
+  assert.equal(b.timeouts.size, 0); assert.equal(b.counts().reloads, 0); b.controller.dispose();
+});
+
+test('offline checks preserve a previously downloaded update without claiming to be current', async () => {
+  const b = setup({ waitingVersion: NEXT }); await tick(); b.browser.navigator.onLine = false;
+  await b.controller.check();
+  assert.equal(b.controller.getSnapshot().checkResult, 'offline'); assert.equal(b.controller.getSnapshot().checking, false);
+  assert.equal(b.controller.getSnapshot().available, true); assert.equal(b.counts().checks, 0);
+  assert.equal(b.timeouts.size, 0); assert.equal(b.counts().reloads, 0); b.controller.dispose();
+});
+
+test('failed network checks and synchronous browser errors remain retryable', async () => {
+  const b = setup(); await tick();
+  for (const update of [() => { throw Error('invalid state'); }, async () => { throw Error('offline'); }]) {
+    b.registration.update = update; await b.controller.check();
+    assert.equal(b.controller.getSnapshot().checkResult, 'error'); assert.equal(b.controller.getSnapshot().checking, false);
+    b.registration.update = async () => {}; await b.controller.check();
+    assert.equal(b.controller.getSnapshot().checkResult, 'current');
+  }
+  assert.equal(b.counts().reloads, 0); b.controller.dispose();
+});
+
+test('failed installs and a stalled version handshake end the manual check with a retryable error', async () => {
+  const b = setup(); await tick(); const worker = b.makeWorker(NEXT, 'installing');
+  b.registration.installing = worker;
+  await b.controller.check(); worker.state = 'redundant'; worker.emit('statechange');
+  assert.equal(b.controller.getSnapshot().checkResult, 'error'); assert.equal(b.controller.getSnapshot().available, false);
+  b.registration.installing = null; worker.state = 'installed'; b.registration.waiting = worker;
+  worker.postMessage = () => {};
+  await b.controller.check(); assert.equal(b.controller.getSnapshot().checking, true);
+  [...b.timeouts.values()][0]();
+  assert.equal(b.controller.getSnapshot().checking, false); assert.equal(b.controller.getSnapshot().checkResult, 'error');
+  assert.equal(b.counts().reloads, 0); b.controller.dispose();
+});
+
+test('manual and background requests share an in-flight check and rapid taps do not duplicate work', async () => {
+  const b = setup(); await tick(); let release;
+  b.holdChecks(new Promise((resolve) => { release = resolve; }));
+  b.browser.emit('focus'); await tick(); const manual = b.controller.check(); await b.controller.check(); await tick();
+  assert.equal(b.counts().checks, 1); assert.equal(b.controller.getSnapshot().checking, true);
+  release(); await manual;
+  assert.equal(b.controller.getSnapshot().checkResult, 'current'); assert.equal(b.counts().checks, 1); b.controller.dispose();
+});
+
+test('manual checks retry blocked registration, while unsupported pages stay inert', async () => {
+  const b = setup({ complete: false }); b.container.register = () => { throw Error('blocked'); };
+  b.browser.emit('load'); await tick(); await b.controller.check();
+  assert.equal(b.controller.getSnapshot().checkResult, 'error');
+  b.container.register = async () => b.registration; await b.controller.check();
+  assert.equal(b.controller.getSnapshot().checkResult, 'current'); b.controller.dispose();
+  const dev = setup({ supported: false }); await dev.controller.check();
+  assert.equal(dev.controller.getSnapshot().supported, false); assert.equal(dev.controller.getSnapshot().checking, false);
+  assert.equal(dev.counts().registrations, 0); dev.controller.dispose();
 });
