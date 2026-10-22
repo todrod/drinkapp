@@ -152,9 +152,11 @@ test('native bars use separate real SQLite files; a failed import rolls back bef
   } };
   Module._load = function (request, ...args) { return request === 'expo-sqlite' ? sqlite : originalLoad.call(this, request, ...args); };
   try {
-    delete require.cache[path]; const native = require(path); const d = source(); native.replaceProfileData(d);
+    delete require.cache[path]; const native = require(path); const d = source(); d.prefs.randomSource = 'all'; native.replaceProfileData(d);
     const original = native.scopedToProfile('default'); const created = native.createProfile('Cabin', emptyProfileData(12345));
     assert.equal(files.size, 2); assert.equal(native.loadKit(created.activeId).length, 0);
+    native.savePrefs({ ...native.loadPrefs(created.activeId), randomSource: 'inventory' }, created.activeId);
+    assert.equal(native.loadPrefs().randomSource, 'all'); assert.equal(native.loadPrefs(created.activeId).randomSource, 'inventory');
     original.saveKitItem(bottle('late-native')); assert.equal(native.loadKit(created.activeId).length, 0);
     assert.equal(native.loadKit().length, 117); assert.equal(native.loadRecipes().find((r) => r.id === d.recipes[0].id).rating, 5);
     const current = native.loadProfileIndex(); failInventory = true;

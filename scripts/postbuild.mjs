@@ -24,7 +24,7 @@ const HEAD = `${MARKER}
     <meta name="apple-mobile-web-app-title" content="Shaker" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="icon" href="/favicon.png" type="image/png" />
-    <meta name="description" content="Your bar inventory, a generator that only pours what you own, and a drink book that works offline." />`;
+    <meta name="description" content="Explore cocktail recipes, pick a surprise, or find drinks from your bar. Works offline." />`;
 
 const BODY = `    <script>
       if ('serviceWorker' in navigator) {

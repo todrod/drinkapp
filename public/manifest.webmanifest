@@ -1,7 +1,7 @@
 {
   "name": "The Drink Shaker",
   "short_name": "Shaker",
-  "description": "Your bar inventory, a generator that only pours what you own, and a drink book that works offline.",
+  "description": "Explore cocktail recipes, pick a surprise, or find drinks from your bar. Works offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

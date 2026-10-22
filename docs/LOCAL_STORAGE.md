@@ -4,6 +4,9 @@ Drink Shaker stores personal data on the device. Inventory, custom recipes,
 favorites, ratings, preparation history, shopping lists, preferences and party
 plans do not require an account or a storage server. Network access still
 delivers the web app and opens source links or explicitly shared guest menus.
+The random selector's **All recipes / My inventory** choice is also saved
+independently for each bar and carried in backups. Older backups without this
+optional preference remain valid.
 
 ## Using it
 

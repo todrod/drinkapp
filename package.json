@@ -45,7 +45,8 @@
     "test:discovery": "node --require ./tests/register-typescript.cjs --test tests/discovery.test.cjs",
     "test:hosting": "node --require ./tests/register-typescript.cjs --test tests/hosting.test.cjs",
     "test:local-bars": "node --require ./tests/register-typescript.cjs --test tests/local-bars.test.cjs",
-    "test": "npm run test:shake && npm run test:discovery && npm run test:hosting && npm run test:local-bars"
+    "test:random-source": "node --require ./tests/register-typescript.cjs --test tests/random-source.test.cjs",
+    "test": "npm run test:shake && npm run test:discovery && npm run test:hosting && npm run test:local-bars && npm run test:random-source"
   },
   "private": true
 }

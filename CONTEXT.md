@@ -1,5 +1,28 @@
 # The Drink Shaker — project context
 
+## Random recipe sources · 22 October 2026
+
+Discover's **Pick from** control switches **All recipes / My inventory** for
+tap, keyboard and phone-shake selection. All recipes works without stock;
+every complete recipe matching the idea, mood, theme and alcohol-free setting
+is eligible. Inventory mode retains strict makeability and substitutions.
+`generate()` still defaults to inventory for callers that omit `source`.
+
+The optional local preference `randomSource` is resolved and saved once:
+empty/out-of-stock bars start in All recipes; stocked legacy bars keep My
+inventory. Explicit choices persist through reloads and stock changes, remain
+separate per local bar, and round-trip through backups. Old backups without
+the field still work. No database schema or backup-format change is needed.
+
+All-recipes results show actual on-hand counts and required ingredients not
+in the bar, with an explicit action to add those to shopping. They never add
+inventory or invent substitutions. Drafts stay excluded. Switching source
+or filters cancels the pending reveal and clears the previous result.
+`npm test` now runs **54 tests**, including eight source-selection tests and
+native SQLite preference-isolation coverage. Browser checks cover an empty
+bar picking a recipe, inventory-mode misses and makeable picks, keyword
+mocktails, shopping-only additions, persistence and mid-pour cancellation.
+
 ## Animated shaker update · 22 October 2026
 
 Discover now uses `components/AnimatedShaker.tsx`: copper-and-steel barware
@@ -73,12 +96,12 @@ against commit `0db0e87`.
 
 ## 1. What this is
 
-A party drink app. You tell it what bottles you own; it only ever suggests
-drinks you can actually pour. Four tabs:
+A party drink app. Explore the recipe library or tell it what bottles you own
+to limit suggestions to drinks you can actually pour. Four tabs:
 
 | Tab | Does |
 |---|---|
-| **Random** | Spin (or physically shake the phone) for a drink you can make right now |
+| **Random** | Spin or shake for any complete recipe, or only one you can make from inventory |
 | **Cabinet** | Your inventory — add, remove, track how much is left. Second segment holds the shopping list |
 | **Recipes** | 144-recipe searchable library with collections, keyword search, ratings, favourites |
 | **Builder** | Pick a base, mixers and toppings from stock; see what it matches |
@@ -224,6 +247,13 @@ generator excludes those items.
 ## 6. The matching algorithm — `src/logic/generator.ts`
 
 This is the heart of the product. Read this file first.
+
+**Two sources.** `source: 'all'` skips inventory eligibility for inspiration,
+while preserving completeness, keyword/exclusion, mood, theme and alcohol-free
+filters. The full eligible library remains in its weighted pool. The default
+`'inventory'` source follows the makeability rules below and retains the
+original scored top-half pool. Never simulate all-recipes mode by fabricating
+a stocked inventory: on-hand counts and shopping advice must stay accurate.
 
 **Resolution order** for each ingredient:
 1. User owns the exact `catalogItemId`, **or**

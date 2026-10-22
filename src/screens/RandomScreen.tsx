@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -28,8 +28,8 @@ import {
   Stars,
 } from '../components/ui';
 import { useData } from '../store';
-import { buildOwned, countMakeable, generate, matchRecipe } from '../logic/generator';
-import { DrinkRecipe, GeneratorResult, Substitution } from '../types';
+import { buildOwned, countMakeable, generate, matchRecipe, resolveRandomSource } from '../logic/generator';
+import { DrinkRecipe, GeneratorResult, RandomSource, Substitution } from '../types';
 import { VIBE_TAGS } from '../data/recipes';
 import { THEMES } from '../data/seed';
 import { useShakeDetector } from '../hooks/useShakeDetector';
@@ -42,7 +42,7 @@ import { ShakeControl } from '../components/ShakeControl';
 import { DrinkIdeaFinder } from '../components/DrinkIdeaFinder';
 import { RecipeSources } from '../components/RecipeSources';
 import { discoverDrinks, ideaAllowsSubstitution } from '../logic/discovery';
-import { isAlcoholFree } from '../logic/recipes';
+import { isAlcoholFree, isServingReady } from '../logic/recipes';
 
 export function RandomScreen({
   goTo, onParty, onServe, active = true,
@@ -79,19 +79,41 @@ export function RandomScreen({
 
   const reveal = useRef(new Animated.Value(0)).current;
 
+  const source = resolveRandomSource(prefs.randomSource, kit);
+  const allRecipes = source === 'all';
   const owned = useMemo(() => buildOwned(kit), [kit]);
   const eligible = useMemo(() => prefs.zeroProofMode ? recipes.filter(isAlcoholFree) : recipes, [recipes, prefs.zeroProofMode]);
+  const completeCount = eligible.filter(isServingReady).length;
   const readyCount = useMemo(() => countMakeable(eligible, kit, prefs.allowSubstitutes), [eligible, kit, prefs.allowSubstitutes]);
   const selectedRecipe = result?.ok ? recipes.find((recipe) => recipe.id === result.recipe.id) ?? result.recipe : null;
   const discovery = useMemo(() => discoverDrinks(eligible, ideaQuery), [eligible, ideaQuery]);
-  const inventoryIdeas = useMemo(() => discovery.matches.map(({ recipe: r }) => {
-    const match = matchRecipe(r, owned, prefs.allowSubstitutes, discovery.intent.excludedIngredientIds,
+  const selectedMatch = selectedRecipe ? matchRecipe(selectedRecipe, owned, !allRecipes && prefs.allowSubstitutes) : null;
+  const inventoryIdeas = useMemo(() => discovery.matches.filter(({ recipe: r }) => isServingReady(r)).map(({ recipe: r }) => {
+    const match = matchRecipe(r, owned, !allRecipes && prefs.allowSubstitutes, discovery.intent.excludedIngredientIds,
       (wanted, used) => ideaAllowsSubstitution(discovery.intent, wanted, used));
-    const ready = (!prefs.zeroProofMode || isAlcoholFree(r)) && (!vibes.length || vibes.some((v) => r.vibeTags.includes(v))) &&
-      (!themes.length || (!!r.theme && themes.includes(r.theme))) && match.ok;
-    return { name: r.name, ready, missing: match.missing };
-  }).sort((a, b) => Number(b.ready) - Number(a.ready)), [discovery, owned, prefs.zeroProofMode, prefs.allowSubstitutes, vibes, themes]);
+    const eligible = (!vibes.length || vibes.some((v) => r.vibeTags.includes(v))) && (!themes.length || (!!r.theme && themes.includes(r.theme)));
+    return { name: r.name, ready: eligible && match.ok, eligible, missing: match.missing };
+  }).sort((a, b) => allRecipes ? Number(b.eligible) - Number(a.eligible) : Number(b.ready) - Number(a.ready)), [discovery, owned, allRecipes, prefs.allowSubstitutes, vibes, themes]);
   const ideaReadyCount = inventoryIdeas.filter((idea) => idea.ready).length;
+  const ideaSelectableCount = inventoryIdeas.filter((idea) => idea.eligible).length;
+
+  const resetSelection = useCallback(() => {
+    finishSelection.current = null;
+    spinning.current = false;
+    selectionAnimation.current?.stop();
+    setIsSpinning(false);
+    setResult(null);
+  }, []);
+  const changeSource = (next: RandomSource) => {
+    if (next === source) return;
+    resetSelection();
+    setPref('randomSource', next);
+  };
+
+  useEffect(() => {
+    // Resolve an older bar once, then retain its mode when stock changes.
+    if (prefs.randomSource !== 'all' && prefs.randomSource !== 'inventory') setPref('randomSource', source);
+  }, [prefs.randomSource, source, setPref]);
 
   useEffect(() => {
     if (!result) return;
@@ -124,12 +146,8 @@ export function RandomScreen({
   }, [motionEnabled]);
 
   useEffect(() => {
-    selectionAnimation.current?.stop();
-    finishSelection.current = null;
-    spinning.current = false;
-    setIsSpinning(false);
-    setResult(null);
-  }, [prefs.zeroProofMode, prefs.allowSubstitutes]);
+    resetSelection();
+  }, [source, prefs.zeroProofMode, prefs.allowSubstitutes, vibes, themes, ideaQuery, resetSelection]);
 
   useEffect(() => {
     if (active) return;
@@ -147,6 +165,7 @@ export function RandomScreen({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
     const next = generate({
+      source,
       recipes,
       kit,
       allowSubstitutes: prefs.allowSubstitutes,
@@ -226,7 +245,7 @@ export function RandomScreen({
         </View>
         <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Open my bar" style={styles.stockPill}>
           <View style={styles.readyDot} />
-          <View style={{ gap: 3, maxWidth: width < 560 ? 160 : 260 }}><Text numberOfLines={1} style={[styles.stockText, { color: C.teal }]}>{profile.name}</Text><Text style={styles.stockText}>{readyCount} recipes you can make</Text></View>
+          <View style={{ gap: 3, maxWidth: width < 560 ? 160 : 260 }}><Text numberOfLines={1} style={[styles.stockText, { color: C.teal }]}>{profile.name}</Text><Text style={styles.stockText}>{readyCount} ready from your inventory</Text></View>
         </Pressable>
       </View>
 
@@ -234,9 +253,20 @@ export function RandomScreen({
         <View style={{ flex: 1, gap: 3 }}><Text style={styles.quickTitle}>Good company. Great drinks.</Text><Dim>Plan a party menu · batch · serve</Dim></View>
         <Icon name="chevron-right" size={22} color={C.accent} />
       </Pressable>
-      {kit.length === 0 ? <Panel style={{ gap: 10 }}><Heading>Your recipe book is ready</Heading><Dim>Browse all {recipes.length} recipes now. Random picks use your inventory—add your ingredients or try a sample bar to start mixing.</Dim><PrimaryButton label="Add ingredients or try a sample bar" onPress={() => goTo('cabinet')} /><GhostButton label="Browse all recipes" onPress={() => goTo('recipes')} /></Panel> : null}
+      <Panel style={{ gap: 12 }}>
+        <Label>Pick from</Label>
+        <View accessibilityRole="radiogroup" accessibilityLabel="Random recipe source" style={styles.sourceOptions}>
+          {([['all', 'All recipes', 'book-open-variant'], ['inventory', 'My inventory', 'cupboard']] as const).map(([value, label, icon]) => <Pressable key={value}
+            accessibilityRole="radio" accessibilityLabel={label} accessibilityState={{ checked: source === value }} aria-checked={source === value}
+            onPress={() => changeSource(value)} style={[styles.sourceOption, source === value && styles.sourceSelected]}>
+            <Icon name={icon} size={18} color={source === value ? C.accent : C.dim} /><Text style={[styles.sourceLabel, source === value && { color: C.text }]}>{label}</Text>
+          </Pressable>)}
+        </View>
+        <Dim accessibilityLiveRegion="polite">{allRecipes ? `${completeCount} recipes to explore. No inventory needed.` : 'Only drinks you can make with your bar. Your substitution setting applies.'}</Dim>
+      </Panel>
+      {kit.length === 0 && !allRecipes ? <Panel style={{ gap: 10 }}><Heading>Add your bar to narrow your picks</Heading><Dim>Add your ingredients or try a sample bar. You can switch to All recipes anytime to pick a drink without stock.</Dim><PrimaryButton label="Add ingredients or try a sample bar" onPress={() => goTo('cabinet')} /></Panel> : null}
       <DrinkIdeaFinder query={ideaQuery} onChange={(value) => { setIdeaQuery(value); setResult(null); }}
-        discovery={discovery} matchCount={discovery.matches.length} readyCount={ideaReadyCount} inventoryIdeas={inventoryIdeas}
+        discovery={discovery} matchCount={inventoryIdeas.length} readyCount={ideaReadyCount} inventoryIdeas={inventoryIdeas} source={source} selectableCount={ideaSelectableCount}
         busy={isSpinning} onFind={onSpin} />
 
       <LinearGradient colors={GLASS.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -248,7 +278,7 @@ export function RandomScreen({
         <View style={[styles.heroCopy, wide && { flex: 1 }, width < 560 && { flexGrow: 1, flexBasis: width - 48 - 34 - 12 - (width < 360 ? 106 : 134) }]}>
           <Text style={styles.eyebrow}>GOOD TIMES, ON THE HOUSE</Text>
           <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }, width < 560 && { fontSize: 24, lineHeight: 28, letterSpacing: -0.7 }]}>Shake things up.{'\n'}Find your pour.</Text>
-          {width >= 360 ? <Text style={styles.heroBody}>{prefs.zeroProofMode ? 'An alcohol-free surprise.' : width < 560 ? 'A surprise from your shelf.' : 'A surprise made from what’s already on your shelf.'}</Text> : null}
+          {width >= 360 ? <Text style={styles.heroBody}>{prefs.zeroProofMode ? 'An alcohol-free surprise.' : allRecipes ? 'A new favorite from the recipe book.' : width < 560 ? 'A surprise from your shelf.' : 'A surprise made from what’s already on your shelf.'}</Text> : null}
           {width >= 560 ? <PrimaryButton label={isSpinning ? 'Mixing your next drink…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} /> : null}
 
         </View>
@@ -370,13 +400,23 @@ export function RandomScreen({
         </View>
       ) : (
         <Animated.View accessibilityLiveRegion="polite" style={revealStyle}>
-          <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Your next pour</Text>
+          <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>{allRecipes ? 'From the recipe book' : 'Your next pour'}</Text>
           {ideaQuery.trim() && result.ok ? <Dim style={{ marginBottom: 12 }}>Matched your idea: {ideaQuery.trim()}</Dim> : null}
           {result.ok ? (
             <ResultCard
+              key={`${source}-${result.recipe.id}`}
               recipe={selectedRecipe ?? result.recipe}
-              have={countHave(result.recipe, owned, prefs.allowSubstitutes)}
+              source={source}
+              missing={selectedMatch?.missing ?? []}
+              have={countHave(selectedRecipe ?? result.recipe, owned, !allRecipes && prefs.allowSubstitutes)}
               substitutions={result.substitutions}
+              onAddMissing={() => {
+                for (const name of new Set(selectedMatch?.missing ?? [])) {
+                  const ingredient = (selectedRecipe ?? result.recipe).ingredients.find((i) => i.displayName === name);
+                  addToShopping(ingredient?.catalogItemId ?? null, name);
+                }
+                goTo('cabinet', 'shopping');
+              }}
               onMade={() => onServe(selectedRecipe ?? result.recipe)}
               onRate={(n) => rateRecipe(result.recipe.id, n)}
               onAgain={onSpin}
@@ -384,6 +424,7 @@ export function RandomScreen({
           ) : (
             <FallbackPanel
               result={result}
+              source={source}
               onWant={(id, name) => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                 addToShopping(id, name);
@@ -417,6 +458,9 @@ function countHave(
 
 function ResultCard({
   recipe,
+  source,
+  missing,
+  onAddMissing,
   have,
   substitutions,
   onMade,
@@ -424,6 +468,9 @@ function ResultCard({
   onAgain,
 }: {
   recipe: DrinkRecipe;
+  source: RandomSource;
+  missing: string[];
+  onAddMissing: () => void;
   have: { have: number; total: number };
   substitutions: Substitution[];
   onMade: () => void;
@@ -460,6 +507,11 @@ function ResultCard({
       <View style={{ paddingHorizontal: S.md, paddingBottom: S.sm }}>
         <Stars value={recipe.rating} size={18} onRate={onRate} />
       </View>
+
+      {source === 'all' ? <View style={{ paddingHorizontal: S.md, paddingBottom: S.md, gap: 8 }}>
+        <Label color={missing.length ? C.amber : C.teal}>{missing.length ? 'Required ingredients not in your bar' : 'You have the required ingredients'}</Label>
+        {missing.length ? <><Body>{[...new Set(missing)].join(' · ')}</Body><GhostButton label="Add missing ingredients to shopping list" onPress={onAddMissing} /></> : null}
+      </View> : null}
 
       {expanded ? (
         <View style={styles.resultBody}>
@@ -505,20 +557,26 @@ function ResultCard({
 
 function FallbackPanel({
   result,
+  source,
   onClear,
   onWant,
   goTo,
 }: {
   result: Extract<GeneratorResult, { ok: false }>;
+  source: RandomSource;
   onClear: () => void;
   onWant: (catalogItemId: string | null, name: string) => void;
   goTo: (t: TabKey, view?: 'stock' | 'shopping') => void;
 }) {
+  if (result.reason === 'library') return <Panel accent={C.amber} style={styles.fallback}>
+    <Heading style={{ textAlign: 'center' }}>No complete recipes match</Heading><Dim style={styles.fallbackBody}>Choose another filter or add a recipe with ingredients and instructions. Your alcohol-free setting still applies.</Dim>
+    <PrimaryButton label="Browse recipes" onPress={() => goTo('recipes')} style={styles.fallbackBtn} />
+  </Panel>;
   if (result.reason === 'idea') {
     return <Panel accent={C.amber} style={styles.fallback}>
       <Icon name="book-open-variant" size={34} color={C.amber} style={styles.fallbackIcon} />
       <Heading style={{ textAlign: 'center' }}>{result.ideaMatches ? 'No matching drink is ready yet' : 'No drinks match that idea yet'}</Heading>
-      <Dim style={styles.fallbackBody}>{result.ideaMatches ? `${result.ideaMatches} recipes match your words. Check your bar and mood filters, or browse the recipe book for their ingredients.` : 'Try fewer words, a different flavor or another theme. Your exclusions stay in place until you change them.'}</Dim>
+      <Dim style={styles.fallbackBody}>{result.ideaMatches ? source === 'all' ? `${result.ideaMatches} recipes match your words. Try changing your quick filters; inventory is optional in All recipes.` : `${result.ideaMatches} recipes match your words. Check your bar and mood filters, or switch to All recipes.` : 'Try fewer words, a different flavor or another theme. Your exclusions stay in place until you change them.'}</Dim>
       <PrimaryButton label="BROWSE RECIPES" onPress={() => goTo('recipes')} style={styles.fallbackBtn} />
       <GhostButton label="Clear idea and filters" onPress={onClear} style={{ marginTop: S.sm }} />
     </Panel>;
@@ -589,6 +647,10 @@ function FallbackPanel({
 }
 
 const styles = StyleSheet.create({
+  sourceOptions: { flexDirection: 'row', gap: 8 },
+  sourceOption: { flex: 1, minHeight: 54, paddingHorizontal: 10, paddingVertical: 12, borderRadius: R.sm, borderWidth: 1, borderColor: C.line2, flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', backgroundColor: C.ink2 },
+  sourceSelected: { backgroundColor: C.raise, borderColor: C.accent },
+  sourceLabel: { fontFamily: F.medium, fontSize: 14, color: C.dim, flexShrink: 1 },
   scroll: { ...SCREEN, gap: 18 },
   brandRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
   brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 9 },

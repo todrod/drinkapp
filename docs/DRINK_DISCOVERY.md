@@ -67,6 +67,14 @@ unrecognized topic needs a new alias/tag or another wording.
 
 ## Adding recipes and keywords
 
+Discover also has a **Pick from: All recipes / My inventory** control. All
+recipes can select a matching complete recipe with an empty bar; inventory
+mode still requires its ingredients (and permits the configured substitutions).
+The idea finder reports candidates for the chosen source. Both modes keep
+the same keyword intersections, exclusions, themes, moods and alcohol-free
+constraints. Switching sources cancels an in-progress reveal. The choice is a
+device-local preference per bar and is included in new backup files.
+
 Add an entry with a unique, permanent slug to `discoveryRecipes.ts`. New ids
 use `bank-<slug>`; leave the original `seed-`, `book-` and `theme-` ids intact.
 Both persistence adapters merge unseen ids without replacing saved edits,

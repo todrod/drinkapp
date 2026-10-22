@@ -38,8 +38,8 @@ export function AgeGate({ onAccept }: { onAccept: () => void }) {
         <Icon name="glass-cocktail" size={54} color={C.teal} style={styles.mark} />
         <Title style={{ textAlign: 'center' }}>The Drink Shaker</Title>
         <Dim style={{ textAlign: 'center', marginTop: S.sm, maxWidth: 300 }}>
-          Recipes, your bar inventory, and a generator that only pours what you
-          already own.
+          Explore cocktail recipes, find a new favorite, or mix with what’s
+          already in your bar.
         </Dim>
 
         <Panel style={styles.panel}>

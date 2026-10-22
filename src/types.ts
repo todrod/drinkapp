@@ -177,12 +177,16 @@ export interface ShoppingItem {
   addedAt: number;
 }
 
+export type RandomSource = 'all' | 'inventory';
+
 export interface Prefs {
   ageGateAcceptedAt: number | null;
   zeroProofMode: boolean;
   allowSubstitutes: boolean;
   /** Physical shake of the device triggers the generator. */
   shakeToShake: boolean;
+  /** Optional for older installs/backups; inferred from stock until explicitly chosen. */
+  randomSource?: RandomSource;
 }
 
 /** A local workspace, not an account or an authentication boundary. */
@@ -207,8 +211,8 @@ export interface ProfileData {
 }
 
 // ── Generator result shapes ───────────────────────────────────────────────
-// The generator never returns a drink it cannot fully pour. When nothing
-// matches it returns a typed miss so the UI can name the fix.
+// Inventory mode only returns makeable drinks. All-recipes mode is inspiration;
+// availability is shown separately and never adds items to inventory.
 
 export interface Substitution {
   wanted: string;
@@ -221,7 +225,7 @@ export interface GeneratorHit {
   substitutions: Substitution[];
 }
 
-export type MissReason = 'filters' | 'nearly' | 'empty' | 'idea';
+export type MissReason = 'filters' | 'nearly' | 'empty' | 'idea' | 'library';
 
 export interface GeneratorMiss {
   ok: false;

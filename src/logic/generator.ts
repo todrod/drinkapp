@@ -6,15 +6,16 @@ import {
   GeneratorResult,
   InventoryItem,
   RecipeIngredient,
+  RandomSource,
   Substitution,
 } from '../types';
 
 /**
  * The matching algorithm — Phase 03 of the build spec.
  *
- * Rule that shapes everything else: never return a drink the user cannot
- * actually pour. When nothing matches, return a typed miss carrying the
- * cheapest fix, so the UI can name it instead of shrugging.
+ * Inventory mode never returns a drink the user cannot actually pour.
+ * Explicit all-recipes mode ignores stock for inspiration, keeping the same
+ * completeness, alcohol-free and discovery filters without inventing ownership.
  */
 
 /** Roles that must resolve. A missing garnish or ice is a note, not a veto. */
@@ -130,6 +131,8 @@ export function matchRecipe(
 }
 
 export interface GenerateOptions {
+  /** Omission preserves the original strict inventory behavior. */
+  source?: RandomSource;
   recipes: DrinkRecipe[];
   kit: InventoryItem[];
   allowSubstitutes: boolean;
@@ -157,7 +160,7 @@ function passesFilters(r: DrinkRecipe, o: GenerateOptions): boolean {
   return true;
 }
 
-function score(r: DrinkRecipe, m: MatchResult, recentIds: string[]): number {
+function score(r: DrinkRecipe, m: Pick<MatchResult, 'substitutions' | 'softMissing'>, recentIds: string[]): number {
   let s = 100;
   if (r.timesMade === 0) s += 40; // reward the untried
   if (recentIds.includes(r.id)) s -= 70; // don't repeat yourself
@@ -179,6 +182,11 @@ function weightedPick<T>(entries: { item: T; weight: number }[]): T {
   return entries[entries.length - 1].item;
 }
 
+export function resolveRandomSource(saved: unknown, kit: InventoryItem[]): RandomSource {
+  if (saved === 'all' || saved === 'inventory') return saved;
+  return kit.some((item) => item.level !== 'out') ? 'inventory' : 'all';
+}
+
 export function generate(o: GenerateOptions): GeneratorResult {
   const owned = buildOwned(o.kit);
   const recentIds = o.recentIds ?? [];
@@ -188,6 +196,18 @@ export function generate(o: GenerateOptions): GeneratorResult {
   const excludedIds = idea?.intent.excludedIngredientIds;
   const allowIdeaSubstitution = idea ? (wanted: string, used: string) => ideaAllowsSubstitution(idea.intent, wanted, used) : undefined;
   const filtered = o.recipes.filter((r) => passesFilters(r, o) && (!idea || relevance.has(r.id)));
+
+  if (o.source === 'all') {
+    const complete = filtered.filter(isServingReady);
+    if (complete.length) {
+      // Every matching recipe stays in the pool, including the end of the book.
+      const recipe = weightedPick(complete.map((r) => ({ item: r, weight: score(r, { substitutions: [], softMissing: [] }, recentIds) + (relevance.get(r.id) ?? 0) })));
+      return { ok: true, recipe, substitutions: [] };
+    }
+    const available = o.recipes.filter((r) => isServingReady(r) && (!o.zeroProofMode || isAlcoholFree(r))).length;
+    return { ok: false, reason: idea ? 'idea' : available ? 'filters' : 'library', suggestions: [], matchesWithoutFilters: available, ...(idea ? { ideaMatches: idea.matches.length } : {}) };
+  }
+
   const hits: { item: { recipe: DrinkRecipe; match: MatchResult }; weight: number }[] = [];
 
   for (const r of filtered) {

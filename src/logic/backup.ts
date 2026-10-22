@@ -85,7 +85,7 @@ export function parseBackup(text: string): ParsedBackup {
     kit: unique(list(d.kit, 'inventory', 3000, inventory), 'duplicate inventory ID'),
     recipes: unique(list(d.recipes, 'recipe book', 3000, recipe), 'duplicate recipe ID'),
     shopping: unique(list(d.shopping, 'shopping list', 3000, shopping), 'duplicate shopping ID'),
-    prefs: { ageGateAcceptedAt: null, zeroProofMode: bool(prefs.zeroProofMode, 'zero-proof preference'), allowSubstitutes: bool(prefs.allowSubstitutes, 'substitution preference'), shakeToShake: bool(prefs.shakeToShake, 'shake preference') },
+    prefs: { ageGateAcceptedAt: null, zeroProofMode: bool(prefs.zeroProofMode, 'zero-proof preference'), allowSubstitutes: bool(prefs.allowSubstitutes, 'substitution preference'), shakeToShake: bool(prefs.shakeToShake, 'shake preference'), ...(prefs.randomSource === undefined ? {} : { randomSource: choice(prefs.randomSource, ['all', 'inventory'] as const, 'random recipe source') }) },
     party: { title: str(p.title, 'party title', 80, true), unit: choice(p.unit, ['oz', 'ml'] as const, 'party units'), entries },
   } };
 }
