@@ -1,23 +1,21 @@
 /**
  * Service worker for the installed web app.
  *
- * The app is already offline-capable — everything lives in localStorage and the
- * bundle — so the only job here is making sure the bundle itself is available
- * without a network. Asset filenames are content-hashed, which is what makes
- * cache-first safe: a new build produces new URLs rather than stale hits.
+ * Postbuild supplies this release's bundle and assets. Precache them before
+ * activation so the first installed launch can work offline. Personal bar data
+ * stays in its own device storage and is never part of these caches.
  */
 
-const CACHE = 'shaker-v3-red';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png'];
+const CACHE = 'shaker-v4-install';
+const BUILD_ASSETS = /* pwa:precache */ [];
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-maskable-512.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(SHELL))
-      .catch(() => {
-        /* a missing shell entry must not block activation */
-      })
+      // Keep the previous worker if this release cannot be cached completely.
+      .then((cache) => cache.addAll([...SHELL, ...BUILD_ASSETS].map((url) => new Request(url, { cache: 'no-store' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -48,8 +46,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('/index.html', copy));
+          if (res.ok) {
+            const copy = res.clone();
+            event.waitUntil(caches.open(CACHE).then((c) => c.put('/index.html', copy)));
+          }
           return res;
         })
         .catch(() => caches.match('/index.html').then((r) => r || caches.match('/')))
@@ -65,7 +65,7 @@ self.addEventListener('fetch', (event) => {
         fetch(request).then((res) => {
           if (res.ok && res.type === 'basic') {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(request, copy));
+            event.waitUntil(caches.open(CACHE).then((c) => c.put(request, copy)));
           }
           return res;
         })

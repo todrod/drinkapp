@@ -8,7 +8,8 @@
  *
  * Idempotent — running it twice does not duplicate the tags.
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
 const INDEX = join(process.cwd(), 'dist', 'index.html');
@@ -36,19 +37,33 @@ const BODY = `    <script>
 
 const html = await readFile(INDEX, 'utf8');
 
-if (html.includes(MARKER)) {
-  console.log('postbuild: already injected, nothing to do');
-  process.exit(0);
-}
-
 if (!html.includes('</head>') || !html.includes('</body>')) {
   console.error('postbuild: dist/index.html has no </head> or </body> — Expo template changed?');
   process.exit(1);
 }
 
-const out = html
+const out = html.includes(MARKER) ? html : html
   .replace('</head>', `${HEAD}\n  </head>`)
   .replace('</body>', `${BODY}\n  </body>`);
 
 await writeFile(INDEX, out, 'utf8');
-console.log('postbuild: injected manifest, iOS meta tags and service worker registration');
+
+async function exportedFiles(relative) {
+  const entries = await readdir(join(process.cwd(), 'dist', relative), { withFileTypes: true });
+  const paths = await Promise.all(entries.map((entry) => {
+    const name = `${relative}/${entry.name}`;
+    return entry.isDirectory() ? exportedFiles(name) : ['/' + name];
+  }));
+  return paths.flat();
+}
+const assets = (await Promise.all(['_expo', 'assets'].map(exportedFiles))).flat().sort();
+const worker = await readFile(join(process.cwd(), 'public', 'sw.js'), 'utf8');
+const manifest = await readFile(join(process.cwd(), 'dist', 'manifest.webmanifest'), 'utf8');
+const version = createHash('sha256').update(out).update(JSON.stringify(assets)).update(worker).update(manifest).digest('hex').slice(0, 12);
+if (!worker.includes('/* pwa:precache */ []') || !worker.includes("'shaker-v4-install'")) {
+  throw new Error('Service worker build markers are missing.');
+}
+await writeFile(join(process.cwd(), 'dist', 'sw.js'), worker
+  .replace("'shaker-v4-install'", `'shaker-v4-${version}'`)
+  .replace('/* pwa:precache */ []', JSON.stringify(assets)), 'utf8');
+console.log(`postbuild: install metadata ready; precaching ${assets.length} assets for ${version}`);

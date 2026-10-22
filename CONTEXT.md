@@ -1,5 +1,23 @@
 # The Drink Shaker — project context
 
+## Installable app flow · 22 October 2026
+
+Discover now has an **Install app** button. A browser install event enables a
+native install dialog; iPhones and other browsers get device-specific guidance.
+Eligible visitors see a non-blocking suggestion after ten seconds, with a
+seven-day Not now preference. Installed app windows, guest menus, the age gate
+and active overlays suppress it. The install sheet links to local backups
+because browser and installed-app inventory may use separate storage.
+
+`install/controller.web.ts` captures install events before UI mounting;
+`useAppInstall.ts` is the native no-op counterpart. `postbuild.mjs` now injects
+the release's bundle/font/graphic paths into the worker and gives its cache a
+build-specific name. Precaching must finish before activation, including on a
+first visit. Cache cleanup leaves local bar data alone. All 65 tests, typecheck
+and platform exports pass; a fresh-origin offline reload and drink selection
+passed after stopping its server. See [docs/INSTALL.md](docs/INSTALL.md) for
+browser behavior, backup advice, test details and device-check limits.
+
 ## Fun mode · 22 October 2026
 
 Discover and the host menu now open **Drunk Test**, a clearly labeled pretend

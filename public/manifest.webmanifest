@@ -1,6 +1,8 @@
 {
   "name": "The Drink Shaker",
   "short_name": "Shaker",
+  "id": "/",
+  "prefer_related_applications": false,
   "description": "Explore cocktail recipes, pick a surprise, or find drinks from your bar. Works offline.",
   "start_url": "/",
   "scope": "/",

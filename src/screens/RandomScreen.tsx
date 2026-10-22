@@ -45,10 +45,11 @@ import { discoverDrinks, ideaAllowsSubstitution } from '../logic/discovery';
 import { isAlcoholFree, isServingReady } from '../logic/recipes';
 
 export function RandomScreen({
-  goTo, onParty, onFun, onServe, active = true,
+  goTo, onParty, onFun, onInstall, onServe, active = true,
 }: {
   onParty: () => void;
   onFun: () => void;
+  onInstall?: () => void;
   onServe: (r: DrinkRecipe) => void;
   active?: boolean;
   goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
@@ -244,10 +245,15 @@ export function RandomScreen({
           <View style={styles.brandIcon}><Icon name="shaker" size={22} color={C.accent} /></View>
           <Text style={[styles.brandName, width < 360 && { fontSize: 19 }]}>drink shaker<Text style={{ color: C.text }}>.</Text></Text>
         </View>
+        <View style={styles.headerActions}>
         <Pressable onPress={() => goTo('cabinet')} accessibilityRole="button" accessibilityLabel="Open my bar" style={styles.stockPill}>
           <View style={styles.readyDot} />
           <View style={{ gap: 3, maxWidth: width < 560 ? 160 : 260 }}><Text numberOfLines={1} style={[styles.stockText, { color: C.text }]}>{profile.name}</Text><Text style={styles.stockText}>{readyCount} ready from your inventory</Text></View>
         </Pressable>
+        {onInstall ? <Pressable onPress={onInstall} accessibilityRole="button" accessibilityLabel="Install app" style={styles.installButton}>
+          <Icon name="download" size={18} color={C.text} /><Text style={styles.installLabel}>Install app</Text>
+        </Pressable> : null}
+        </View>
       </View>
 
       <Pressable onPress={onParty} accessibilityRole="button" accessibilityLabel="Plan a party menu" style={styles.hostEntry}>
@@ -660,6 +666,9 @@ const styles = StyleSheet.create({
   sourceLabel: { fontFamily: F.medium, fontSize: 16, lineHeight: 23, color: C.dim, flexShrink: 1 },
   scroll: { ...SCREEN, gap: 18 },
   brandRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
+  headerActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, maxWidth: '100%' },
+  installButton: { minHeight: 44, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: C.line2, borderRadius: R.pill, backgroundColor: C.raise, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  installLabel: { color: C.text, fontFamily: F.medium, fontSize: 15, lineHeight: 22 },
   brandLockup: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   brandIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: C.raise, alignItems: 'center', justifyContent: 'center' },
   brandName: { fontFamily: F.semibold, fontSize: 23, letterSpacing: -0.7, color: C.text },
