@@ -31,6 +31,7 @@ import { decodeGuestMenu } from './src/logic/guestMenu';
 import { initialGuestToken, leaveGuestMenu, subscribeGuestToken } from './src/guestLink';
 import type { DrinkRecipe } from './src/types';
 import { LocalBarsScreen } from './src/screens/LocalBarsScreen';
+import { PartyGagScreen } from './src/screens/PartyGagScreen';
 import { Body, Dim, GhostButton, Heading, Panel, PrimaryButton } from './src/components/ui';
 
 function Shell() {
@@ -42,6 +43,7 @@ function Shell() {
   // from elsewhere should show you the list, not the stock you already had.
   const [cabinetView, setCabinetView] = useState<CabinetView>('stock');
   const [partyOpen, setPartyOpen] = useState(false);
+  const [partyGagOpen, setPartyGagOpen] = useState(false);
   const [partyMode, setPartyMode] = useState<PartyMode>('menu');
   const [detailId, setDetailId] = useState<string | null>(null);
   const [editing, setEditing] = useState<DrinkRecipe | null>(null);
@@ -50,7 +52,7 @@ function Shell() {
   const [linkReady, setLinkReady] = useState(false);
   const guestMenu = useMemo(() => guestToken === null ? null : decodeGuestMenu(guestToken), [guestToken]);
   const detail = detailId ? recipes.find((r) => r.id === detailId) : null;
-  const overlay = localBarsOpen || partyOpen || !!detail || !!editing || !!serving;
+  const overlay = partyGagOpen || localBarsOpen || partyOpen || !!detail || !!editing || !!serving;
 
   useEffect(() => {
     let active = true;
@@ -95,18 +97,18 @@ function Shell() {
     <View style={{ flex: 1 }}>
       {storageError && !overlay ? <View style={{ paddingHorizontal: 20, paddingTop: 12, gap: 6 }}><Body style={{ color: C.amber }} accessibilityLiveRegion="polite">{storageError}</Body><GhostButton label="Open device storage & backups" onPress={() => setLocalBarsOpen(true)} /></View> : null}
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        {tab === 'random' && <RandomScreen goTo={goTo} onParty={() => setPartyOpen(true)} onServe={startServing} active={!overlay} />}
+        {tab === 'random' && <RandomScreen goTo={goTo} onParty={() => setPartyOpen(true)} onFun={() => setPartyGagOpen(true)} onServe={startServing} active={!overlay} />}
         {tab === 'cabinet' && <CabinetScreen view={cabinetView} onViewChange={setCabinetView} onLocalBars={() => setLocalBarsOpen(true)} />}
         {tab === 'recipes' && <RecipesScreen onOpen={(r) => setDetailId(r.id)} onNew={() => setEditing(blankRecipe())} />}
         {tab === 'builder' && <BuilderScreen goTo={goTo} onOpen={(r) => setDetailId(r.id)} onEdit={setEditing} />}
       </SafeAreaView>
       <NavPill active={tab} onChange={setTab} />
       <OverlayLayer visible={overlay} onClose={() => {
-        if (localBarsOpen) setLocalBarsOpen(false); else if (serving) setServing(null); else if (editing) setEditing(null); else if (detail) setDetailId(null); else setPartyOpen(false);
+        if (partyGagOpen) setPartyGagOpen(false); else if (localBarsOpen) setLocalBarsOpen(false); else if (serving) setServing(null); else if (editing) setEditing(null); else if (detail) setDetailId(null); else setPartyOpen(false);
       }}>
-      {localBarsOpen ? <LocalBarsScreen onClose={() => setLocalBarsOpen(false)} /> : serving ? <ServingView key={serving.recipe.id} {...serving} onClose={() => setServing(null)} /> : editing ? <RecipeEditor key={editing.id} recipe={editing} onClose={() => setEditing(null)} onSave={(r) => { saveRecipe(r); setEditing(null); setDetailId(r.id); }} /> : detail ?
+      {partyGagOpen ? <PartyGagScreen onClose={() => setPartyGagOpen(false)} /> : localBarsOpen ? <LocalBarsScreen onClose={() => setLocalBarsOpen(false)} /> : serving ? <ServingView key={serving.recipe.id} {...serving} onClose={() => setServing(null)} /> : editing ? <RecipeEditor key={editing.id} recipe={editing} onClose={() => setEditing(null)} onSave={(r) => { saveRecipe(r); setEditing(null); setDetailId(r.id); }} /> : detail ?
         <RecipeDetail recipe={detail} onClose={() => setDetailId(null)} onEdit={editRecipe} onServe={startServing} onShopping={() => { setDetailId(null); setPartyOpen(false); goTo('cabinet', 'shopping'); }} onParty={() => { setDetailId(null); setPartyMode('menu'); setPartyOpen(true); }} /> : partyOpen ?
-        <PartyScreen mode={partyMode} setMode={setPartyMode} onClose={() => setPartyOpen(false)} onRecipe={(r) => setDetailId(r.id)} onServe={startServing} onShopping={() => { setPartyOpen(false); goTo('cabinet', 'shopping'); }} /> : null}
+        <PartyScreen mode={partyMode} setMode={setPartyMode} onClose={() => setPartyOpen(false)} onFun={() => setPartyGagOpen(true)} onRecipe={(r) => setDetailId(r.id)} onServe={startServing} onShopping={() => { setPartyOpen(false); goTo('cabinet', 'shopping'); }} /> : null}
       </OverlayLayer>
     </View>
   );

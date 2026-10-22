@@ -46,7 +46,8 @@
     "test:hosting": "node --require ./tests/register-typescript.cjs --test tests/hosting.test.cjs",
     "test:local-bars": "node --require ./tests/register-typescript.cjs --test tests/local-bars.test.cjs",
     "test:random-source": "node --require ./tests/register-typescript.cjs --test tests/random-source.test.cjs",
-    "test": "npm run test:shake && npm run test:discovery && npm run test:hosting && npm run test:local-bars && npm run test:random-source"
+    "test:party-gag": "node --require ./tests/register-typescript.cjs --test tests/party-gag.test.cjs",
+    "test": "npm run test:shake && npm run test:discovery && npm run test:hosting && npm run test:local-bars && npm run test:random-source && npm run test:party-gag"
   },
   "private": true
 }

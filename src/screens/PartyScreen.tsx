@@ -27,8 +27,9 @@ function ServingCount({ name, text, onText, onChange }: { name: string; text: st
 }
 
 export type PartyMode = 'menu' | 'batch' | 'guest';
-export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setMode }: {
+export function PartyScreen({ onClose, onFun, onRecipe, onServe, onShopping, mode, setMode }: {
   onClose: () => void; onRecipe: (r: DrinkRecipe) => void;
+  onFun: () => void;
   onServe: (r: DrinkRecipe, servings?: number, unit?: 'ml' | 'oz') => void; onShopping: () => void;
   mode: PartyMode; setMode: (mode: PartyMode) => void;
 }) {
@@ -105,6 +106,7 @@ export function PartyScreen({ onClose, onRecipe, onServe, onShopping, mode, setM
       {!candidates.length && party.entries.length < MAX_MENU ? <Dim>No complete recipes match. Try All recipes or another search.</Dim> : null}
       {candidates.length > limit && party.entries.length < MAX_MENU ? <GhostButton label="Show more drinks" onPress={() => setLimit((n) => n + 12)} /> : null}
       {selected.length ? <PrimaryButton label="Calculate batches & shopping" disabled={badCounts} onPress={() => setMode('batch')} /> : null}
+      <GhostButton label="Try Drunk Test · party gag" onPress={onFun} />
     </> : mode === 'batch' ? <>
       {!selected.length ? <PrimaryButton label="Choose the menu first" onPress={() => setMode('menu')} /> : badCounts ? <><Body style={{ color: C.text }}>Fix the serving counts before calculating.</Body><PrimaryButton label="Back to menu" onPress={() => setMode('menu')} /></> : <>
         <View style={styles.tabs}><Chip label="Milliliters" active={party.unit === 'ml'} onPress={() => setParty({ ...party, unit: 'ml' })} /><Chip label="US fluid ounces" active={party.unit === 'oz'} onPress={() => setParty({ ...party, unit: 'oz' })} /></View>

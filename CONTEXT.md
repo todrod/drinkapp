@@ -1,5 +1,24 @@
 # The Drink Shaker — project context
 
+## Fun mode · 22 October 2026
+
+Discover and the host menu now open **Drunk Test**, a clearly labeled pretend
+party gag. A four-second countdown reveals a random integer nonsense score
+from 0–100 and a silly party verdict. These are fictional party scores, never
+BAC readings or sobriety/impairment estimates. No result encourages more
+drinking or claims someone can drive. The joke label and made-up-score wording
+stay visible; the screen explains that no microphone or breath sensor is used.
+
+`PartyGagScreen` shares the existing host overlay. Opening it suspends Discover
+shake selection; closing returns to the host menu when opened there. Cancel,
+unmount and backgrounding clear the countdown. Results are transient and never
+touch inventory, party plans, preferences, backups or guest QR payloads.
+
+Verified: all 57 tests, typecheck, web/Android/iOS exports, 320/390 px layouts,
+countdown/result/replay, cancellation past the original deadline, closing during
+countdown and reopening fresh, returning to a saved party menu, and its guest
+QR still rendering. Native background transitions need a device check.
+
 ## Larger phone text and party discoverability · 22 October 2026
 
 Shared body text is now 17 px, supporting text 15 px and headings 19 px.

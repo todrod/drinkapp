@@ -45,9 +45,10 @@ import { discoverDrinks, ideaAllowsSubstitution } from '../logic/discovery';
 import { isAlcoholFree, isServingReady } from '../logic/recipes';
 
 export function RandomScreen({
-  goTo, onParty, onServe, active = true,
+  goTo, onParty, onFun, onServe, active = true,
 }: {
   onParty: () => void;
+  onFun: () => void;
   onServe: (r: DrinkRecipe) => void;
   active?: boolean;
   goTo: (tab: TabKey, view?: 'stock' | 'shopping') => void;
@@ -382,6 +383,12 @@ export function RandomScreen({
           </ScrollView>
         </View>
       ) : null}
+
+      <Pressable onPress={onFun} accessibilityRole="button" accessibilityLabel="Open Drunk Test party gag" style={styles.quickCard}>
+        <View style={styles.quickIcon}><Icon name="party-popper" size={24} color={C.accent} /></View>
+        <View style={{ flex: 1 }}><Text style={styles.quickTitle}>Fun mode · Drunk Test</Text><Dim>A pretend blow test. Random party scores, just for laughs.</Dim></View>
+        <Icon name="chevron-right" size={20} color={C.faint} />
+      </Pressable>
 
       {/* ── Result ──────────────────────────────────────────────────────── */}
       <View onLayout={(event) => { resultOffset.current = event.nativeEvent.layout.y; }}>
