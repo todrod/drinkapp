@@ -122,6 +122,27 @@ test('a full-bar retry is atomic when browser storage runs out of space', () => 
   ls.healthy(); web.replaceProfileData(updated); assert.equal(web.loadKit().length, 117);
 });
 
+test('bulk inventory edits/clears are atomic and preserve recipes, menus, shopping and other browser bars', () => {
+  const ls = fakeLocalStorage(); const d = source(); web.replaceProfileData(d);
+  const other = web.createProfile('Other shelf', d).activeId;
+  web.scopedToProfile('default').replaceKit([bottle('new-bottle', 'Edited name')]);
+  assert.equal(web.loadKit().length, 1); assert.equal(web.loadKit()[0].name, 'Edited name');
+  assert.deepEqual(web.loadRecipes(), d.recipes); assert.deepEqual(web.loadParty(), d.party); assert.deepEqual(web.loadShopping(), d.shopping);
+  assert.equal(web.loadKit(other).length, 116);
+  const before = ls.values.get('shaker:state'); ls.failAfter(1);
+  assert.throws(() => web.scopedToProfile('default').replaceKit([])); assert.equal(ls.values.get('shaker:state'), before);
+  ls.healthy(); web.scopedToProfile('default').replaceKit([]); assert.deepEqual(web.loadKit(), []);
+  assert.deepEqual(web.loadParty(), d.party); assert.equal(web.loadKit(other).length, 116);
+  web.replaceKit(d.kit); assert.equal(web.loadKit().length, 116);
+});
+
+test('bulk inventory changes on a legacy browser bar write only its inventory key', () => {
+  const ls = fakeLocalStorage(); const d = source();
+  ls.values.set('shaker:kit', JSON.stringify(d.kit)); ls.values.set('shaker:party', JSON.stringify(d.party));
+  web.replaceKit([bottle('one')]); assert.equal(web.loadKit().length, 1);
+  assert.equal(ls.values.get('shaker:party'), JSON.stringify(d.party)); assert.ok(!ls.values.has('shaker:state'));
+});
+
 test('damaged profile metadata fails closed and profile names cannot become filesystem paths', () => {
   assert.throws(() => readProfileIndex({ version: 1, activeId: '../../other', profiles: [] }));
   const index = readProfileIndex(null); const p = newLocalProfile('../My cabin', index);
@@ -165,6 +186,15 @@ test('native bars use separate real SQLite files; a failed import rolls back bef
     const failed = [...files.values()].at(-1); assert.equal(failed.prepare('SELECT count(*) AS n FROM inventory').get().n, 0);
     const restored = native.createProfile('Saved copy', parseBackup(makeBackup('Source', d)).data);
     assert.equal(native.loadKit(restored.activeId).length, 116); assert.equal(native.loadParty(restored.activeId).entries[0].servings, 12);
+    const existingKit = native.loadKit(); failInventory = true;
+    assert.throws(() => original.replaceKit([bottle('bulk-failure')])); failInventory = false;
+    assert.deepEqual(native.loadKit(), existingKit, 'a failed insert rolls back the inventory delete'); clearPersistenceError();
+    original.replaceKit([{ ...bottle('edited-native'), catalogItemId: 'mx-lime-juice', category: 'mixer', level: 'out' }]);
+    assert.equal(native.loadKit()[0].catalogItemId, 'mx-lime-juice'); assert.equal(native.loadKit()[0].level, 'out');
+    assert.equal(native.loadRecipes().find((r) => r.id === d.recipes[0].id).rating, 5); assert.equal(native.loadParty().title, 'Saturday');
+    assert.equal(native.loadKit(restored.activeId).length, 116);
+    original.replaceKit([]); assert.deepEqual(native.loadKit(), []); original.replaceKit(existingKit);
+    assert.deepEqual(native.loadKit(), existingKit);
     native.setActiveProfile('default'); assert.equal(native.loadProfileIndex().activeId, 'default');
     failRegistryRead = true; assert.throws(() => native.loadProfileIndex()); assert.equal(getPersistenceReadError(), true);
     failRegistryRead = false; assert.equal(native.loadProfileIndex().activeId, 'default');

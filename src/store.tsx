@@ -17,6 +17,7 @@ import { clearPersistenceError, getPersistenceError, getPersistenceReadError, re
 import { DEFAULT_PARTY, MAX_MENU, normalizeParty } from './logic/hosting';
 import { isAlcoholFree, isServingReady } from './logic/recipes';
 import { MY_BAR } from './data/bar';
+import { editInventory, mergeInventory, removeInventory, restoreInventory, type InventoryDraft } from './logic/inventory';
 
 /**
  * Data lives in SQLite (or localStorage on web) and is mirrored in memory.
@@ -47,6 +48,10 @@ interface Ctx {
   restoreKitItem: (item: InventoryItem) => void;
   addStarterKit: () => void;
   loadMyBar: () => void;
+  importInventory: (drafts: InventoryDraft[]) => { added: number; skipped: number };
+  editInventoryItem: (id: string, draft: InventoryDraft) => void;
+  removeInventoryItems: (ids: string[]) => InventoryItem[];
+  restoreInventoryItems: (items: InventoryItem[]) => void;
 
   saveRecipe: (recipe: DrinkRecipe) => void;
   removeRecipe: (id: string) => void;
@@ -202,6 +207,29 @@ function ProfileDataProvider({ children, index, onIndexChange, reload }: { child
     store.saveKitItem(item);
     setKit((prev) => (prev.some((k) => k.id === item.id) ? prev : [item, ...prev]));
   }, []);
+
+  const commitInventory = useCallback((next: InventoryItem[]) => {
+    // Persist first. Failed bulk writes must not display an import/clear as saved.
+    if (getPersistenceError()) throw new Error('Resolve the device storage warning before changing inventory.');
+    store.replaceKit(next);
+    setKit(next);
+  }, [store]);
+  const importInventory = useCallback((drafts: InventoryDraft[]) => {
+    const result = mergeInventory(kit, drafts, uid);
+    if (result.added) commitInventory(result.kit);
+    return { added: result.added, skipped: result.skipped };
+  }, [kit, commitInventory]);
+  const editInventoryItem = useCallback((id: string, draft: InventoryDraft) => {
+    commitInventory(editInventory(kit, id, draft));
+  }, [kit, commitInventory]);
+  const removeInventoryItems = useCallback((ids: string[]) => {
+    const result = removeInventory(kit, ids);
+    if (result.removed.length) commitInventory(result.kit);
+    return result.removed;
+  }, [kit, commitInventory]);
+  const restoreInventoryItems = useCallback((items: InventoryItem[]) => {
+    commitInventory(restoreInventory(kit, items));
+  }, [kit, commitInventory]);
 
   const addStarterKit = useCallback(() => {
     const { STARTER_KIT } = require('./data/catalog');
@@ -401,6 +429,7 @@ function ProfileDataProvider({ children, index, onIndexChange, reload }: { child
       restoreKitItem,
       addStarterKit,
       loadMyBar,
+      importInventory, editInventoryItem, removeInventoryItems, restoreInventoryItems,
       saveRecipe,
       removeRecipe,
       markMade,
@@ -421,6 +450,7 @@ function ProfileDataProvider({ children, index, onIndexChange, reload }: { child
       kit, recipes, prefs, shopping, undoMade, party, setParty, addToParty,
       addFromCatalog, addCustom, setLevel, removeFromKit, restoreKitItem,
       addStarterKit, loadMyBar, saveRecipe, removeRecipe, markMade, toggleFavorite,
+      importInventory, editInventoryItem, removeInventoryItems, restoreInventoryItems,
       rateRecipe, shopping, addToShopping, toggleShoppingDone, removeFromShopping,
       buyShoppingItem, clearBoughtShopping, setPref,
     ]

@@ -1,5 +1,27 @@
 # The Drink Shaker — project context
 
+## Inventory imports and management · 22 October 2026
+
+My bar now has **Import list** and **Edit inventory**, plus **Edit item** on
+each bottle. Import CSV/TSV/TXT/JSON or paste a list, review/exclude/edit rows,
+then add to the current local bar. Exact catalog/known bottle names link to
+recipe types; unfamiliar items stay custom until reviewed. Duplicate names are
+skipped, never deduplicated by shared catalog ID. Existing levels are preserved.
+No AI, upload server, dependency or schema change. See [docs/INVENTORY.md](docs/INVENTORY.md).
+
+The editor changes name, brand, remaining level, category and recipe type.
+The manager supports search, selected/matching-row removal and confirmed
+clear-all. Undo of the last removal/clear is available while My bar stays
+mounted. New `replaceKit` writes atomically before changing UI state, using one
+web storage write or an inventory-only SQLite transaction; failures keep saved
+data intact. Other local bars, recipes, history, shopping and party plans stay
+saved. Keep the platform split for `inventoryFiles` and profile-bound writes.
+
+All 97 tests, typecheck and web/Android/iOS exports pass. Real CSV upload and
+pasted-list browser checks cover preview, duplicate skipping, type review,
+manual edits, bulk/single removal, clear/cancel/undo and reload persistence at
+320/390 px. Native SQLite rollback is tested; native picker UI needs a phone.
+
 ## Manual update checks in settings · 22 October 2026
 
 **My bar → settings gear → App updates → Check for updates** now checks the

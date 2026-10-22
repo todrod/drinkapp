@@ -165,6 +165,15 @@ export function deleteKitItem(id: string, profileId = 'default') {
   sqlite(profileId).runSync('DELETE FROM inventory WHERE id = ?', [id]);
 }
 
+export function replaceKit(items: InventoryItem[], profileId = 'default') {
+  const handle = sqlite(profileId);
+  // A bulk import/clear is one transaction; a failed row leaves the bar intact.
+  handle.withTransactionSync(() => {
+    handle.execSync('DELETE FROM inventory');
+    items.forEach((item) => saveKitItem(item, profileId));
+  });
+}
+
 // ── Recipes ────────────────────────────────────────────────────────────────
 
 function insertRecipe(r: DrinkRecipe, profileId = 'default') {
@@ -311,4 +320,4 @@ export function createProfile(name: string, data: ProfileData): ProfileIndex {
   const next: ProfileIndex = { ...index, activeId: profile.id, profiles: [...index.profiles, profile] };
   saveIndex(next); return next;
 }
-export const scopedToProfile = (id: string) => bindProfileStore({ loadKit, saveKitItem, deleteKitItem, loadRecipes, saveRecipe, deleteRecipe, loadShopping, saveShoppingItem, deleteShoppingItem, loadPrefs, savePrefs, loadParty, saveParty, replaceProfileData }, id);
+export const scopedToProfile = (id: string) => bindProfileStore({ loadKit, replaceKit, saveKitItem, deleteKitItem, loadRecipes, saveRecipe, deleteRecipe, loadShopping, saveShoppingItem, deleteShoppingItem, loadPrefs, savePrefs, loadParty, saveParty, replaceProfileData }, id);

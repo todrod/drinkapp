@@ -44,6 +44,8 @@ import { IngredientArt } from '../components/IngredientArt';
 import { artForCatalog } from '../data/art';
 import { pluralize } from '../format';
 import { UpdateSettings } from '../components/UpdateSettings';
+import { InventoryImportScreen } from './InventoryImportScreen';
+import { InventoryManageScreen } from './InventoryManageScreen';
 
 export type CabinetView = 'stock' | 'shopping';
 
@@ -58,14 +60,16 @@ export function CabinetScreen({
 }) {
   const {
     profile, kit, recipes, prefs, setPref, addFromCatalog, addCustom, setLevel,
-    removeFromKit, restoreKitItem, addStarterKit, loadMyBar, shopping, addToShopping, storageError,
+    removeInventoryItems, restoreInventoryItems, addStarterKit, loadMyBar, shopping, addToShopping, storageError,
   } = useData();
 
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState(false);
   const [settings, setSettings] = useState(false);
-  const [undo, setUndo] = useState<InventoryItem | null>(null);
+  const [undo, setUndo] = useState<InventoryItem[]>([]);
+  const [inventoryTool, setInventoryTool] = useState<{ mode: 'import' | 'manage'; id?: string } | null>(null);
+  const [inventoryNotice, setInventoryNotice] = useState('');
   const { width } = useWindowDimensions();
   const columns = width >= 1000 ? 4 : width >= 700 ? 3 : 2;
   const cardWidth = (Math.min(width, 1120) - 48 - 12 * (columns - 1)) / columns;
@@ -92,9 +96,11 @@ export function CabinetScreen({
 
   const remove = (item: InventoryItem) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    removeFromKit(item.id);
-    setUndo(item);
-    setTimeout(() => setUndo((u) => (u?.id === item.id ? null : u)), 5000);
+    try { setUndo(removeInventoryItems([item.id])); setInventoryNotice(''); }
+    catch (problem) { setInventoryNotice(problem instanceof Error ? problem.message : 'Couldn’t remove this item.'); }
+  };
+  const undoRemoval = () => {
+    restoreInventoryItems(undo); setUndo([]); setInventoryNotice('Inventory restored.');
   };
 
   return (
@@ -160,6 +166,12 @@ export function CabinetScreen({
             <Text style={styles.addBtnText}>Add ingredient</Text>
           </Pressable>
         </View>
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+          <GhostButton label="Import list" onPress={() => setInventoryTool({ mode: 'import' })} style={{ flex: 1, minWidth: 115 }} />
+          <GhostButton label="Edit inventory" onPress={() => setInventoryTool({ mode: 'manage' })} style={{ flex: 1, minWidth: 135 }} />
+        </View>
+        {inventoryNotice ? <Body accessibilityLiveRegion="polite" style={{ marginBottom: 14 }}>{inventoryNotice}</Body> : null}
 
         {kit.length > 0 ? (
           <Dim style={{ marginBottom: S.md }}>
@@ -228,6 +240,7 @@ export function CabinetScreen({
                           width={cardWidth}
                           onLevel={(l) => setLevel(item.id, l)}
                           onRemove={() => remove(item)}
+                          onEdit={() => setInventoryTool({ mode: 'manage', id: item.id })}
                         />
                       ))}
                     </View>
@@ -247,22 +260,24 @@ export function CabinetScreen({
         ) : null}
       </ScrollView>
 
-      {undo ? (
+      {undo.length && !inventoryTool ? (
         <View style={styles.toast}>
           <Body style={{ flex: 1 }} numberOfLines={1}>
-            Removed {undo.name}
+            Removed {undo.length} {undo.length === 1 ? 'item' : 'items'}
           </Body>
           <Pressable
             onPress={() => {
-              restoreKitItem(undo);
-              setUndo(null);
+              try { undoRemoval(); } catch (problem) { setInventoryNotice(problem instanceof Error ? problem.message : 'Couldn’t restore inventory.'); }
             }}
             accessibilityRole="button"
+            accessibilityLabel="Undo inventory removal"
           >
             <Text style={styles.undoText}>UNDO</Text>
           </Pressable>
         </View>
       ) : null}
+
+      {inventoryTool?.mode === 'import' ? <InventoryImportScreen onClose={() => setInventoryTool(null)} onImported={(message) => { setInventoryNotice(message); setInventoryTool(null); }} /> : inventoryTool?.mode === 'manage' ? <InventoryManageScreen initialId={inventoryTool.id} onClose={() => setInventoryTool(null)} onRemoved={(items) => { setUndo(items); setInventoryNotice(`Removed ${items.length} ${items.length === 1 ? 'item' : 'items'}.`); }} undoCount={undo.length} onUndo={undoRemoval} /> : null}
 
       <AddSheet
         visible={adding}
@@ -352,11 +367,13 @@ function ItemCard({
   width,
   onLevel,
   onRemove,
+  onEdit,
 }: {
   item: InventoryItem;
   width: number;
   onLevel: (l: Level) => void;
   onRemove: () => void;
+  onEdit: () => void;
 }) {
   return (
     <LinearGradient
@@ -382,8 +399,10 @@ function ItemCard({
       <Text style={styles.cardName}>
         {item.name}
       </Text>
+      {item.brand ? <Text style={styles.cardMeta}>{item.brand}</Text> : null}
       <Text style={[styles.cardMeta, item.level === 'low' && { color: C.text }]}>{({ full: 'Well stocked', half: 'Half remaining', low: 'Running low', out: 'Time to restock' })[item.level]}</Text>
       <QuantityBar name={item.name} level={item.level} onChange={onLevel} />
+      <GhostButton label="Edit item" accessibilityLabel={`Edit ${item.name}`} onPress={onEdit} style={{ marginTop: 8 }} />
     </LinearGradient>
   );
 }

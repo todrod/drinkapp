@@ -4,6 +4,7 @@ import { reportPersistenceError } from '../persistenceStatus';
 
 export interface ProfileStore {
   loadKit(id?: string): InventoryItem[];
+  replaceKit(items: InventoryItem[], id?: string): void;
   saveKitItem(item: InventoryItem, id?: string): void;
   deleteKitItem(itemId: string, id?: string): void;
   loadRecipes(id?: string): DrinkRecipe[];
@@ -25,6 +26,7 @@ export function bindProfileStore(store: ProfileStore, id: string) {
   const write = (action: () => void) => { try { action(); } catch { reportPersistenceError(); } };
   return {
     loadKit: () => store.loadKit(id), saveKitItem: (item: InventoryItem) => write(() => store.saveKitItem(item, id)), deleteKitItem: (itemId: string) => write(() => store.deleteKitItem(itemId, id)),
+    replaceKit: (items: InventoryItem[]) => { try { store.replaceKit(items, id); } catch (error) { reportPersistenceError(); throw error; } },
     loadRecipes: () => store.loadRecipes(id), saveRecipe: (recipe: DrinkRecipe) => write(() => store.saveRecipe(recipe, id)), deleteRecipe: (recipeId: string) => write(() => store.deleteRecipe(recipeId, id)),
     loadShopping: () => store.loadShopping(id), saveShoppingItem: (item: ShoppingItem) => write(() => store.saveShoppingItem(item, id)), deleteShoppingItem: (itemId: string) => write(() => store.deleteShoppingItem(itemId, id)),
     loadPrefs: () => store.loadPrefs(id), savePrefs: (prefs: Prefs) => write(() => store.savePrefs(prefs, id)), loadParty: () => store.loadParty(id), saveParty: (party: PartyPlan) => write(() => store.saveParty(party, id)),

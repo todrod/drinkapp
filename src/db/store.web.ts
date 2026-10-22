@@ -28,6 +28,13 @@ function write(key: keyof ProfileData, value: unknown, id = 'default') {
 }
 
 export function loadKit(id = 'default'): InventoryItem[] { return read('kit', [], id); }
+export function replaceKit(items: InventoryItem[], id = 'default') {
+  try {
+    const state = globalThis.localStorage.getItem(keyFor('state', id));
+    if (state !== null) globalThis.localStorage.setItem(keyFor('state', id), JSON.stringify({ ...JSON.parse(state), kit: items }));
+    else globalThis.localStorage.setItem(keyFor('kit', id), JSON.stringify(items));
+  } catch { reportPersistenceError(); throw new Error('Inventory could not be saved. Your saved inventory has been kept. Check device storage and try again.'); }
+}
 export function saveKitItem(item: InventoryItem, id = 'default') {
   const kit = loadKit(id); const at = kit.findIndex((k) => k.id === item.id);
   if (at >= 0) kit[at] = item; else kit.unshift(item);
@@ -89,4 +96,4 @@ export function createProfile(name: string, data: ProfileData): ProfileIndex {
   const next: ProfileIndex = { ...index, activeId: profile.id, profiles: [...index.profiles, profile] };
   saveIndex(next); return next;
 }
-export const scopedToProfile = (id: string) => bindProfileStore({ loadKit, saveKitItem, deleteKitItem, loadRecipes, saveRecipe, deleteRecipe, loadShopping, saveShoppingItem, deleteShoppingItem, loadPrefs, savePrefs, loadParty, saveParty, replaceProfileData }, id);
+export const scopedToProfile = (id: string) => bindProfileStore({ loadKit, replaceKit, saveKitItem, deleteKitItem, loadRecipes, saveRecipe, deleteRecipe, loadShopping, saveShoppingItem, deleteShoppingItem, loadPrefs, savePrefs, loadParty, saveParty, replaceProfileData }, id);
