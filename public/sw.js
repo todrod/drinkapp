@@ -16,15 +16,23 @@ self.addEventListener('install', (event) => {
       .open(CACHE)
       // Keep the previous worker if this release cannot be cached completely.
       .then((cache) => cache.addAll([...SHELL, ...BUILD_ASSETS].map((url) => new Request(url, { cache: 'no-store' }))))
-      .then(() => self.skipWaiting())
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SHAKER_GET_VERSION') {
+    event.source?.postMessage({ type: 'SHAKER_VERSION', version: CACHE });
+  }
+  // Updates stay waiting until the user taps. A first installation activates
+  // normally; it has no previous worker and needs no update prompt.
+  if (event.data?.type === 'SHAKER_ACTIVATE_UPDATE') event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('shaker-') && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -45,14 +53,9 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
-        .then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            event.waitUntil(caches.open(CACHE).then((c) => c.put('/index.html', copy)));
-          }
-          return res;
-        })
-        .catch(() => caches.match('/index.html').then((r) => r || caches.match('/')))
+        // Keep the offline HTML paired with this worker's fully cached assets.
+        // A newer network page may belong to a release that has not cached yet.
+        .catch(() => caches.open(CACHE).then((cache) => cache.match('/index.html').then((r) => r || cache.match('/'))))
     );
     return;
   }

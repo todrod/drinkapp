@@ -1,5 +1,29 @@
 # The Drink Shaker — project context
 
+## In-app update prompt · 22 October 2026
+
+Installed web apps and browser tabs now check for releases every minute while
+visible/online, and on focus, foregrounding or reconnecting. Discover shows
+**Update available → Update now / Later** only after the new worker has cached
+its complete release. Later leaves a compact update action. Other screens,
+overlays, the age gate, guest menus and storage errors suppress the invitation.
+There is no automatic page reload or interruption to editing/serving.
+
+`updates/controller.web.ts` owns registration and the worker lifecycle;
+`useAppUpdate.ts` is the native no-op. Postbuild pairs an HTML build meta tag
+with the worker cache identifier. A waiting worker activates on request, then
+only the requesting window reloads once. Other windows get their own invitation.
+Fresh pages already using the waiting release activate it without a redundant
+prompt. Offline HTML stays paired with its own fully cached assets; cleanup
+only removes Shaker caches, never local inventory or party records.
+
+All 75 tests, typecheck and web/Android/iOS exports pass. Browser verification
+covers two successive releases, deferral, overlay suppression, multiple windows,
+320/390 px layouts and an update after stopping the origin server. Eight sample
+ingredients, a named party menu and its servings survived; random selection
+still worked. Physical installed iOS/Android lifecycle behavior remains a phone
+check. Existing pre-feature app windows need one refresh to receive this updater.
+
 ## Installable app flow · 22 October 2026
 
 Discover now has an **Install app** button. A browser install event enables a

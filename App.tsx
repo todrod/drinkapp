@@ -34,6 +34,8 @@ import { LocalBarsScreen } from './src/screens/LocalBarsScreen';
 import { PartyGagScreen } from './src/screens/PartyGagScreen';
 import { useAppInstall } from './src/hooks/useAppInstall';
 import { InstallAppScreen, InstallInvite } from './src/components/InstallApp';
+import { useAppUpdate } from './src/hooks/useAppUpdate';
+import { UpdateAvailable } from './src/components/UpdateAvailable';
 import { Body, Dim, GhostButton, Heading, Panel, PrimaryButton } from './src/components/ui';
 
 function Shell() {
@@ -56,7 +58,9 @@ function Shell() {
   const guestMenu = useMemo(() => guestToken === null ? null : decodeGuestMenu(guestToken), [guestToken]);
   const detail = detailId ? recipes.find((r) => r.id === detailId) : null;
   const overlay = installOpen || partyGagOpen || localBarsOpen || partyOpen || !!detail || !!editing || !!serving;
-  const install = useAppInstall(ready && linkReady && !!prefs.ageGateAcceptedAt && guestToken === null && tab === 'random' && !overlay);
+  const update = useAppUpdate();
+  const showUpdate = update.snapshot.available && tab === 'random' && !overlay && !storageError;
+  const install = useAppInstall(ready && linkReady && !!prefs.ageGateAcceptedAt && guestToken === null && tab === 'random' && !overlay && !update.snapshot.available);
   const openInstall = () => { install.dismissHint(); setInstallOpen(true); };
 
   useEffect(() => {
@@ -107,7 +111,7 @@ function Shell() {
         {tab === 'recipes' && <RecipesScreen onOpen={(r) => setDetailId(r.id)} onNew={() => setEditing(blankRecipe())} />}
         {tab === 'builder' && <BuilderScreen goTo={goTo} onOpen={(r) => setDetailId(r.id)} onEdit={setEditing} />}
       </SafeAreaView>
-      {install.hintVisible ? <InstallInvite onInstall={openInstall} onDismiss={install.dismissHint} /> : null}
+      {showUpdate ? <UpdateAvailable update={update} /> : install.hintVisible ? <InstallInvite onInstall={openInstall} onDismiss={install.dismissHint} /> : null}
       <NavPill active={tab} onChange={setTab} />
       <OverlayLayer visible={overlay} onClose={() => {
         if (installOpen) setInstallOpen(false); else if (partyGagOpen) setPartyGagOpen(false); else if (localBarsOpen) setLocalBarsOpen(false); else if (serving) setServing(null); else if (editing) setEditing(null); else if (detail) setDetailId(null); else setPartyOpen(false);

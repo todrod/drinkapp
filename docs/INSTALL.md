@@ -40,16 +40,51 @@ generates a worker asset list from exported code, fonts and graphics. Its cache
 name incorporates the current HTML and asset paths. All release assets and app
 icons must cache successfully before the new worker activates. A failed install
 keeps the previous worker; activation removes old asset caches without touching
-the separate local inventory store. Native imports use a no-op install hook.
+the separate local inventory store. Cleanup is limited to Shaker cache names.
+Native imports use no-op install/update hooks.
+
+## Updating without closing the app
+
+- Visible, online windows check every minute, and check again when focused,
+  foregrounded or reconnected. `/sw.js` bypasses HTTP caching. Download and
+  precaching happen in the background; a failed download never offers a ready
+  update or displaces the previous worker.
+- On Discover, **Update available** offers **Update now** and **Later**. Other
+  screens, guest menus, overlays, the age gate and storage errors suppress it.
+  Later leaves a compact **Update available · Update now** action for this
+  session. A different release gets a new invitation. Install suggestions wait
+  while an update is available.
+- Update now activates the waiting worker, then refreshes this window once.
+  Your saved local bar, recipes, preferences and party plans remain. Unsaved
+  search/filter/selection state can reset. Activation failures show a retry.
+  Already-downloaded updates can apply offline using their cached HTML/assets.
+- Another window's activation never forces this window to reload. It offers
+  its own manual update. HTML and workers exchange build identifiers so a fresh
+  page already on the latest release never shows a redundant update prompt.
+- Existing windows from before this feature need one refresh to receive it.
+  Future releases use the in-app prompt. Phone operating systems can suspend
+  background apps; checks resume when the app becomes active.
+
+Worker messages follow the browser's [skipWaiting lifecycle](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/skipWaiting)
+and explicit [registration update checks](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/update).
+The offline index belongs to its worker's precached release; network navigation
+does not overwrite it with HTML from an incompletely downloaded future release.
 
 ## Verification
 
-All 65 tests, typecheck and web/Android/iOS exports pass. Eight install/PWA tests
+All 75 tests, typecheck and web/Android/iOS exports pass. Eighteen install/PWA/update tests
 cover early event capture, synchronous activation, single-use events, concurrent
 taps, accepted/dismissed/error outcomes, old `userChoice` promises, cooldowns,
 Apple device detection, installed states, unavailable storage and build cache
-generation/failure behavior. Browser checks at 320/390 px cover the visible
+generation/failure behavior, explicit activation, first installs, fresh pages,
+multi-window activation, deferral, retry, deduplicated checks and cleanup.
+Browser checks at 320/390 px cover the visible
 button, selectable device instructions and backup shortcut. A first-visit cache
 reloaded and selected a recipe after stopping that origin's server. Browser
-install confirmations use mocked events in tests; physical-device installation
-remains a phone check.
+install confirmations use mocked events in tests. Two local release transitions
+verified update detection without refreshing, Later, overlay suppression,
+no forced reload in another window and no prompt on an already-current page.
+After stopping the origin server, the update button loaded the new cached
+release with all eight test ingredients and the named Daiquiri party menu
+intact. Random selection still worked. Physical-device installation and
+installed iOS/Android foreground/update behavior remain phone checks.
