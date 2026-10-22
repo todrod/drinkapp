@@ -1,5 +1,26 @@
 # The Drink Shaker — project context
 
+## Animated shaker update · 22 October 2026
+
+Discover now uses `components/AnimatedShaker.tsx`: copper-and-steel barware
+drawn with the existing SVG library and animated through React Native's
+`Animated`. A tap or phone shake runs the same guarded selection, with a
+1,800 ms shake/uncap/pour sequence before revealing the recipe. Pause or
+reduced motion shows the finished still and selects immediately. Idle motion
+stops offscreen, in the background and behind overlays; tab changes cancel
+selection. No graphics or navigation dependency was added. The original orb
+assets and render scripts remain as historical source but are no longer
+bundled into the app. Starter recipes and inventory matching are unchanged.
+The empty-bar card now states that all recipes can be browsed, and links to
+the recipe book and inventory/sample-bar setup.
+
+Verified: all 46 tests and typecheck; web and Android/iOS exports; browser
+checks at 320 px and 390 px, visible shake/uncap/pour frames, result reveal,
+pause with immediate selection, and cancellation when leaving Discover.
+An empty inventory browses all 144 starter recipes; the eight-item sample bar
+unlocks seven options with substitutions. Real phone motion remains a device
+check; the existing nine sensor/gesture tests pass unchanged.
+
 ## Local storage update · 21 October 2026
 
 **My bar → My local bars · switch · backup & restore** now manages named,
@@ -33,9 +54,10 @@ plan. The legacy web bar uses `shaker:party`; new bars include it in their
 namespaced full-state record. Existing bottles,
 recipe edits, ratings and favorites are preserved. Keep the native/web split.
 
-The app bundles a **2,034,634-byte animated WebP** at 480 px / 25 fps / 12 seconds
-instead of the 12.2 MB GIF. The original GIF remains in source. The rendering
-and tap/shake paths are independent. See `scripts/encode-orb-web.ps1`.
+The hosting release used a **2,034,634-byte animated WebP** instead of the
+12.2 MB GIF. Both remain in source for reference; the animated shaker has
+since replaced this media in the shipped app. See `scripts/encode-orb-web.ps1`
+for the historical encoding workflow.
 
 Host overlay content shares one native modal, and the four main tabs remain.
 The hosting update added tests for hosting arithmetic, guest validation,
@@ -88,10 +110,9 @@ npm test                   # motion, recipe integrity and keyword discovery
 `vercel.json`, which runs `npx expo export --platform web && node
 scripts/postbuild.mjs` and serves `dist/`. No dashboard config needed.
 
-Code and fonts export at about **1.2 MB**. The rendered hero GIF and its PNG
-poster are separate bundled assets; see `docs/MAGIC_ORB_VERIFICATION.json` for
-the animation's exact size and timing. Four Outfit font weights and the subset
-icon font remain in use.
+Code and fonts export at about **1.2 MB**. The shaker uses code-native vector
+art and motion; its predecessor's GIF and PNG poster are no longer shipped.
+Four Outfit font weights and the subset icon font remain in use.
 
 ---
 
@@ -103,8 +124,7 @@ Expo SDK 57 · React Native 0.86 · TypeScript · React 19.
 |---|---|
 | Local data | `expo-sqlite` on native, `localStorage` on web |
 | State | React context + in-memory mirror (`src/store.tsx`) |
-| Graphics | `react-native-svg` for catalog art; a rendered Cycles GIF for the home crystal |
-| Animated images | `expo-image` with a matching PNG poster |
+| Graphics | `react-native-svg` for catalog art and the animated home shaker |
 | Animation | React Native's built-in `Animated` — **not** Reanimated |
 | Icons | `@expo/vector-icons` MaterialCommunityIcons, subset to 12 KB |
 | Sensors | `expo-sensors` accelerometer on native; `devicemotion` on mobile web |
@@ -155,7 +175,7 @@ src/
     Atmosphere.tsx        Quiet background glow + grain overlay
     IngredientArt.tsx     Parametric SVG bottles
     CocktailArt.tsx       Recipe illustrations, chosen by serving glass
-    CrystalBall.tsx       Rendered GIF and reduced-motion/background poster
+    AnimatedShaker.tsx    Copper shaker and coupe; idle and shake/uncap/pour motion
     LineIcon.tsx          Shared SVG interface icons on a 24-unit grid
   screens/                One per tab, plus AgeGate
   hooks/useShakeDetector.ts
@@ -324,7 +344,7 @@ The installed Expo web Accelerometer uses orientation angles, so the web
 adapter reads `devicemotion.accelerationIncludingGravity` and converts m/s²
 to g. Native Accelerometer readings are already in g. Keep that distinction.
 The hook detaches when backgrounded or off; three distinct jolts trigger the
-same crystal-ball selection as a tap, with a cooldown against repeated picks.
+same shaker selection as a tap, with a cooldown against repeated picks.
 
 ### Empty recipes used to be "pourable"
 A recipe with no ingredients satisfies "every required ingredient resolves"

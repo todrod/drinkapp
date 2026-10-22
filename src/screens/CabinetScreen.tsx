@@ -303,7 +303,7 @@ export function CabinetScreen({
                 onToggle={() => setPref('allowSubstitutes', !prefs.allowSubstitutes)}
               />
               <SettingRow
-                label="Shake the crystal ball"
+                label="Find a drink with the shaker"
                 hint="Enable motion on Discover to choose a drink by shaking your phone"
                 on={prefs.shakeToShake}
                 onToggle={() => setPref('shakeToShake', !prefs.shakeToShake)}

@@ -46,11 +46,17 @@ QR codes are offered for links up to 1,800 characters; longer valid menus can be
 6. Preparation and completed-history recording are separate, with confirmation and undo.
 7. The editor offers units, roles, optional ingredients, positive-measure validation and explicit free-text alcohol declarations. Incomplete recipes are labeled drafts and excluded from serving/generation/batches. Editing a bundled recipe creates a personal copy and retains its attribution; existing stored edits remain intact.
 
-The home idea field now precedes the compact crystal hero. At 390 × 844 it starts near y=282, compared with approximately y=924 in the audit. Main actions stay full-width on phones. Secondary text is larger, availability counts explicitly refer to recipes, and first use prioritizes adding owned ingredients. The 116-item owner inventory and eight-ingredient starter are clearly labeled samples. Web search fields retain focus when filtering changes scroll position.
+The home idea field precedes the compact animated hero. At 390 × 844 it starts near y=282, compared with approximately y=924 in the audit. Main actions stay full-width on phones. Secondary text is larger, availability counts explicitly refer to recipes, and first use prioritizes adding owned ingredients. The 116-item owner inventory and eight-ingredient starter are clearly labeled samples. Web search fields retain focus when filtering changes scroll position.
 
 ## Media delivery
 
-The original GIF remains in `assets/magic-orb.gif`. The app loads `assets/magic-orb.webp`: 480 × 480, 300 frames, 40 ms per frame, 12 seconds, infinite loop, **2,034,634 bytes**, about 83% smaller than the 12,185,250-byte GIF. It was encoded directly from the original full-color Cycles frames with unchanged smoke density and timing. The matching PNG still covers reduced motion, pause, background, offscreen and image-error states. Tap and shake selection remain independent of decoding.
+On 22 October the home media was replaced by `AnimatedShaker.tsx`, a vector
+shaker and coupe with React Native animation. It shakes, uncaps and pours
+before revealing a recipe. Pause/reduced motion select immediately; idle
+motion stops offscreen or in the background. The orb media is no longer
+bundled. The following measurements document the previous release.
+
+The original GIF remains in `assets/magic-orb.gif`. The previous release loaded `assets/magic-orb.webp`: 480 × 480, 300 frames, 40 ms per frame, 12 seconds, infinite loop, **2,034,634 bytes**, about 83% smaller than the 12,185,250-byte GIF. It was encoded directly from the original full-color Cycles frames with unchanged smoke density and timing. The matching PNG covered reduced motion, pause, background, offscreen and image-error states. Tap and shake selection remained independent of decoding.
 
 Reproduce it from the original frames:
 

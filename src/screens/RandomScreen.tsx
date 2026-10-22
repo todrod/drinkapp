@@ -36,7 +36,7 @@ import { useShakeDetector } from '../hooks/useShakeDetector';
 import { formatIngredient, pluralize } from '../format';
 import { TabKey } from '../components/NavPill';
 import { Icon } from '../icons';
-import { CrystalBall } from '../components/CrystalBall';
+import { AnimatedShaker, MIX_ANIMATION_DURATION } from '../components/AnimatedShaker';
 import { CocktailArt } from '../components/CocktailArt';
 import { ShakeControl } from '../components/ShakeControl';
 import { DrinkIdeaFinder } from '../components/DrinkIdeaFinder';
@@ -184,8 +184,8 @@ export function RandomScreen({
       return;
     }
 
-    // Selection feedback does not move the rendered glass; only its smoke moves.
-    selectionAnimation.current = Animated.delay(600);
+    // The pour completes before revealing the result. Reduced motion skips the wait.
+    selectionAnimation.current = Animated.delay(MIX_ANIMATION_DURATION);
     selectionAnimation.current.start(({ finished }) => { if (finished) show(); });
   };
 
@@ -234,7 +234,7 @@ export function RandomScreen({
         <View style={{ flex: 1, gap: 3 }}><Text style={styles.quickTitle}>Good company. Great drinks.</Text><Dim>Plan a party menu · batch · serve</Dim></View>
         <Icon name="chevron-right" size={22} color={C.accent} />
       </Pressable>
-      {kit.length === 0 ? <Panel style={{ gap: 10 }}><Heading>Start with what’s on your shelf</Heading><Dim>Add your own ingredients to see recipes you can make.</Dim><PrimaryButton label="Add what you have" onPress={() => goTo('cabinet')} /></Panel> : null}
+      {kit.length === 0 ? <Panel style={{ gap: 10 }}><Heading>Your recipe book is ready</Heading><Dim>Browse all {recipes.length} recipes now. Random picks use your inventory—add your ingredients or try a sample bar to start mixing.</Dim><PrimaryButton label="Add ingredients or try a sample bar" onPress={() => goTo('cabinet')} /><GhostButton label="Browse all recipes" onPress={() => goTo('recipes')} /></Panel> : null}
       <DrinkIdeaFinder query={ideaQuery} onChange={(value) => { setIdeaQuery(value); setResult(null); }}
         discovery={discovery} matchCount={discovery.matches.length} readyCount={ideaReadyCount} inventoryIdeas={inventoryIdeas}
         busy={isSpinning} onFind={onSpin} />
@@ -246,30 +246,30 @@ export function RandomScreen({
         }}
         style={[styles.hero, wide && styles.heroWide, width < 560 && { padding: 16, gap: 12 }]}>
         <View style={[styles.heroCopy, wide && { flex: 1 }, width < 560 && { flexGrow: 1, flexBasis: width - 48 - 34 - 12 - (width < 360 ? 106 : 134) }]}>
-          <Text style={styles.eyebrow}>LET THE SPIRITS DECIDE</Text>
-          <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }, width < 560 && { fontSize: 24, lineHeight: 28, letterSpacing: -0.7 }]}>A little magic.{'\n'}A great drink.</Text>
+          <Text style={styles.eyebrow}>GOOD TIMES, ON THE HOUSE</Text>
+          <Text accessibilityRole="header" style={[styles.heroTitle, width >= 1000 && { fontSize: 48, lineHeight: 53 }, width < 560 && { fontSize: 24, lineHeight: 28, letterSpacing: -0.7 }]}>Shake things up.{'\n'}Find your pour.</Text>
           {width >= 360 ? <Text style={styles.heroBody}>{prefs.zeroProofMode ? 'An alcohol-free surprise.' : width < 560 ? 'A surprise from your shelf.' : 'A surprise made from what’s already on your shelf.'}</Text> : null}
-          {width >= 560 ? <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} /> : null}
+          {width >= 560 ? <PrimaryButton label={isSpinning ? 'Mixing your next drink…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={styles.heroCta} /> : null}
 
         </View>
-        <View style={[styles.crystalStage, wide && { flex: 1 }, width < 560 && { flexGrow: 0, flexShrink: 0, width: width < 360 ? 106 : 134 }]}>
-          <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Find a drink with the crystal ball"
+        <View style={[styles.shakerStage, wide && { flex: 1 }, width < 560 && { flexGrow: 0, flexShrink: 0, width: width < 360 ? 106 : 134 }]}>
+          <Pressable onPress={onSpin} disabled={isSpinning} accessibilityRole="button" accessibilityLabel="Shake the cocktail shaker to find a drink"
             accessibilityState={{ busy: isSpinning, disabled: isSpinning }} aria-busy={isSpinning} aria-disabled={isSpinning}
-            style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, styles.crystalButton]}>
-            <CrystalBall size={wide ? 260 : width >= 560 ? 208 : width < 360 ? 104 : 132}
-              motionEnabled={motionEnabled} visible={heroVisible && active} />
+            style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, styles.shakerButton]}>
+            <AnimatedShaker size={wide ? 280 : width >= 560 ? 240 : width < 360 ? 124 : 156}
+              mixing={isSpinning} motionEnabled={motionEnabled} visible={heroVisible && active} />
           </Pressable>
-          <View style={styles.crystalCaption}>
+          <View style={styles.shakerCaption}>
             {width >= 560 ? <Icon name="shuffle-variant" size={13} color={C.accent} /> : null}
-            <Text style={styles.crystalCaptionText}>{width < 560 ? 'TAP TO PICK' : isSpinning ? 'A LITTLE MAGIC IN THE MIX…' : 'TAP TO FIND YOUR POUR'}</Text>
+            <Text style={styles.shakerCaptionText}>{isSpinning ? 'MIXING…' : 'TAP TO MIX'}</Text>
             {!reduceMotion ? <Pressable onPress={() => setAnimationPaused((paused) => !paused)} disabled={isSpinning}
-              accessibilityRole="button" accessibilityLabel={animationPaused ? 'Play crystal animation' : 'Pause crystal animation'}
+              accessibilityRole="button" accessibilityLabel={animationPaused ? 'Play shaker animation' : 'Pause shaker animation'}
               style={({ pressed }) => [styles.motionToggle, { opacity: pressed || isSpinning ? 0.5 : 1 }]}>
               <Icon name={animationPaused ? 'play-outline' : 'pause'} size={14} color={C.dim} />
             </Pressable> : null}
           </View>
         </View>
-        {width < 560 ? <PrimaryButton label={isSpinning ? 'Consulting the spirits…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={{ width: '100%' }} /> : null}
+        {width < 560 ? <PrimaryButton label={isSpinning ? 'Mixing your next drink…' : 'Find my next drink'} disabled={isSpinning} onPress={onSpin} style={{ width: '100%' }} /> : null}
       </LinearGradient>
       <ShakeControl status={shakeSensor.status} onToggle={toggleShakeSensor} />
 
@@ -581,7 +581,7 @@ function FallbackPanel({
       <Icon name="bottle-tonic-outline" size={34} color={C.amber} style={styles.fallbackIcon} />
       <Heading style={{ textAlign: 'center' }}>Nothing makes a full drink yet</Heading>
       <Dim style={styles.fallbackBody}>
-        Add ingredients from a recipe you like, then try the crystal ball again.
+        Add ingredients from a recipe you like, then give the shaker another try.
       </Dim>
       <PrimaryButton label="OPEN MY CABINET" onPress={() => goTo('cabinet')} style={styles.fallbackBtn} />
     </Panel>
@@ -605,10 +605,10 @@ const styles = StyleSheet.create({
   heroTitle: { fontFamily: F.semibold, color: C.text, fontSize: 30, lineHeight: 35, letterSpacing: -1.4 },
   heroBody: { fontFamily: F.regular, color: C.dim, fontSize: 15, lineHeight: 23, maxWidth: 330 },
   heroCta: { alignSelf: 'stretch', maxWidth: 300, marginTop: 4 },
-  crystalStage: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
-  crystalButton: { borderRadius: 999, overflow: 'hidden', backgroundColor: '#000', borderWidth: 1, borderColor: '#FFFFFF14' },
-  crystalCaption: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 0 },
-  crystalCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 10, letterSpacing: 0.6 },
+  shakerStage: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
+  shakerButton: { borderRadius: 24 },
+  shakerCaption: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 0 },
+  shakerCaptionText: { color: C.dim, fontFamily: F.medium, fontSize: 10, letterSpacing: 0.6 },
   motionToggle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   moodHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 6 },
   sectionTitle: { fontFamily: F.medium, fontSize: 20, letterSpacing: -0.3, color: C.text },

@@ -6,7 +6,7 @@ import { C, F, R } from '../theme';
 
 export function ShakeControl({ status, onToggle }: { status: ShakeStatus; onToggle: () => void }) {
   if (status === 'checking' || status === 'unsupported') {
-    return <Text style={styles.hint}>Tap the crystal ball to choose a drink.</Text>;
+    return <Text style={styles.hint}>Tap the cocktail shaker to choose a drink.</Text>;
   }
   const active = status === 'ready' || status === 'waiting';
   const label = status === 'requesting' ? 'Enabling shake…' : active ? 'Shake on' :
@@ -14,7 +14,7 @@ export function ShakeControl({ status, onToggle }: { status: ShakeStatus; onTogg
   const help = status === 'ready' ? 'Give your phone three quick shakes to choose a drink.' :
     status === 'waiting' ? 'Waiting for your phone’s motion sensor…' :
     status === 'denied' ? 'Allow motion in your device or browser settings, then try again.' :
-    status === 'unavailable' ? 'No motion data arrived. You can still tap the crystal ball.' :
+    status === 'unavailable' ? 'No motion data arrived. You can still tap the cocktail shaker.' :
     status === 'insecure' ? 'Open the HTTPS version of the app to enable phone motion.' :
     'Allow motion, then shake your phone to choose a drink.';
 
